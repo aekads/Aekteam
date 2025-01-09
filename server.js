@@ -424,7 +424,7 @@ app.post('/api/campaign/quotation', verifyToken, async (req, res) => {
 
 
 
-app.put('/api/campaign/quotation/edit', verifyToken, async (req, res) => {
+app.post('/api/campaign/quotation/edit', verifyToken, async (req, res) => {
     const {
         id, // Campaign ID
         city,
