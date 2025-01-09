@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+<body>
+    <h1>Employee Login</h1>
+    <form action="/api/login" method="POST">
+        <label for="emp_id">Employee ID:</label><br>
+        <input type="text" id="emp_id" name="emp_id" placeholder="Enter Employee Id" required><br><br>
+
+        <label for="pin">PIN:</label><br>
+        <input type="password" id="pin" name="pin" required><br><br>
+
+        <button type="submit">Login</button>
+    </form>
+    <% if (error) { %>
+        <p style="color: red;"><%= error %></p> 
+    <% } %>
+</body>
+</html>
+
+                                                                                 
