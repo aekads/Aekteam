@@ -221,7 +221,7 @@ app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
             console.error('Error during logout:', err);
-            return res.status(500).json({ error: 'Error during logout' });
+            return res.status(500).json({ message: 'Error during logout' });
         }
         if (req.headers['content-type'] === 'application/json') {
             res.status(200).json({ message: 'Logout successful' });
@@ -325,7 +325,7 @@ app.post('/api/inquiry/edit',verifyToken, async (req, res) => {
         ]);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Campaign not found' });
+            return res.status(404).json({ message: 'Campaign not found' });
         }
 
         res.status(200).json({
@@ -424,7 +424,7 @@ app.post('/api/inquiry/quotation', verifyToken, async (req, res) => {
     const employee_id = req.user.emp_id;
 
     if (!id) {
-        return res.status(400).json({ error: 'Campaign ID is required' });
+        return res.status(400).json({ message: 'Campaign ID is required' });
     }
 
     try {
@@ -466,7 +466,7 @@ app.post('/api/inquiry/quotation', verifyToken, async (req, res) => {
         ]);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Campaign not found or invalid ID' });
+            return res.status(404).json({ message: 'Campaign not found or invalid ID' });
         }
 
         res.status(200).json({
@@ -501,7 +501,7 @@ app.post('/api/inquiry/quotation/edit', verifyToken, async (req, res) => {
     } = req.body;
     const employee_id = req.user.emp_id;
     if (!id) {
-        return res.status(400).json({ error: 'Campaign ID is required' });
+        return res.status(400).json({ message: 'Campaign ID is required' });
     }
 
     try {
@@ -542,7 +542,7 @@ app.post('/api/inquiry/quotation/edit', verifyToken, async (req, res) => {
         ]);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Campaign not found or invalid ID' });
+            return res.status(404).json({ message: 'Campaign not found or invalid ID' });
         }
 
         res.status(200).json({
