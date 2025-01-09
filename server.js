@@ -146,14 +146,14 @@ app.post('/api/login', async (req, res) => {
         } else {
             res.status(401).json({
                 status: false,
-                error: 'Invalid Employee ID or PIN',
+                message: 'Invalid Employee ID or PIN',
             });
         }
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).json({
             status: false,
-            error: 'Error during login',
+            message: 'Error during login',
         });
     }
 });
@@ -201,7 +201,7 @@ app.post('/api/forgot-password', async (req, res) => {
         console.error('Error during password reset:', error);
         res.status(500).json({
             status: false,
-            error: 'Error during password reset',
+            message: 'Error during password reset',
         });
     }
 });
@@ -275,7 +275,7 @@ app.post('/api/inquiry',verifyToken, async (req, res) => {
         });
     } catch (error) {
         console.error('Error creating campaign:', error);
-        res.status(500).json({  status: false, error: 'Failed to create campaign' });  
+        res.status(500).json({  status: false, message: 'Failed to create campaign' });  
     }
 });
 
@@ -335,7 +335,7 @@ app.post('/api/inquiry/edit',verifyToken, async (req, res) => {
         });
     } catch (error) {
         console.error('Error updating campaign:', error);
-        res.status(500).json({status:false, error: 'Failed to update campaign' });
+        res.status(500).json({status:false, message: 'Failed to update campaign' });
     }
 });
 
@@ -476,7 +476,7 @@ app.post('/api/inquiry/quotation', verifyToken, async (req, res) => {
         });
     } catch (error) {
         console.error('Error submitting quotation:', error);
-        res.status(500).json({ status:false, error: 'Failed to submit quotation' });
+        res.status(500).json({ status:false, message: 'Failed to submit quotation' });
     }
 });
 
@@ -552,7 +552,7 @@ app.post('/api/inquiry/quotation/edit', verifyToken, async (req, res) => {
         });
     } catch (error) {
         console.error('Error updating campaign quotation:', error);
-        res.status(500).json({ status: false ,error: 'Failed to update campaign quotation' });
+        res.status(500).json({ status: false ,message: 'Failed to update campaign quotation' });
     }
 });
 
