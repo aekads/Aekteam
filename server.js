@@ -170,7 +170,7 @@ app.post('/api/forgot-password', async (req, res) => {
         if (result.rows.length === 0) {
             return res.status(404).json({
                 status: false,
-                error: 'Employee not found',
+                message: 'Employee not found',
             });
         }
 
