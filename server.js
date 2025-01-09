@@ -137,19 +137,75 @@ app.post('/api/login', async (req, res) => {
             const token = jwt.sign({ emp_id: user.emp_id, name: user.name }, secretKey, { expiresIn: '1h' });
 
             res.status(200).json({
+                status: true,
                 message: 'Login successful',
                 token: token,
                 emp_id: user.emp_id,
                 name: user.name,
             });
         } else {
-            res.status(401).json({ error: 'Invalid Employee ID or PIN' });
+            res.status(401).json({
+                status: false,
+                error: 'Invalid Employee ID or PIN',
+            });
         }
     } catch (error) {
         console.error('Error during login:', error);
-        res.status(500).json({ error: 'Error during login' });
+        res.status(500).json({
+            status: false,
+            error: 'Error during login',
+        });
     }
 });
+
+
+
+app.post('/api/forgot-password', async (req, res) => {
+    const { emp_id } = req.body;
+
+    try {
+        // Fetch the employee record
+        const result = await pool.query('SELECT * FROM employees WHERE emp_id = $1', [emp_id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                status: false,
+                error: 'Employee not found',
+            });
+        }
+
+        const user = result.rows[0];
+        const email = user.email;
+
+        // Generate a new unique PIN
+        const newPin = await generateUniquePin();
+
+        // Update the database with the new PIN
+        await pool.query('UPDATE employees SET pin = $1 WHERE emp_id = $2', [newPin, emp_id]);
+
+        // Send the new PIN to the user's email
+        const mailOptions = {
+            from: 'your_email@gmail.com',
+            to: email,
+            subject: 'Password Reset',
+            text: `Hello ${user.name},\n\nYour PIN has been reset successfully!\n\nNew PIN: ${newPin}\n\nPlease use this PIN to log in.\n\nThank you.`,
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.status(200).json({
+            status: true,
+            message: 'New PIN sent to your email address',
+        });
+    } catch (error) {
+        console.error('Error during password reset:', error);
+        res.status(500).json({
+            status: false,
+            error: 'Error during password reset',
+        });
+    }
+});
+
 
 // Render Dashboard
 app.get('/dashboard', (req, res) => {
@@ -213,12 +269,13 @@ app.post('/api/inquiry',verifyToken, async (req, res) => {
         ]);
 
         res.status(201).json({
+            status: true,
             message: 'Campaign created successfully',
             data: result.rows[0],
         });
     } catch (error) {
         console.error('Error creating campaign:', error);
-        res.status(500).json({ error: 'Failed to create campaign' });  
+        res.status(500).json({  status: false, error: 'Failed to create campaign' });  
     }
 });
 
@@ -272,12 +329,13 @@ app.post('/api/inquiry/edit',verifyToken, async (req, res) => {
         }
 
         res.status(200).json({
+            status: true,
             message: 'Campaign updated successfully',
             data: result.rows[0],
         });
     } catch (error) {
         console.error('Error updating campaign:', error);
-        res.status(500).json({ error: 'Failed to update campaign' });
+        res.status(500).json({status:false, error: 'Failed to update campaign' });
     }
 });
 
@@ -412,12 +470,13 @@ app.post('/api/inquiry/quotation', verifyToken, async (req, res) => {
         }
 
         res.status(200).json({
+            status: true,
             message: 'Quotation details submitted successfully for approval',
             data: result.rows[0],
         });
     } catch (error) {
         console.error('Error submitting quotation:', error);
-        res.status(500).json({ error: 'Failed to submit quotation' });
+        res.status(500).json({ status:false, error: 'Failed to submit quotation' });
     }
 });
 
@@ -487,12 +546,13 @@ app.post('/api/inquiry/quotation/edit', verifyToken, async (req, res) => {
         }
 
         res.status(200).json({
+            status: true,
             message: 'Campaign quotation updated successfully',
             data: result.rows[0],
         });
     } catch (error) {
         console.error('Error updating campaign quotation:', error);
-        res.status(500).json({ error: 'Failed to update campaign quotation' });
+        res.status(500).json({ status: false ,error: 'Failed to update campaign quotation' });
     }
 });
 
@@ -504,6 +564,3 @@ const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
-
-
-
