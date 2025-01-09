@@ -181,7 +181,7 @@ app.get('/logout', (req, res) => {
 
 
 
-app.post('/api/campaign',verifyToken, async (req, res) => {
+app.post('/api/inquiry',verifyToken, async (req, res) => {
     const {
         name,
         mobile_number,
@@ -224,7 +224,7 @@ app.post('/api/campaign',verifyToken, async (req, res) => {
 
 
 // PUT: Edit a Campaign by ID
-app.post('/api/campaign/edit',verifyToken, async (req, res) => {
+app.post('/api/inquiry/edit',verifyToken, async (req, res) => {
     const {
         id,
         name,
