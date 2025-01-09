@@ -224,7 +224,7 @@ app.post('/api/campaign',verifyToken, async (req, res) => {
 
 
 // PUT: Edit a Campaign by ID
-app.post('/api/campaignn',verifyToken, async (req, res) => {
+app.post('/api/campaign/edit',verifyToken, async (req, res) => {
     const {
         id,
         name,
