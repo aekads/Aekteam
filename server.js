@@ -310,15 +310,15 @@ app.post('/api/inquiry-list', verifyToken, async (req, res) => {
 
         res.status(200).json({
             status: true,
-            message: 'Inquiries fetched successfully',
+            message: 'Inquiries Data successfully',
             data: inquiries,
         });
     } catch (error) {
-        console.error('Error fetching inquiries:', error);
+        console.error('Error fetching inquiries data:', error);
 
         res.status(500).json({
             status: false,
-            message: 'Failed to fetch inquiries',
+            message: 'Failed to fetch inquiries Data',
         });
     }
 });
