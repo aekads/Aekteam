@@ -6,6 +6,8 @@ const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const app = express();
 const secretKey = 'your_secret_key';
+const { body, validationResult } = require('express-validator');
+
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
@@ -83,7 +85,7 @@ app.get('/register', (req, res) => {
 
 // API: Register Employee
 app.post('/api/register', async (req, res) => {
-    const { name, emp_number, email } = req.body;
+    const { name, emp_number, email, role } = req.body; // Added role
 
     try {
         const emp_id = await generateEmpId();
@@ -91,8 +93,8 @@ app.post('/api/register', async (req, res) => {
 
         // Insert into Database
         await pool.query(
-            `INSERT INTO employees (emp_id, name, emp_number, email, pin) VALUES ($1, $2, $3, $4, $5)`,
-            [emp_id, name, emp_number, email, pin]
+            `INSERT INTO employees (emp_id, name, emp_number, email, pin, role) VALUES ($1, $2, $3, $4, $5, $6)`,
+            [emp_id, name, emp_number, email, pin, role]
         );
 
         // Send Email
@@ -100,7 +102,7 @@ app.post('/api/register', async (req, res) => {
             from: 'your_email@gmail.com',
             to: email,
             subject: 'Registration Successful',
-            text: `Hello ${name},\n\nYour registration is successful!\n\nEmployee ID: ${emp_id}\nPIN: ${pin}\n\nThank you.`,
+            text: `Hello ${name},\n\nYour registration is successful!\n\nEmployee ID: ${emp_id}\nPIN: ${pin}\nRole: ${role}\n\nThank you.`,
         };
 
         await transporter.sendMail(mailOptions);
@@ -110,6 +112,7 @@ app.post('/api/register', async (req, res) => {
                 message: 'Registration successful',
                 emp_id: emp_id,
                 pin: pin,
+                role: role, // Include role in the response
             });
         } else {
             res.redirect('/login');
@@ -119,7 +122,6 @@ app.post('/api/register', async (req, res) => {
         res.status(500).json({ message: 'Error during registration' });
     }
 });
-
 // Render Login Page    for                                                                                                                    
 app.get('/login', (req, res) => {
     res.render('login', { error: null });
@@ -130,11 +132,20 @@ app.post('/api/login', async (req, res) => {
     const { emp_id, pin } = req.body;
 
     try {
-        const result = await pool.query('SELECT * FROM employees WHERE emp_id = $1 AND pin = $2', [emp_id, pin]);
+        const result = await pool.query(
+            'SELECT * FROM employees WHERE emp_id = $1 AND pin = $2',
+            [emp_id, pin]
+        );
 
         if (result.rows.length > 0) {
             const user = result.rows[0];
-            const token = jwt.sign({ emp_id: user.emp_id, name: user.name }, secretKey, { expiresIn: '1h' });
+            const token = jwt.sign(
+                { emp_id: user.emp_id, name: user.name, role: user.role },
+                secretKey,
+                { expiresIn: '1h' }
+            );
+
+            const loginTime = new Date(); // Capture the current login time
 
             res.status(200).json({
                 status: true,
@@ -142,6 +153,8 @@ app.post('/api/login', async (req, res) => {
                 token: token,
                 emp_id: user.emp_id,
                 name: user.name,
+                role: user.role, // Include role in the response
+                // login_time: loginTime, // Include login time
             });
         } else {
             res.status(401).json({
@@ -157,7 +170,6 @@ app.post('/api/login', async (req, res) => {
         });
     }
 });
-
 
 
 app.post('/api/forgot-password', async (req, res) => {
@@ -236,8 +248,7 @@ app.get('/logout', (req, res) => {
 
 
 
-
-app.post('/api/inquiry',verifyToken, async (req, res) => {
+app.post('/api/inquiry', verifyToken, async (req, res) => {
     const {
         name,
         mobile_number,
@@ -246,9 +257,10 @@ app.post('/api/inquiry',verifyToken, async (req, res) => {
         screen_type,
         total_days,
         campaign_remark,
-        // employee_id,
     } = req.body;
+
     const employee_id = req.user.emp_id; // Extract from token
+
     try {
         const query = `
             INSERT INTO public.sales_enquiry 
@@ -274,8 +286,17 @@ app.post('/api/inquiry',verifyToken, async (req, res) => {
             data: result.rows[0],
         });
     } catch (error) {
-        console.error('Error creating campaign:', error);
-        res.status(500).json({  status: false, message: 'Failed to create campaign' });  
+        const errorDetails = {
+            message: error.message,
+            stack: error.stack,
+        };
+
+        console.error('[ERROR] Failed to create campaign:', JSON.stringify(errorDetails, null, 2));
+
+        res.status(500).json({
+            status: false,
+            message: 'Failed to create campaign',
+        });
     }
 });
 
