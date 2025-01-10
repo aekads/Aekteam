@@ -282,6 +282,36 @@ app.get('/dashboard', (req, res) => {
 
 
 
+app.get('/api/inquiry-list', verifyToken, async (req, res) => {
+    try {
+        const query = `
+            SELECT id, name, mobile_number, email, budget, screen_count, screen_type, tag, final_screen_count, start_date, end_date, total_value, per_screen_cost, payment_mode, payment_url, remark, creative_video_url, quotation_url, last_update_time, status, total_days, employee_id, city, campaign_remark
+            FROM public.sales_enquiry
+            ORDER BY last_update_time DESC;
+        `;
+
+        const result = await pool.query(query);
+
+        // Format `screen_type` back to JSON object
+        const inquiries = result.rows.map((inquiry) => ({
+            ...inquiry,
+            screen_type: inquiry.screen_type ? JSON.parse(inquiry.screen_type) : null,
+        }));
+
+        res.status(200).json({
+            status: true,
+            message: 'Inquiries fetched successfully',
+            data: inquiries,
+        });
+    } catch (error) {
+        console.error('Error fetching inquiries:', error);
+
+        res.status(500).json({
+            status: false,
+            message: 'Failed to fetch inquiries',
+        });
+    }
+});
 
 
 
