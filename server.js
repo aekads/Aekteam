@@ -282,15 +282,25 @@ app.get('/dashboard', (req, res) => {
 
 
 
-app.get('/api/inquiry-list', verifyToken, async (req, res) => {
+app.post('/api/inquiry-list', verifyToken, async (req, res) => {
+    const { emp_id } = req.body; // Extract employee_id from the request body
+
+    if (!emp_id) {
+        return res.status(400).json({
+            status: false,
+            message: 'Employee ID is required',
+        });
+    }
+
     try {
         const query = `
             SELECT id, name, mobile_number, email, budget, screen_count, screen_type, tag, final_screen_count, start_date, end_date, total_value, per_screen_cost, payment_mode, payment_url, remark, creative_video_url, quotation_url, last_update_time, status, total_days, employee_id, city, campaign_remark
             FROM public.sales_enquiry
+            WHERE employee_id = $1
             ORDER BY last_update_time DESC;
         `;
 
-        const result = await pool.query(query);
+        const result = await pool.query(query, [emp_id]);
 
         // Format `screen_type` back to JSON object
         const inquiries = result.rows.map((inquiry) => ({
