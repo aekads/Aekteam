@@ -142,10 +142,16 @@ app.post('/api/login', async (req, res) => {
             const token = jwt.sign(
                 { emp_id: user.emp_id, name: user.name, role: user.role },
                 secretKey,
-                { expiresIn: '1h' }
+                { expiresIn: '24h' }
             );
 
-            const loginTime = new Date(); // Capture the current login time
+            // const loginTime = new Date(); // Capture the current login time
+
+            // Update the database with the token and login status
+            await pool.query(
+                'UPDATE employees SET token = $1, status = $2 WHERE emp_id = $3',
+                [token, 1, emp_id]
+            );
 
             res.status(200).json({
                 status: true,
@@ -153,8 +159,8 @@ app.post('/api/login', async (req, res) => {
                 token: token,
                 emp_id: user.emp_id,
                 name: user.name,
-                role: user.role, // Include role in the response
-                // login_time: loginTime, // Include login time
+                role: user.role,
+                // login_time: loginTime, // Include login time in response
             });
         } else {
             res.status(401).json({
@@ -170,6 +176,37 @@ app.post('/api/login', async (req, res) => {
         });
     }
 });
+
+
+
+app.post('/api/logout', async (req, res) => {
+    const { emp_id } = req.body; // Extract emp_id from the request body
+
+    if (!emp_id) {
+        return res.status(400).json({ message: 'Employee ID is required for logout' });
+    }
+
+    try {
+        // Invalidate the token and update status to 0
+        const result = await pool.query(
+            'UPDATE employees SET token = NULL, status = $1 WHERE emp_id = $2 AND status = $3',
+            [0, emp_id, 1] // Ensure the user is currently logged in (status = 1)
+        );
+
+        if (result.rowCount > 0) {
+            res.status(200).json({ status: true,  message: 'Logout successful' });
+        } else {
+            res.status(400).json({
+                status: false,
+                message: ' user is already logged out',
+            });
+        }
+    } catch (error) {
+        console.error('Error during logout:', error);
+        res.status(500).json({  status: false ,message: 'Error during logout' });
+    }
+});
+
 
 
 app.post('/api/forgot-password', async (req, res) => {
@@ -229,19 +266,19 @@ app.get('/dashboard', (req, res) => {
 });
 
 // API: Logout Employee
-app.get('/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            console.error('Error during logout:', err);
-            return res.status(500).json({ message: 'Error during logout' });
-        }
-        if (req.headers['content-type'] === 'application/json') {
-            res.status(200).json({ message: 'Logout successful' });
-        } else {
-            res.redirect('/login');
-        }
-    });
-});
+// app.get('/logout', (req, res) => {
+//     req.session.destroy((err) => {
+//         if (err) {
+//             console.error('Error during logout:', err);
+//             return res.status(500).json({ message: 'Error during logout' });
+//         }
+//         if (req.headers['content-type'] === 'application/json') {
+//             res.status(200).json({ message: 'Logout successful' });
+//         } else {
+//             res.redirect('/login');
+//         }
+//     });
+// });
 
 
 
