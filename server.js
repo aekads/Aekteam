@@ -325,14 +325,14 @@ app.post('/api/inquiry', verifyToken, async (req, res) => {
 
         res.status(201).json({
             status: true,
-            message: 'Campaign created successfully'
+            message: 'inquiry created successfully'
         });
     } catch (error) {
-        console.error('Error during campaign creation:', error);
+        console.error('Error during inquiry creation:', error);
 
         res.status(500).json({
             status: false,
-            message: 'Failed to create campaign',
+            message: 'Failed to create inquiry',
         });
     }
 });
@@ -383,17 +383,17 @@ app.post('/api/inquiry/edit',verifyToken, async (req, res) => {
         ]);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'Campaign not found' });
+            return res.status(404).json({ message: 'inquiry not found' });
         }
 
         res.status(200).json({
             status: true,
-            message: 'Campaign updated successfully',
+            message: 'inquiry updated successfully',
             data: result.rows[0],
         });
     } catch (error) {
-        console.error('Error updating campaign:', error);
-        res.status(500).json({status:false, message: 'Failed to update campaign' });
+        console.error('Error updating inquiry:', error);
+        res.status(500).json({status:false, message: 'Failed to update inquiry' });
     }
 });
 
@@ -482,7 +482,7 @@ app.post('/api/inquiry/quotation', verifyToken, async (req, res) => {
     const employee_id = req.user.emp_id;
 
     if (!id) {
-        return res.status(400).json({ message: 'Campaign ID is required' });
+        return res.status(400).json({ message: 'inquiry ID is required' });
     }
 
     try {
@@ -524,7 +524,7 @@ app.post('/api/inquiry/quotation', verifyToken, async (req, res) => {
         ]);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'Campaign not found or invalid ID' });
+            return res.status(404).json({ message: 'inquiry not found or invalid ID' });
         }
 
         res.status(200).json({
@@ -559,7 +559,7 @@ app.post('/api/inquiry/quotation/edit', verifyToken, async (req, res) => {
     } = req.body;
     const employee_id = req.user.emp_id;
     if (!id) {
-        return res.status(400).json({ message: 'Campaign ID is required' });
+        return res.status(400).json({ message: 'inquiry ID is required' });
     }
 
     try {
@@ -600,17 +600,17 @@ app.post('/api/inquiry/quotation/edit', verifyToken, async (req, res) => {
         ]);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'Campaign not found or invalid ID' });
+            return res.status(404).json({ message: 'inquiry not found' });
         }
 
         res.status(200).json({
             status: true,
-            message: 'Campaign quotation updated successfully',
+            message: 'inquiry quotation updated successfully',
             data: result.rows[0],
         });
     } catch (error) {
-        console.error('Error updating campaign quotation:', error);
-        res.status(500).json({ status: false ,message: 'Failed to update campaign quotation' });
+        console.error('Error updating inquiry quotation:', error);
+        res.status(500).json({ status: false ,message: 'Failed to update inquiry quotation' });
     }
 });
 
