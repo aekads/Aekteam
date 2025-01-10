@@ -310,7 +310,7 @@ app.post('/api/inquiry-list', verifyToken, async (req, res) => {
 
         res.status(200).json({
             status: true,
-            message: 'Inquiries Data successfully',
+            message: 'Inquiries Data fetched successfully',
             data: inquiries,
         });
     } catch (error) {
