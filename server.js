@@ -306,29 +306,29 @@ app.post('/api/inquiry', verifyToken, async (req, res) => {
             RETURNING id, name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, employee_id, last_update_time, status;
         `;
 
+        const screenTypeString = JSON.stringify(screen_type);
+
         const result = await pool.query(query, [
             name,
             mobile_number,
             budget,
             screen_count,
-            JSON.stringify(screen_type),
+            screenTypeString,
             total_days,
             campaign_remark,
             employee_id,
         ]);
 
+        // Parse screen_type back to JSON object to avoid extra escaping
+        const responseData = result.rows[0];
+        responseData.screen_type = JSON.parse(responseData.screen_type);
+
         res.status(201).json({
             status: true,
-            message: 'Campaign created successfully',
-            data: result.rows[0],
+            message: 'Campaign created successfully'
         });
     } catch (error) {
-        const errorDetails = {
-            message: error.message,
-            stack: error.stack,
-        };
-
-        console.error('[ERROR] Failed to create campaign:', JSON.stringify(errorDetails, null, 2));
+        console.error('Error during campaign creation:', error);
 
         res.status(500).json({
             status: false,
