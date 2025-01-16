@@ -325,6 +325,7 @@ app.post('/api/inquiry-list', verifyToken, async (req, res) => {
 
 
 
+
 app.post('/api/inquiry', verifyToken, async (req, res) => {
     const {
         name,
@@ -340,10 +341,10 @@ app.post('/api/inquiry', verifyToken, async (req, res) => {
 
     try {
         const query = `
-            INSERT INTO public.sales_enquiry 
-            (name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, employee_id, last_update_time, status) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), 'enquiry') 
-            RETURNING id, name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, employee_id, last_update_time, status;
+         INSERT INTO public.sales_enquiry 
+            (name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, employee_id, last_update_time, status, created_time) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW() AT TIME ZONE 'Asia/Kolkata', 'enquiry', NOW() AT TIME ZONE 'Asia/Kolkata') 
+            RETURNING id, name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, employee_id, last_update_time, status, created_time;
         `;
 
         const screenTypeString = JSON.stringify(screen_type);
@@ -404,12 +405,12 @@ app.post('/api/inquiry/edit',verifyToken, async (req, res) => {
                 total_days = $6, 
                 campaign_remark = $7, 
                 employee_id = $8, 
-                last_update_time = NOW(),
+                last_update_time = NOW() AT TIME ZONE 'Asia/Kolkata',
                 status = 'enquiry'
             WHERE id = $9
             RETURNING id, name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, employee_id, last_update_time, status;
         `;
-
+ 
         const result = await pool.query(query, [
             name,
             mobile_number,
@@ -436,6 +437,7 @@ app.post('/api/inquiry/edit',verifyToken, async (req, res) => {
         res.status(500).json({status:false, message: 'Failed to update inquiry' });
     }
 });
+
 
 
 
