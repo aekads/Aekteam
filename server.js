@@ -142,7 +142,7 @@ app.post('/api/login', async (req, res) => {
             const token = jwt.sign(
                 { emp_id: user.emp_id, name: user.name, role: user.role },
                 secretKey,
-                { expiresIn: '24h' }
+                { expiresIn: '365d' }
             );
 
             // const loginTime = new Date(); // Capture the current login time
