@@ -295,7 +295,7 @@ app.post('/api/inquiry-list', verifyToken, async (req, res) => {
     try {
         // Build the query with optional date filter
         let query = `
-            SELECT id, name, mobile_number, email, budget, screen_count, screen_type, tag, final_screen_count, start_date, end_date, total_value, per_screen_cost, payment_mode, payment_url, remark, creative_video_url, quotation_url, last_update_time, status, total_days, employee_id, city, campaign_remark
+            SELECT id, name, mobile_number, email, budget, screen_count, screen_type, tag, final_screen_count, start_date, end_date, total_value, per_screen_cost, payment_mode, payment_url, remark, creative_video_url, quotation_url, last_update_time, status, total_days, employee_id, city, created_time, campaign_remark
             FROM public.sales_enquiry
             WHERE employee_id = $1
         `;
@@ -304,11 +304,11 @@ app.post('/api/inquiry-list', verifyToken, async (req, res) => {
 
         // Add date filter if provided
         if (filter_date) {
-            query += ` AND DATE(last_update_time) = $2`; // Filter by the provided date
+            query += ` AND DATE(created_time) = $2`; // Filter by the provided date
             queryParams.push(filter_date); // Add filter_date as a parameter
         }
 
-        query += ` ORDER BY last_update_time DESC;`; // Append the order clause
+        query += ` ORDER BY created_time DESC;`; // Append the order clause
 
         const result = await pool.query(query, queryParams);
 
