@@ -169,7 +169,7 @@ app.post('/api/login', async (req, res) => {
             });
         }
     } catch (error) {
-        console.error('Error during login:', error);
+        console.error('Database Error:', error);
         res.status(500).json({
             status: false,
             message: 'Error during login',
@@ -283,7 +283,7 @@ app.get('/dashboard', (req, res) => {
 
 
 app.post('/api/inquiry-list', verifyToken, async (req, res) => {
-    const { emp_id } = req.body; // Extract employee_id from the request body
+    const { emp_id, filter_date } = req.body; // Extract employee_id and filter_date from the request body
 
     if (!emp_id) {
         return res.status(400).json({
@@ -293,14 +293,24 @@ app.post('/api/inquiry-list', verifyToken, async (req, res) => {
     }
 
     try {
-        const query = `
+        // Build the query with optional date filter
+        let query = `
             SELECT id, name, mobile_number, email, budget, screen_count, screen_type, tag, final_screen_count, start_date, end_date, total_value, per_screen_cost, payment_mode, payment_url, remark, creative_video_url, quotation_url, last_update_time, status, total_days, employee_id, city, campaign_remark
             FROM public.sales_enquiry
             WHERE employee_id = $1
-            ORDER BY last_update_time DESC;
         `;
 
-        const result = await pool.query(query, [emp_id]);
+        const queryParams = [emp_id];
+
+        // Add date filter if provided
+        if (filter_date) {
+            query += ` AND DATE(last_update_time) = $2`; // Filter by the provided date
+            queryParams.push(filter_date); // Add filter_date as a parameter
+        }
+
+        query += ` ORDER BY last_update_time DESC;`; // Append the order clause
+
+        const result = await pool.query(query, queryParams);
 
         // Format `screen_type` back to JSON object
         const inquiries = result.rows.map((inquiry) => ({
@@ -325,6 +335,7 @@ app.post('/api/inquiry-list', verifyToken, async (req, res) => {
 
 
 
+ 
 
 app.post('/api/inquiry', verifyToken, async (req, res) => {
     const {
@@ -341,11 +352,21 @@ app.post('/api/inquiry', verifyToken, async (req, res) => {
 
     try {
         const query = `
-         INSERT INTO public.sales_enquiry 
-            (name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, employee_id, last_update_time, status, created_time) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW() AT TIME ZONE 'Asia/Kolkata', 'enquiry', NOW() AT TIME ZONE 'Asia/Kolkata') 
-            RETURNING id, name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, employee_id, last_update_time, status, created_time;
-        `;
+        INSERT INTO public.sales_enquiry 
+        (name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, employee_id, last_update_time, status, created_time) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 
+                NOW() AT TIME ZONE 'Asia/Kolkata', 
+                'enquiry', 
+                NOW() AT TIME ZONE 'Asia/Kolkata') 
+        RETURNING id, name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, employee_id, 
+                  TO_CHAR(last_update_time, 'YYYY-MM-DD HH24:MI:SS') AS last_update_time, 
+                  status, 
+                  TO_CHAR(created_time, 'YYYY-MM-DD HH24:MI:SS') AS created_time;
+    `;
+    
+    
+    
+
 
         const screenTypeString = JSON.stringify(screen_type);
 
@@ -368,6 +389,7 @@ app.post('/api/inquiry', verifyToken, async (req, res) => {
             status: true,
             message: 'inquiry created successfully'
         });
+        console.log(responseData)
     } catch (error) {
         console.error('Error during inquiry creation:', error);
 
@@ -395,21 +417,34 @@ app.post('/api/inquiry/edit',verifyToken, async (req, res) => {
     const employee_id = req.user.emp_id;
     try {
         const query = `
-            UPDATE public.sales_enquiry 
-            SET 
-                name = $1, 
-                mobile_number = $2, 
-                budget = $3, 
-                screen_count = $4, 
-                screen_type = $5, 
-                total_days = $6, 
-                campaign_remark = $7, 
-                employee_id = $8, 
-                last_update_time = NOW() AT TIME ZONE 'Asia/Kolkata',
-                status = 'enquiry'
-            WHERE id = $9
-            RETURNING id, name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, employee_id, last_update_time, status;
-        `;
+        UPDATE public.sales_enquiry 
+        SET 
+            name = $1, 
+            mobile_number = $2, 
+            budget = $3, 
+            screen_count = $4, 
+            screen_type = $5, 
+            total_days = $6, 
+            campaign_remark = $7, 
+            employee_id = $8, 
+            last_update_time = NOW() AT TIME ZONE 'Asia/Kolkata',  -- Corrected line
+            status = 'enquiry'
+        WHERE id = $9
+        RETURNING 
+            id, 
+            name, 
+            mobile_number, 
+            budget, 
+            screen_count, 
+            screen_type, 
+            total_days, 
+            campaign_remark, 
+            employee_id, 
+            TO_CHAR(last_update_time, 'YYYY-MM-DD HH24:MI:SS') AS last_update_time,  -- Format for response
+            status;
+    `;
+    
+    
  
         const result = await pool.query(query, [
             name,
@@ -437,7 +472,6 @@ app.post('/api/inquiry/edit',verifyToken, async (req, res) => {
         res.status(500).json({status:false, message: 'Failed to update inquiry' });
     }
 });
-
 
 
 
