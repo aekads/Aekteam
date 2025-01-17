@@ -33,7 +33,7 @@ router.post('/acquisition/add',verifyToken, async (req, res) => {
         // Extract the specific fields from the query result
         const data = result.rows[0];
   
-      res.status(201).json({  status: true ,message: 'Data added successfully', data });
+      res.status(201).json({  status: true ,message: 'Data added successfully' });
     } catch (error) {
       console.error('Error adding property:', error);
       res.status(500).json({  status: false ,message: 'Internal server error' });
@@ -59,9 +59,7 @@ router.post('/acquisition/add',verifyToken, async (req, res) => {
       // Send only the required fields in the response
       res.status(200).json({
         status: true,
-        message: 'Data fetched successfully',
-        
-        data: result.rows,
+        message: 'Data fetched successfully'
       });
     } catch (error) {
       console.error('Error fetching properties:', error);
