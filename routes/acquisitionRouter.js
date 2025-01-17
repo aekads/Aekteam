@@ -38,7 +38,7 @@ router.post('/acquisition/add',verifyToken, async (req, res) => {
   });
   
 //fetches data  
-  router.get('/acquisition-list',verifyToken, async (req, res) => {
+  router.post('/acquisition-list',verifyToken, async (req, res) => {
     try {
       const query = `
         SELECT 
