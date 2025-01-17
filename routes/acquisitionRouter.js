@@ -44,7 +44,8 @@ router.post('/acquisition/add',verifyToken, async (req, res) => {
   router.post('/acquisition-list',verifyToken, async (req, res) => {
     try {
       const query = `
-        SELECT 
+        SELECT
+          id,
           property_name, 
           address, 
           screen_qty, 
@@ -60,7 +61,7 @@ router.post('/acquisition/add',verifyToken, async (req, res) => {
       res.status(200).json({
         status: true,
         message: 'Data fetched successfully',
-         data: result.rows,
+        data: result.rows,
       });
     } catch (error) {
       console.error('Error fetching properties:', error);
