@@ -4,7 +4,6 @@ const { verifyToken } = require('../middleware/authMiddleware'); // Assuming you
 const pool = require('../config/database');
 
 
-
 router.post('/acquisition/add',verifyToken, async (req, res) => {
     const {
         property_name,
@@ -24,7 +23,11 @@ router.post('/acquisition/add',verifyToken, async (req, res) => {
           INSERT INTO acquisition (property_name, address, screen_qty, per_screen_rent_price, latitude, longitude)
           VALUES ($1, $2, $3, $4, $5, $6) RETURNING property_name, address, screen_qty, per_screen_rent_price, latitude, longitude;
         `;
-        const values = [property_name, address, screen_qty, per_screen_rent_price, latitude, longitude];
+
+        const latitudeValue = latitude || null;
+        const longitudeValue = longitude || null;
+
+        const values = [property_name, address, screen_qty, per_screen_rent_price, latitudeValue, longitudeValue];
         const result = await pool.query(query, values);
     
         // Extract the specific fields from the query result
