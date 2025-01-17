@@ -74,7 +74,7 @@ router.post('/inquiry', verifyToken, async (req, res) => {
         (name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, employee_id, last_update_time, status, created_time) 
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 
                 NOW() AT TIME ZONE 'Asia/Kolkata', 
-                'enquiry', 
+                'inquiry', 
                 NOW() AT TIME ZONE 'Asia/Kolkata') 
         RETURNING id, name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, employee_id, 
                   TO_CHAR(last_update_time, 'YYYY-MM-DD HH24:MI:SS') AS last_update_time, 
