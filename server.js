@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const session = require("express-session");
 const app = express();
 const authRoutes = require("./routes/authRoutes");
+const acquisitionRouter = require('./routes/acquisitionRouter');
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
@@ -17,6 +18,7 @@ app.use(
 );
 const inquiryRoutes = require("./routes/inquiryRoutes");
 app.use("/api", inquiryRoutes);
+app.use('/api', acquisitionRouter);
 
 // Render Dashboard
 app.get("/dashboard", (req, res) => {
@@ -25,12 +27,13 @@ app.get("/dashboard", (req, res) => {
   }
 
   res.send(
-    `<h1>Welcome ${req.session.user.name}!</h1><a href="/logout">Logout</a>`
+    `<h1>Welcome ${req.session.user.name}!</h1><a href="/logout">Logout</a>`                                        
   );
-});
+});                                                                               
 
-// Start Server
+// Start Server                                                                 
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
