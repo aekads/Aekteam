@@ -59,7 +59,8 @@ router.post('/acquisition/add',verifyToken, async (req, res) => {
       // Send only the required fields in the response
       res.status(200).json({
         status: true,
-        message: 'Data fetched successfully'
+        message: 'Data fetched successfully',
+         data: result.rows,
       });
     } catch (error) {
       console.error('Error fetching properties:', error);
