@@ -64,7 +64,7 @@ router.post('/register', async (req, res) => {
                 role: role, // Include role in the response
             });
         } else {
-            res.redirect('/login');
+            res.redirect('/api/login');
         }
     } catch (error) {
         console.error('Error during registration:', error);
