@@ -153,7 +153,7 @@ router.post('/logout', async (req, res) => {
     }
 });
 
-routerpost('/api/forgot-password', async (req, res) => {
+router.post('/forgot-password', async (req, res) => {
     const { emp_id } = req.body;
 
     try {
