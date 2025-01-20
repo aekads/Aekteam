@@ -56,7 +56,18 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
     screen_qty,
     per_screen_rent_price,
     latitude,
-    longitude
+    longitude,
+    total_tower,
+    total_floor,
+    final_screen_count,
+    contact_person_name,
+    contact_person_mobile_number,
+    contact_person_position,
+    full_address,
+    contract_pdf_file,
+    final_screen_qty,
+    final_per_screen_rent_price,
+    remarks
   } = req.body;
 
   // Check if the required fields are provided
@@ -78,17 +89,32 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
         per_screen_rent_price = $4,
         latitude = $5,
         longitude = $6,
-        updated_date = $7
-      WHERE id = $8
-      RETURNING id, property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, updated_date;
+        total_tower = $7,
+        total_floor = $8,
+        final_screen_count = $9,
+        contact_person_name = $10,
+        contact_person_mobile_number = $11,
+        contact_person_position = $12,
+        full_address = $13,
+        contract_pdf_file = $14,
+        final_screen_qty = $15,
+        final_per_screen_rent_price = $16,
+        remarks = $17,
+        updated_date = $18,
+        status = $19
+      WHERE id = $20
+      RETURNING id, property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, total_tower, total_floor, final_screen_count, contact_person_name, contact_person_mobile_number, contact_person_position, full_address, contract_pdf_file, final_screen_qty, final_per_screen_rent_price, remarks, updated_date, status;
     `;
 
     // Get the current timestamp in Asia/Kolkata timezone
     const updatedDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
 
-    // Handle optional latitude and longitude
+    // Handle optional values
     const latitudeValue = latitude || null;
     const longitudeValue = longitude || null;
+
+    // Set `status` to "approved"
+    const statusValue = "approved";
 
     // Values to be passed into the query
     const values = [
@@ -98,7 +124,19 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
       per_screen_rent_price,
       latitudeValue,
       longitudeValue,
+      total_tower || null,
+      total_floor || null,
+      final_screen_count || null,
+      contact_person_name || null,
+      contact_person_mobile_number || null,
+      contact_person_position || null,
+      full_address || null,
+      contract_pdf_file || null,
+      final_screen_qty || null,
+      final_per_screen_rent_price || null,
+      remarks || null,
       updatedDate,
+      statusValue,
       id,
     ];
 
@@ -129,6 +167,7 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
     });
   }
 });
+
   
 //fetches data  
   router.post('/acquisition-list',verifyToken, async (req, res) => {
