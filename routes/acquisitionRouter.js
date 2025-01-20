@@ -134,18 +134,19 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
   router.post('/acquisition-list',verifyToken, async (req, res) => {
     try {
       const query = `
-        SELECT
-          id,
-          property_name, 
-          address, 
-          screen_qty, 
-          per_screen_rent_price, 
-          latitude, 
-          longitude ,
-          status,
-          created_date
-        FROM acquisition; 
-      `;
+     SELECT
+        id,
+        property_name, 
+        address, 
+        screen_qty, 
+        per_screen_rent_price, 
+        latitude, 
+        longitude,
+        status,
+        created_date
+      FROM acquisition
+      ORDER BY created_date DESC; -- Sort by created_date in descending order
+    `;
   
       const result = await pool.query(query);
   
