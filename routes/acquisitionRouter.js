@@ -46,6 +46,89 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
     res.status(500).json({ status: false, message: 'Internal server error' });
   }
 });
+
+
+router.post('/acquisition/edit', verifyToken, async (req, res) => {
+  const {
+    id,
+    property_name,
+    address,
+    screen_qty,
+    per_screen_rent_price,
+    latitude,
+    longitude
+  } = req.body;
+
+  // Check if the required fields are provided
+  if (!id || !property_name || !address) {
+    return res.status(400).json({
+      status: false,
+      message: 'ID, Property name, and Address are required',
+    });
+  }
+
+  try {
+    // Prepare the query to update the acquisition
+    const query = `
+      UPDATE acquisition
+      SET 
+        property_name = $1,
+        address = $2,
+        screen_qty = $3,
+        per_screen_rent_price = $4,
+        latitude = $5,
+        longitude = $6,
+        updated_date = $7
+      WHERE id = $8
+      RETURNING id, property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, updated_date;
+    `;
+
+    // Get the current timestamp in Asia/Kolkata timezone
+    const updatedDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
+
+    // Handle optional latitude and longitude
+    const latitudeValue = latitude || null;
+    const longitudeValue = longitude || null;
+
+    // Values to be passed into the query
+    const values = [
+      property_name,
+      address,
+      screen_qty,
+      per_screen_rent_price,
+      latitudeValue,
+      longitudeValue,
+      updatedDate,
+      id,
+    ];
+
+    // Execute the query
+    const result = await pool.query(query, values);
+
+    if (result.rowCount === 0) {
+      // No rows affected, likely invalid ID
+      return res.status(404).json({
+        status: false,
+        message: 'No property found with the given ID',
+      });
+    }
+
+    // Extract updated data
+    const data = result.rows[0];
+
+    res.status(200).json({
+      status: true,
+      message: 'Data updated successfully',
+      data,
+    });
+  } catch (error) {
+    console.error('Error updating property:', error);
+    res.status(500).json({
+      status: false,
+      message: 'Internal server error',
+    });
+  }
+});
   
 //fetches data  
   router.post('/acquisition-list',verifyToken, async (req, res) => {
