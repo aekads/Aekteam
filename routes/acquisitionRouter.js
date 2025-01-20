@@ -48,7 +48,7 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
 });
   
 //fetches data  
-  router.post('/acquisition-list',verifyToken, async (req, res) => {
+ router.post('/acquisition-list',verifyToken, async (req, res) => {
     try {
       const query = `
         SELECT
@@ -66,17 +66,24 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
   
       const result = await pool.query(query);
   
+      const formattedData = result.rows.map((row) => ({
+        ...row,
+        created_date: moment(row.created_date).tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss'),
+      }));
+  
+
       // Send only the required fields in the response
       res.status(200).json({
         status: true,
         message: 'Data fetched successfully',
-        data: result.rows,
+        data: formattedData,
       });
     } catch (error) {
       console.error('Error fetching properties:', error);
       res.status(500).json({  status: false,message: 'Internal server error' });
     }
   });
+  
   
 
   module.exports = router;
