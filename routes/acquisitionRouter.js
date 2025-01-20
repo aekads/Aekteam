@@ -41,7 +41,7 @@ router.post('/acquisition/add',verifyToken, async (req, res) => {
   });
   
 //fetches data  
-  router.post('/acquisition-list',verifyToken, async (req, res) => {
+    router.post('/acquisition-list',verifyToken, async (req, res) => {
     try {
       const query = `
         SELECT
@@ -51,8 +51,10 @@ router.post('/acquisition/add',verifyToken, async (req, res) => {
           screen_qty, 
           per_screen_rent_price, 
           latitude, 
-          longitude 
-        FROM acquisition;
+          longitude ,
+          status,
+          created_date
+        FROM acquisition; 
       `;
   
       const result = await pool.query(query);
