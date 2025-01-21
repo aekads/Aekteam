@@ -4,6 +4,7 @@ const session = require("express-session");
 const app = express();
 const authRoutes = require("./routes/authRoutes");
 const acquisitionRouter = require('./routes/acquisitionRouter');
+const fileUpload = require('express-fileupload');
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
@@ -19,7 +20,7 @@ app.use(
 const inquiryRoutes = require("./routes/inquiryRoutes");
 app.use("/api", inquiryRoutes);
 app.use('/api', acquisitionRouter);
-
+app.use(fileUpload());
 // Render Dashboard
 app.get("/dashboard", (req, res) => {
   if (!req.session.user) {
@@ -36,4 +37,3 @@ const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-
