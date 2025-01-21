@@ -23,7 +23,8 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
     screen_qty,
     per_screen_rent_price,
     latitude,
-    longitude
+    longitude,
+    emp_id
   } = req.body;
 
   if (!property_name || !address) {
@@ -37,16 +38,16 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
     
 
     const query = `
-      INSERT INTO acquisition (property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, created_date)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, created_date;
+      INSERT INTO acquisition (property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, created_date, emp_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, created_date, emp_id;
     `;
 
     const latitudeValue = latitude || null;
     const longitudeValue = longitude || null;
 
     // Add `createdDate` to the values array
-    const values = [property_name, address, screen_qty, per_screen_rent_price, latitudeValue, longitudeValue, createdDate];
+    const values = [property_name, address, screen_qty, per_screen_rent_price, latitudeValue, longitudeValue, createdDate, emp_id];
 
     const result = await pool.query(query, values);
 
@@ -80,6 +81,7 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
     final_screen_qty,
     final_per_screen_rent_price,
     remarks,
+    
   } = req.body;
 
   // Check if the required fields are provided
@@ -193,6 +195,76 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
 
 
 
+router.post(
+  '/acquisition/upload',
+  verifyToken,
+  upload.single('pdf_file'),
+  async (req, res) => {
+    const { id, emp_id } = req.body;
+
+    // Validate input
+    if (!id || !emp_id) {
+      return res.status(400).json({
+        status: false,
+        message: 'ID and emp_id are required.',
+      });
+    }
+
+    try {
+      // Check if the record exists
+      const checkQuery = 'SELECT * FROM acquisition WHERE id = $1';
+      const checkResult = await pool.query(checkQuery, [id]);
+
+      if (checkResult.rowCount === 0) {
+        return res.status(404).json({
+          status: false,
+          message: 'Record not found with the given ID.',
+        });
+      }
+
+      // Upload the PDF to Cloudinary
+      let pdfUrl = null;
+      if (req.file) {
+        const uploadResponse = await cloudinary.uploader.upload(req.file.path, {
+          resource_type: 'raw',
+          folder: 'acquisition_contracts',
+        });
+        pdfUrl = uploadResponse.secure_url;
+      } else {
+        return res.status(400).json({
+          status: false,
+          message: 'PDF file is required.',
+        });
+      }
+
+      // Update the record in the database
+      const updateQuery = `
+        UPDATE acquisition
+        SET emp_id = $1,
+            contract_pdf_file = $2,
+            updated_date = $3
+        WHERE id = $4
+        RETURNING *;
+      `;
+      const updatedDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
+      const updateResult = await pool.query(updateQuery, [emp_id, pdfUrl, updatedDate, id]);
+
+      res.status(200).json({
+        status: true,
+        message: 'pdf upload successfully.'
+      });
+    } catch (error) {
+      console.error('Error updating record:', error);
+      res.status(500).json({
+        status: false,
+        message: 'Internal server error.',
+      });
+    }
+  }
+);
+
+
+
 //fetches data  
   router.post('/acquisition-list',verifyToken, async (req, res) => {
     try {
@@ -206,7 +278,9 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
         latitude, 
         longitude,
         status,
-        created_date
+        created_date,
+
+        total_tower, total_floor, final_screen_count, contact_person_name, contact_person_mobile_number, contact_person_position, full_address, contract_pdf_file, final_screen_qty, final_per_screen_rent_price, remarks, emp_id
       FROM acquisition
       ORDER BY created_date DESC; -- Sort by created_date in descending order
     `;
@@ -231,4 +305,10 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
   });
   
 
+
+
+
   module.exports = router;  
+
+
+  
