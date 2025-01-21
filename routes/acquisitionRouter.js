@@ -61,7 +61,7 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
 });
   
 
-router.post('/acquisition/edit', verifyToken, upload.single('contract_pdf_file'), async (req, res) => {
+router.post('/acquisition/edit', verifyToken, async (req, res) => {
   const {
     id,
     property_name,
@@ -91,28 +91,12 @@ router.post('/acquisition/edit', verifyToken, upload.single('contract_pdf_file')
   }
 
   try {
-    let contractPdfUrl = null;
-
-    // Check if file is uploaded in the form-data
-    if (req.file) {
-      console.log("File uploaded:", req.file); // Log the file to ensure it's uploaded
-
-      // Upload the PDF to Cloudinary
-      const uploadResponse = await cloudinary.uploader.upload(req.file.path, {
-        resource_type: 'raw', // Use 'raw' for non-image files like PDFs
-        folder: 'acquisition_contracts', // Optional: Folder to store files in Cloudinary
-      });
-
-      contractPdfUrl = uploadResponse.secure_url; // Get the Cloudinary URL
-      console.log("File uploaded to Cloudinary:", contractPdfUrl); // Log the Cloudinary URL
-    }
-
     // Ensure correct data type conversion for integers
     const parseValue = (value, type = 'int') => {
       if (value === undefined || value === null) return null;
       return type === 'int' ? parseInt(value, 10) : parseFloat(value);
     };
-  
+
     const screenQtyValue = parseValue(screen_qty);
     const totalTowerValue = parseValue(total_tower);
     const totalFloorValue = parseValue(total_floor);
@@ -120,7 +104,6 @@ router.post('/acquisition/edit', verifyToken, upload.single('contract_pdf_file')
     const finalScreenQtyValue = parseValue(final_screen_qty);
     const finalPerScreenRentPriceValue = parseValue(final_per_screen_rent_price, 'float');
     const perScreenRentPriceValue = parseValue(per_screen_rent_price, 'float');
-  
 
     const query = `
       UPDATE acquisition
@@ -138,14 +121,13 @@ router.post('/acquisition/edit', verifyToken, upload.single('contract_pdf_file')
         contact_person_mobile_number = $11,
         contact_person_position = $12,
         full_address = $13,
-        contract_pdf_file = $14,
-        final_screen_qty = $15,
-        final_per_screen_rent_price = $16,
-        remarks = $17,
-        updated_date = $18,
-        status = $19
-      WHERE id = $20
-      RETURNING id, property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, total_tower, total_floor, final_screen_count, contact_person_name, contact_person_mobile_number, contact_person_position, full_address, contract_pdf_file, final_screen_qty, final_per_screen_rent_price, remarks, updated_date, status;
+        final_screen_qty = $14,
+        final_per_screen_rent_price = $15,
+        remarks = $16,
+        updated_date = $17,
+        status = $18
+      WHERE id = $19
+      RETURNING id, property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, total_tower, total_floor, final_screen_count, contact_person_name, contact_person_mobile_number, contact_person_position, full_address, final_screen_qty, final_per_screen_rent_price, remarks, updated_date, status;
     `;
 
     // Get the current timestamp in Asia/Kolkata timezone
@@ -170,7 +152,6 @@ router.post('/acquisition/edit', verifyToken, upload.single('contract_pdf_file')
       contact_person_mobile_number || null,
       contact_person_position || null,
       full_address || null,
-      contractPdfUrl || null, // Use Cloudinary URL if file is uploaded
       finalScreenQtyValue, // Ensure this is an integer or null
       finalPerScreenRentPriceValue, // Ensure this is a number (float)
       remarks || null,
@@ -190,16 +171,15 @@ router.post('/acquisition/edit', verifyToken, upload.single('contract_pdf_file')
     }
 
     // Extract updated data
-    const data = result.rows[0];
     const formattedData = result.rows.map((row) => ({
       ...row,
-      updated_date: moment(row.created_date).tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss'),
+      updated_date: moment(row.updated_date).tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss'),
     }));
-
 
     res.status(200).json({
       status: true,
-      message: 'Data updated successfully'
+      message: 'Data updated successfully',
+      data: formattedData,
     });
   } catch (error) {
     console.error('Error updating property:', error);
@@ -209,6 +189,8 @@ router.post('/acquisition/edit', verifyToken, upload.single('contract_pdf_file')
     });
   }
 });
+
+
 
 
 //fetches data  
