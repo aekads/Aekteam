@@ -266,10 +266,20 @@ router.post(
 
 
 //fetches data  
-  router.post('/acquisition-list',verifyToken, async (req, res) => {
-    try {
-      const query = `
-       SELECT
+router.post('/acquisition-list', verifyToken, async (req, res) => {
+  const { emp_id } = req.body;
+
+  // Validate input
+  if (!emp_id) {
+    return res.status(400).json({
+      status: false,
+      message: 'emp_id is required',
+    });
+  }
+
+  try {
+    const query = `
+      SELECT
         id,
         property_name, 
         address, 
@@ -279,30 +289,46 @@ router.post(
         longitude,
         status,
         created_date,
-
-        total_tower, total_floor, final_screen_count, contact_person_name, contact_person_mobile_number, contact_person_position, full_address, contract_pdf_file, final_screen_qty, final_per_screen_rent_price, remarks, emp_id
+        total_tower,
+        total_floor,
+        final_screen_count,
+        contact_person_name,
+        contact_person_mobile_number,
+        contact_person_position,
+        full_address,
+        contract_pdf_file,
+        final_screen_qty,
+        final_per_screen_rent_price,
+        remarks,
+        emp_id
       FROM acquisition
+      WHERE emp_id = $1
       ORDER BY created_date DESC; -- Sort by created_date in descending order
     `;
-  
-      const result = await pool.query(query);
-  
-      const formattedData = result.rows.map((row) => ({
-        ...row,
-        created_date: moment(row.created_date).tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss'),
-      }));
 
-      // Send only the required fields in the response
-      res.status(200).json({
-        status: true,
-        message: 'Data fetched successfully',
-        data: formattedData,
-      });
-    } catch (error) {
-      console.error('Error fetching properties:', error);
-      res.status(500).json({  status: false,message: 'Internal server error' });
-    }
-  });
+    // Execute query with emp_id
+    const result = await pool.query(query, [emp_id]);
+
+    // Format data to adjust the date format
+    const formattedData = result.rows.map((row) => ({
+      ...row,
+      created_date: moment(row.created_date).tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss'),
+    }));
+
+    res.status(200).json({
+      status: true,
+      message: 'Data fetched successfully',
+      data: formattedData,
+    });
+  } catch (error) {
+    console.error('Error fetching properties:', error);
+    res.status(500).json({
+      status: false,
+      message: 'Internal server error',
+    });
+  }
+});
+
   
 
 
