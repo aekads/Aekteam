@@ -31,7 +31,7 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
     Property_Type
   } = req.body;
 
-  if (!property_name || !address) {
+  if (!property_name ) {
     return res.status(400).json({ message: 'Property name and address are required', status: false });
   }
 
@@ -122,7 +122,7 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
   } = req.body;
 
   // Check if the required fields are provided
-  if (!id || !property_name || !address || !screen_qty) {
+  if (!id || !property_name || !screen_qty) {
     return res.status(400).json({
       status: false,
       message: 'ID, Property name, Address, and screen_qty are required',
