@@ -354,7 +354,13 @@ router.post('/acquisition-list', verifyToken, async (req, res) => {
         final_screen_qty,
         final_per_screen_rent_price,
         remarks,
-        emp_id
+        emp_id,
+        state,
+        city,
+        pincode,
+        Property_Type,
+        household, 
+        reach
       FROM acquisition
       WHERE emp_id = $1
       ORDER BY created_date DESC; -- Sort by created_date in descending order
