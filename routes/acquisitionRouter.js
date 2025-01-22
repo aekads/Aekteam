@@ -122,7 +122,7 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
   } = req.body;
 
   // Check if the required fields are provided
-  if (!id || !property_name || !screen_qty) {
+  if (!id || !property_name ) {
     return res.status(400).json({
       status: false,
       message: 'ID, Property name, Address, and screen_qty are required',
@@ -190,8 +190,8 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
     // Values to be passed into the query
     const values = [
       property_name,
-      address,
-      screenQtyValue,  // Ensure this is an integer
+      address  || null,
+      screenQtyValue || null,  // Ensure this is an integer
       perScreenRentPriceValue || null, // Ensure this is a number (float)
       latitudeValue || null,
       longitudeValue || null,
@@ -421,4 +421,3 @@ router.get('/acquisition/locations',  verifyToken, async (req, res) => {
 
 
   module.exports = router;  
-
