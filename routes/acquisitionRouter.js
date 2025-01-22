@@ -192,12 +192,12 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
       property_name,
       address,
       screenQtyValue,  // Ensure this is an integer
-      perScreenRentPriceValue, // Ensure this is a number (float)
-      latitudeValue,
-      longitudeValue,
-      totalTowerValue, // Ensure this is an integer or null
-      totalFloorValue, // Ensure this is an integer or null
-      finalScreenCountValue, // Ensure this is an integer or null
+      perScreenRentPriceValue || null, // Ensure this is a number (float)
+      latitudeValue || null,
+      longitudeValue || null,
+      totalTowerValue ||null, // Ensure this is an integer or null
+      totalFloorValue || null, // Ensure this is an integer or null
+      finalScreenCountValue || null, // Ensure this is an integer or null
       contact_person_name || null,
       contact_person_mobile_number || null,
       contact_person_position || null,
