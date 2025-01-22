@@ -132,7 +132,7 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
   try {
     // Ensure correct data type conversion for integers
     const parseValue = (value, type = 'int') => {
-      if (value === undefined || value === null) return null;
+      if (!value || value === '') return null;
       return type === 'int' ? parseInt(value, 10) : parseFloat(value);
     };
 
