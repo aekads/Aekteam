@@ -16,7 +16,7 @@ router.post('/inquiry-list', verifyToken, async (req, res) => {
     try {
         // Build the query with optional date filter
         let query = `
-            SELECT id, name, mobile_number, email, budget, screen_count, screen_type, tag, final_screen_count, start_date, end_date, total_value, per_screen_cost, payment_mode, payment_url, remark, creative_video_url, quotation_url, last_update_time, status, total_days, employee_id, city, created_time, campaign_remark
+            SELECT id, name, mobile_number, email, budget, screen_count, screen_type, tag, final_screen_count, start_date, end_date, total_value, per_screen_cost, payment_mode, payment_url, remark, creative_video_url, quotation_url, last_update_time, status, total_days, employee_id, city, created_time, campaign_remark,email
             FROM public.sales_enquiry
             WHERE employee_id = $1
         `;
@@ -64,6 +64,7 @@ router.post('/inquiry', verifyToken, async (req, res) => {
         screen_type,
         total_days,
         campaign_remark,
+        email
     } = req.body;
 
     const employee_id = req.user.emp_id; // Extract from token
@@ -71,12 +72,12 @@ router.post('/inquiry', verifyToken, async (req, res) => {
     try {
         const query = `
         INSERT INTO public.sales_enquiry 
-        (name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, employee_id, last_update_time, status, created_time) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 
+        (name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, email, employee_id, last_update_time, status, created_time) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 
                 NOW() AT TIME ZONE 'Asia/Kolkata', 
                 'inquiry', 
                 NOW() AT TIME ZONE 'Asia/Kolkata') 
-        RETURNING id, name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, employee_id, 
+        RETURNING id, name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark,email, employee_id, 
                   TO_CHAR(last_update_time, 'YYYY-MM-DD HH24:MI:SS') AS last_update_time, 
                   status, 
                   TO_CHAR(created_time, 'YYYY-MM-DD HH24:MI:SS') AS created_time;
@@ -96,6 +97,7 @@ router.post('/inquiry', verifyToken, async (req, res) => {
             screenTypeString,
             total_days,
             campaign_remark,
+            email,
             employee_id,
         ]);
 
@@ -129,6 +131,7 @@ router.post('/inquiry/edit',verifyToken, async (req, res) => {
         screen_type,
         total_days,
         campaign_remark,
+        email,
         // employee_id,
     } = req.body;
     const employee_id = req.user.emp_id;
@@ -143,10 +146,12 @@ router.post('/inquiry/edit',verifyToken, async (req, res) => {
             screen_type = $5, 
             total_days = $6, 
             campaign_remark = $7, 
+
             employee_id = $8, 
+            email = $9,
             last_update_time = NOW() AT TIME ZONE 'Asia/Kolkata',  -- Corrected line
             status = 'enquiry'
-        WHERE id = $9
+        WHERE id = $10
         RETURNING 
             id, 
             name, 
@@ -155,8 +160,10 @@ router.post('/inquiry/edit',verifyToken, async (req, res) => {
             screen_count, 
             screen_type, 
             total_days, 
-            campaign_remark, 
-            employee_id, 
+            campaign_remark,
+             
+            employee_id,
+            email, 
             TO_CHAR(last_update_time, 'YYYY-MM-DD HH24:MI:SS') AS last_update_time,  -- Format for response
             status;
     `;
@@ -171,7 +178,9 @@ router.post('/inquiry/edit',verifyToken, async (req, res) => {
             JSON.stringify(screen_type),
             total_days,
             campaign_remark,
+            
             employee_id,
+            email,
             id,
         ]);
 
