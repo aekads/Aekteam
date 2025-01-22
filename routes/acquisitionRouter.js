@@ -234,8 +234,8 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
 
     res.status(200).json({
       status: true,
-      message: 'Data updated successfully',
-      data: formattedData,
+      message: 'Data updated successfully'
+     
     });
   } catch (error) {
     console.error('Error updating property:', error);
