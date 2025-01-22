@@ -24,7 +24,11 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
     per_screen_rent_price,
     latitude,
     longitude,
-    emp_id
+    emp_id,
+    state,
+    city,
+    pincode,
+    Property_Type
   } = req.body;
 
   if (!property_name || !address) {
@@ -38,16 +42,29 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
     
 
     const query = `
-      INSERT INTO acquisition (property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, created_date, emp_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, created_date, emp_id;
-    `;
+    INSERT INTO acquisition (property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, state, city, pincode,Property_Type, created_date, emp_id)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    RETURNING property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, state, city, pincode,Property_Type, created_date, emp_id;
+  `;
 
     const latitudeValue = latitude || null;
     const longitudeValue = longitude || null;
 
     // Add `createdDate` to the values array
-    const values = [property_name, address, screen_qty, per_screen_rent_price, latitudeValue, longitudeValue, createdDate, emp_id];
+    const values = [
+      property_name,
+      address,
+      screen_qty,
+      per_screen_rent_price,
+      latitudeValue,
+      longitudeValue,
+      state,
+      city,
+      pincode,
+      Property_Type,
+      createdDate,
+      emp_id
+    ];
 
     const result = await pool.query(query, values);
 
@@ -81,6 +98,12 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
     final_screen_qty,
     final_per_screen_rent_price,
     remarks,
+    state,
+    city,
+    pincode,
+    Property_Type,
+    household, 
+    reach
     
   } = req.body;
 
@@ -127,9 +150,20 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
         final_per_screen_rent_price = $15,
         remarks = $16,
         updated_date = $17,
-        status = $18
-      WHERE id = $19
-      RETURNING id, property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, total_tower, total_floor, final_screen_count, contact_person_name, contact_person_mobile_number, contact_person_position, full_address, final_screen_qty, final_per_screen_rent_price, remarks, updated_date, status;
+        status = $18,
+        state = $19,
+        city = $20,
+        pincode = $21,
+        Property_Type = $22, 
+        household = $23, 
+        reach = $24
+      WHERE id = $25
+      RETURNING id, property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, total_tower, total_floor, final_screen_count, contact_person_name, contact_person_mobile_number, contact_person_position, full_address, final_screen_qty, final_per_screen_rent_price, remarks, state,
+    city,
+    pincode,
+    Property_Type,
+    household, 
+    reach ,updated_date, status
     `;
 
     // Get the current timestamp in Asia/Kolkata timezone
@@ -159,7 +193,13 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
       remarks || null,
       updatedDate,
       'inquiry', // Status can be set to 'inquiry' or another value
-      id,
+      state || null,
+      city || null,
+      pincode || null,
+      Property_Type || null,
+      household || null, 
+      reach || null,  
+      id
     ];
 
     // Execute the query
@@ -331,10 +371,8 @@ router.post('/acquisition-list', verifyToken, async (req, res) => {
 
   
 
-
+                                                                                  
 
 
   module.exports = router;  
 
-
-  
