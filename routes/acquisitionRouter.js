@@ -387,7 +387,7 @@ router.post('/acquisition-list', verifyToken, async (req, res) => {
 
           
 
-router.get('/acquisition/locations', async (req, res) => {
+router.get('/acquisition/locations',  verifyToken, async (req, res) => {
   try {
     // Hardcoded states and cities (can be fetched from a database if needed)
     const locations = {
