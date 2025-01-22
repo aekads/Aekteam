@@ -50,6 +50,8 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
     const latitudeValue = latitude || null;
     const longitudeValue = longitude || null;
 
+    const PropertyTypeString = JSON.stringify(Property_Type);
+
     // Add `createdDate` to the values array
     const values = [
       property_name,
@@ -61,7 +63,7 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
       state,
       city,
       pincode,
-      Property_Type,
+      PropertyTypeString,
       createdDate,
       emp_id
     ];
@@ -71,7 +73,19 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
     // Extract the specific fields from the query result
     const data = result.rows[0];
 
+    const responseData = result.rows[0];
+    if (responseData.Property_Type) {
+      try {
+        responseData.Property_Type = JSON.parse(responseData.Property_Type);
+      } catch (err) {
+        console.error('Error parsing Property_Type:', err);
+      }
+    }
+
+
+
     res.status(201).json({ status: true, message: 'Data added successfully' });
+    // console.log(responseData)
   } catch (error) {
     console.error('Error adding property:', error);
     res.status(500).json({ status: false, message: 'Internal server error' });
@@ -196,7 +210,7 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
       state || null,
       city || null,
       pincode || null,
-      Property_Type || null,
+      JSON.stringify(Property_Type) || null,
       household || null, 
       reach || null,  
       id
@@ -371,7 +385,33 @@ router.post('/acquisition-list', verifyToken, async (req, res) => {
 
   
 
-                                                                                  
+          
+
+router.get('/acquisition/locations', async (req, res) => {
+  try {
+    // Hardcoded states and cities (can be fetched from a database if needed)
+    const locations = {
+      states: [
+        "Gujarat",
+        "Maharashtra",
+        "Rajasthan"
+      ],
+      cities: [
+        "Ahmedabad",
+        "Gandhinagar",
+        "Surat",
+        "Rajkot",
+        "Mumbai"
+      ]
+    };
+
+    res.status(200).json({ status: true, message: 'Locations fetched successfully', data: locations });
+  } catch (error) {
+    console.error('Error fetching locations:', error);
+    res.status(500).json({ status: false, message: 'Internal server error' });
+  }
+});
+
 
 
   module.exports = router;  
