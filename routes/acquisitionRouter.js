@@ -431,7 +431,7 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
   const { id, screenname } = req.body;
 
   if (!id ) {
-    return res.status(400).json({ error: 'id and screenname are required fields.' });
+    return res.status(400).json({ message: 'id and screenname are required fields.' });
   }
 
   try {
@@ -452,7 +452,7 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
     const acquisitionResult = await pool.query(acquisitionQuery, [id]);
 
     if (acquisitionResult.rows.length === 0) {
-      return res.status(404).json({ error: 'No data found for the provided id in acquisition table.' });
+      return res.status(404).json({ message: 'No data found for the provided id in acquisition table.' });
     }
 
     const acquisitionData = acquisitionResult.rows[0];
@@ -493,7 +493,7 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating screen:', error);
-    res.status(500).json({ status: true,  message: 'Internal Server Error' });
+    res.status(500).json({ status: false,  message: 'Internal Server Error' });
   }
 });
 
