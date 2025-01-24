@@ -427,7 +427,7 @@ router.get('/acquisition/locations',  verifyToken, async (req, res) => {
 
 
 
-router.post('/acquisition/create-screen', async (req, res) => {
+router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
   const { id, screenname } = req.body;
 
   if (!id ) {
