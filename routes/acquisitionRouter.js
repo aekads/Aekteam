@@ -130,10 +130,10 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
   }
 
   try {
-    // Ensure correct data type conversion for integers
+    // Ensure correct data type conversion for integers                         
     const parseValue = (value, type = 'int') => {
       if (!value || value === '') return null;
-      return type === 'int' ? parseInt(value, 10) : parseFloat(value);
+      return type === 'int' ? parseInt(value, 10) : parseFloat(value);          
     };
 
     const screenQtyValue = parseValue(screen_qty);
@@ -196,7 +196,7 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
       latitudeValue || null,
       longitudeValue || null,
       totalTowerValue ||null, // Ensure this is an integer or null
-      totalFloorValue || null, // Ensure this is an integer or null
+      totalFloorValue || null, // Ensure this is an integer or null     
       finalScreenCountValue || null, // Ensure this is an integer or null
       contact_person_name || null,
       contact_person_mobile_number || null,
@@ -333,38 +333,39 @@ router.post('/acquisition-list', verifyToken, async (req, res) => {
 
   try {
     const query = `
-      SELECT
-        id,
-        property_name, 
-        address, 
-        screen_qty, 
-        per_screen_rent_price, 
-        latitude, 
-        longitude,
-        status,
-        created_date,
-        total_tower,
-        total_floor,
-        final_screen_count,
-        contact_person_name,
-        contact_person_mobile_number,
-        contact_person_position,
-        full_address,
-        contract_pdf_file,
-        final_screen_qty,
-        final_per_screen_rent_price,
-        remarks,
-        emp_id,
-        state,
-        city,
-        pincode,
-        Property_Type,
-        household, 
-        reach
-      FROM acquisition
-      WHERE emp_id = $1
-      ORDER BY created_date DESC; -- Sort by created_date in descending order
-    `;
+    SELECT
+      id,
+      property_name, 
+      address, 
+      screen_qty, 
+      per_screen_rent_price, 
+      latitude, 
+      longitude,
+      status,
+      created_date,
+      total_tower,
+      total_floor,
+      final_screen_count,
+      contact_person_name,
+      contact_person_mobile_number,
+      contact_person_position,
+      full_address,
+      contract_pdf_file,
+      final_screen_qty,
+      final_per_screen_rent_price,
+      remarks,
+      emp_id,
+      state,
+      city,
+      pincode,
+      Property_Type,
+      household, 
+      reach
+    FROM acquisition
+    WHERE emp_id = $1
+      AND status != 'created_screen' -- Exclude rows with status 'created_screen'
+    ORDER BY created_date DESC;
+  `;
 
     // Execute query with emp_id
     const result = await pool.query(query, [emp_id]);
@@ -418,6 +419,83 @@ router.get('/acquisition/locations',  verifyToken, async (req, res) => {
   }
 });
 
+
+
+//
+
+
+
+
+
+router.post('/acquisition/create-screen', async (req, res) => {
+  const { id, screenname } = req.body;
+
+  if (!id ) {
+    return res.status(400).json({ error: 'id and screenname are required fields.' });
+  }
+
+  try {
+    // Fetch necessary details from the acquisition table using the provided id
+    const acquisitionQuery = `
+      SELECT 
+        full_address AS location, 
+        city, 
+        address AS area, 
+        state, 
+        pincode, 
+        status, 
+        household, 
+        reach
+      FROM public.acquisition
+      WHERE id = $1;
+    `;
+    const acquisitionResult = await pool.query(acquisitionQuery, [id]);
+
+    if (acquisitionResult.rows.length === 0) {
+      return res.status(404).json({ error: 'No data found for the provided id in acquisition table.' });
+    }
+
+    const acquisitionData = acquisitionResult.rows[0];
+
+    // Insert data into the acquisition_screens table
+    const screenInsertQuery = `
+      INSERT INTO public.acquisition_screens (
+        screenname, location, city, area, state, pincode, country, deleted, stutus, households, reach
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      RETURNING *;
+    `;
+    const screenInsertResult = await pool.query(screenInsertQuery, [
+      screenname,
+      acquisitionData.location || '',
+      acquisitionData.city || '',
+      acquisitionData.area || '',
+      acquisitionData.state || '',
+      acquisitionData.pincode || '',
+      acquisitionData.country || 'India',
+      acquisitionData.deleted || false,
+      'created_screen', // Hardcoded status
+      acquisitionData.household || 0,
+      acquisitionData.reach || 0,
+    ]);
+
+    // Update the status field in the acquisition table
+    const acquisitionUpdateQuery = `
+      UPDATE public.acquisition
+      SET status = 'created_screen'
+      WHERE id = $1;
+    `;
+    await pool.query(acquisitionUpdateQuery, [id]);
+
+    res.status(201).json({
+      message: 'Screen created successfully, and acquisition status updated.',
+      screenData: screenInsertResult.rows[0],
+    });
+  } catch (error) {
+    console.error('Error creating screen:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 
   module.exports = router;  
