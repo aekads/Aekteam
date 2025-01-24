@@ -488,12 +488,12 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
     await pool.query(acquisitionUpdateQuery, [id]);
 
     res.status(201).json({
-      message: 'Screen created successfully, and acquisition status updated.',
-      screenData: screenInsertResult.rows[0],
+      status: true, 
+      message: 'Screen created successfully'
     });
   } catch (error) {
     console.error('Error creating screen:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ status: true,  message: 'Internal Server Error' });
   }
 });
 
