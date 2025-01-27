@@ -509,6 +509,9 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
 
 
 // feath city vise screen data
+
+
+// feath city vise screen data
 router.post('/acquisition/screens',verifyToken, async (req, res) => {
   const { city } = req.body;
 
@@ -522,7 +525,7 @@ router.post('/acquisition/screens',verifyToken, async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT screenid, pairingcode, screenname 
+      `SELECT screenid, screenname 
        FROM public.acquisition_screens 
        WHERE LOWER(city) = LOWER($1)`, // Removed the deleted condition
       [city] // Pass city directly as a string
@@ -538,6 +541,7 @@ router.post('/acquisition/screens',verifyToken, async (req, res) => {
 
       res.status(200).json({
           status: true,
+          message: 'Screens Data fetched successfully',
           data: result.rows,
       });
   } catch (error) {
@@ -548,6 +552,9 @@ router.post('/acquisition/screens',verifyToken, async (req, res) => {
       });
   }
 });
+
+            
+
 
             
 
