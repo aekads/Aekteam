@@ -462,7 +462,7 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
     // Loop through the screenname array and insert each screenname as a separate row
     const screenInsertQuery = `
       INSERT INTO public.acquisition_screens (
-        screenname, location, city, area, state, pincode, country, deleted, stutus, households, reach
+        screenname, location, city, area, state, pincode, country, deleted, status, households, reach
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *;
@@ -506,9 +506,6 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
 });
 
 
-
-
-// feath city vise screen data
 
 
 // feath city vise screen data
@@ -556,10 +553,7 @@ router.post('/acquisition/screens',verifyToken, async (req, res) => {
             
 
 
-            
-
-
-
+  
 
   module.exports = router;                                                      
   
