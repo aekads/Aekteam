@@ -509,7 +509,7 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
 
 
 // feath city vise screen data
-router.post('/acquisition/screens', async (req, res) => {
+router.post('/acquisition/screens',verifyToken, async (req, res) => {
   const { city } = req.body;
 
   // Validate input
