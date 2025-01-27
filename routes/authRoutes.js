@@ -107,9 +107,9 @@ router.post('/login', async (req, res) => {
                 emp_id: user.emp_id,
                 name: user.name,
                 role: user.role,
-                // assign_city: user.assign_city,
+                assign_city: user.assign_city,
                 // login_time: loginTime, // Include login time in response
-                city: user.assign_city
+                //city: user.assign_city
             });
       
             
