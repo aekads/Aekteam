@@ -4,6 +4,7 @@ const { verifyToken } = require('../middleware/authMiddleware'); // Assuming you
 const pool = require('../config/database');
 const moment = require('moment-timezone');
 
+
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 // const upload = multer({ dest: 'uploads/' }); 
@@ -510,44 +511,49 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
 
 
 // feath city vise screen data
-router.post('/acquisition/screens',verifyToken, async (req, res) => {
+router.post('/acquisition/screens', verifyToken, async (req, res) => {
   const { city } = req.body;
 
   // Validate input
   if (!city) {
-      return res.status(400).json({
-          status: false,
-          message: 'City is required in the request body',
-      });
+    return res.status(400).json({
+      status: false,
+      message: 'City is required in the request body',
+    });
   }
 
   try {
     const result = await pool.query(
-      `SELECT screenid, screenname ,pairingcode,status, created_at
+      `SELECT screenid, screenname, pairingcode, status, created_at
        FROM public.acquisition_screens 
-       WHERE LOWER(city) = LOWER($1)`, // Removed the deleted condition
-      [city] // Pass city directly as a string
-  );
-  
+       WHERE LOWER(city) = LOWER($1)`,
+      [city]
+    );
 
-      if (result.rows.length === 0) {
-          return res.status(404).json({
-              status: false,
-              message: `No screens found for city: ${city}`,
-          });
-      }
-
-      res.status(200).json({
-          status: true,
-          message: 'Screens Data fetched successfully',
-          data: result.rows,
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        status: false,
+        message: `No screens found for city: ${city}`,
       });
+    }
+
+    // Format the created_at field for each row using moment-timezone
+    const formattedData = result.rows.map((row) => ({
+      ...row,
+      created_at: moment(row.created_at).tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss'), // Convert to IST and format
+    }));
+
+    res.status(200).json({
+      status: true,
+      message: 'Screens Data fetched successfully',
+      data: formattedData,
+    });
   } catch (error) {
-      console.error('Error fetching screens:', error);
-      res.status(500).json({
-          status: false,
-          message: 'Error fetching screens',
-      });
+    console.error('Error fetching screens:', error);
+    res.status(500).json({
+      status: false,
+      message: 'Error fetching screens',
+    });
   }
 });
 
