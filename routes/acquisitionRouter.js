@@ -430,8 +430,8 @@ router.get('/acquisition/locations',  verifyToken, async (req, res) => {
 router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
   const { id, screenname } = req.body;
 
-  if (!id ) {
-    return res.status(400).json({ message: 'id and screenname are required fields.' });
+  if (!id || !Array.isArray(screenname) || screenname.length === 0) {
+    return res.status(400).json({ message: 'id and screenname (array) are required fields.' });
   }
 
   try {
@@ -445,7 +445,8 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
         pincode, 
         status, 
         household, 
-        reach
+        reach,
+        property_type
       FROM public.acquisition
       WHERE id = $1;
     `;
@@ -457,7 +458,7 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
 
     const acquisitionData = acquisitionResult.rows[0];
 
-    // Insert data into the acquisition_screens table
+    // Loop through the screenname array and insert each screenname as a separate row
     const screenInsertQuery = `
       INSERT INTO public.acquisition_screens (
         screenname, location, city, area, state, pincode, country, deleted, stutus, households, reach
@@ -465,19 +466,24 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *;
     `;
-    const screenInsertResult = await pool.query(screenInsertQuery, [
-      screenname,
-      acquisitionData.location || '',
-      acquisitionData.city || '',
-      acquisitionData.area || '',
-      acquisitionData.state || '',
-      acquisitionData.pincode || '',
-      acquisitionData.country || 'India',
-      acquisitionData.deleted || false,
-      'created_screen', // Hardcoded status
-      acquisitionData.household || 0,
-      acquisitionData.reach || 0,
-    ]);
+    const insertedRows = [];
+
+    for (const name of screenname) {
+      const screenInsertResult = await pool.query(screenInsertQuery, [
+        name,
+        acquisitionData.location || '',
+        acquisitionData.city || '',
+        acquisitionData.property_type || '',
+        acquisitionData.state || '',
+        acquisitionData.pincode || '',
+        acquisitionData.country || 'India',
+        acquisitionData.deleted || false,
+        'created_screen', // Hardcoded status
+        acquisitionData.household || 0,
+        acquisitionData.reach || 0,
+      ]);
+      insertedRows.push(screenInsertResult.rows[0]); // Collect inserted rows for response
+    }
 
     // Update the status field in the acquisition table
     const acquisitionUpdateQuery = `
@@ -488,14 +494,18 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
     await pool.query(acquisitionUpdateQuery, [id]);
 
     res.status(201).json({
-      status: true, 
-      message: 'Screen created successfully'
+      status: true,
+      message: 'Screen created successfully',
+      screenData: insertedRows, // Return all inserted rows
     });
   } catch (error) {
     console.error('Error creating screen:', error);
-    res.status(500).json({ status: false,  message: 'Internal Server Error' });
+    res.status(500).json({ status: false, message: 'Internal Server Error' });
   }
 });
 
 
-  module.exports = router;  
+  module.exports = router;                                                      
+  
+  
+                                                                                 
