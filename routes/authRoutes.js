@@ -60,7 +60,7 @@ router.post('/register', async (req, res) => {
 
         await transporter.sendMail(mailOptions);
 
-        res.status(201).json({ message: 'Registration successful', emp_id, pin, role, Assign_city });
+        res.status(201).json({ message: 'Registration successful', emp_id, pin, role,  Assign_city });
     } catch (error) {
         await client.query('ROLLBACK'); // Rollback on failure
         console.error('Error during registration:', error);
@@ -107,9 +107,9 @@ router.post('/login', async (req, res) => {
                 emp_id: user.emp_id,
                 name: user.name,
                 role: user.role,
-                assign_city: user.assign_city,
+                // assign_city: user.assign_city,
                 // login_time: loginTime, // Include login time in response
-                
+                city: user.assign_city
             });
       
             
