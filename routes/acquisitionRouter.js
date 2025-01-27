@@ -446,7 +446,8 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
         status, 
         household, 
         reach,
-        property_type
+        property_type,
+        property_name
       FROM public.acquisition
       WHERE id = $1;
     `;
@@ -473,7 +474,7 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
         name,
         acquisitionData.location || '',
         acquisitionData.city || '',
-        acquisitionData.property_type || '',
+        acquisitionData.property_name || '',
         acquisitionData.state || '',
         acquisitionData.pincode || '',
         acquisitionData.country || 'India',
@@ -496,7 +497,7 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
     res.status(201).json({
       status: true,
       message: 'Screen created successfully',
-      screenData: insertedRows, // Return all inserted rows
+      // screenData: insertedRows, // Return all inserted rows
     });
   } catch (error) {
     console.error('Error creating screen:', error);
@@ -505,7 +506,55 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
 });
 
 
+
+
+// feath city vise screen data
+router.post('/acquisition/screens', async (req, res) => {
+  const { city } = req.body;
+
+  // Validate input
+  if (!city) {
+      return res.status(400).json({
+          status: false,
+          message: 'City is required in the request body',
+      });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT screenid, pairingcode, screenname 
+       FROM public.acquisition_screens 
+       WHERE LOWER(city) = LOWER($1)`, // Removed the deleted condition
+      [city] // Pass city directly as a string
+  );
+  
+
+      if (result.rows.length === 0) {
+          return res.status(404).json({
+              status: false,
+              message: `No screens found for city: ${city}`,
+          });
+      }
+
+      res.status(200).json({
+          status: true,
+          data: result.rows,
+      });
+  } catch (error) {
+      console.error('Error fetching screens:', error);
+      res.status(500).json({
+          status: false,
+          message: 'Error fetching screens',
+      });
+  }
+});
+
+            
+
+
+
+
   module.exports = router;                                                      
   
   
-                                                                                 
+                                                                                    
