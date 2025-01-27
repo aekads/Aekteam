@@ -9,8 +9,8 @@ const router = express.Router();
 
 // Helper functions
 async function generateEmpId() {
-    const result = await pool.query('SELECT COUNT(*) FROM employees');
-    const count = parseInt(result.rows[0].count) + 1;
+    const result = await pool.query("SELECT nextval('emp_id_seq') AS id");
+    const count = result.rows[0].id;
     return `emp_${count.toString().padStart(2, '0')}`;
 }
 
@@ -34,19 +34,23 @@ router.get('/register', (req, res) => {
 
 // Routes
 router.post('/register', async (req, res) => {
-    const { name, emp_number, email, role } = req.body; // Added role
+    const { name, emp_number, email, role, Assign_city } = req.body;
 
+    const client = await pool.connect(); // Use client for transactions
     try {
+        await client.query('BEGIN'); // Start transaction
+
         const emp_id = await generateEmpId();
         const pin = await generateUniquePin();
 
-        // Insert into Database
-        await pool.query(
-            `INSERT INTO employees (emp_id, name, emp_number, email, pin, role) VALUES ($1, $2, $3, $4, $5, $6)`,
-            [emp_id, name, emp_number, email, pin, role]
+        await client.query(
+            `INSERT INTO employees (emp_id, name, emp_number, email, pin, role, Assign_city) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [emp_id, name, emp_number, email, pin, role, Assign_city]
         );
 
-        // Send Email
+        await client.query('COMMIT'); // Commit transaction
+
+        // Send email and respond
         const mailOptions = {
             from: 'your_email@gmail.com',
             to: email,
@@ -56,21 +60,16 @@ router.post('/register', async (req, res) => {
 
         await transporter.sendMail(mailOptions);
 
-        if (req.headers['content-type'] === 'application/json') {
-            res.status(201).json({
-                message: 'Registration successful',
-                emp_id: emp_id,
-                pin: pin,
-                role: role, // Include role in the response
-            });
-        } else {
-            res.redirect('/api/login');
-        }
+        res.status(201).json({ message: 'Registration successful', emp_id, pin, role, Assign_city });
     } catch (error) {
+        await client.query('ROLLBACK'); // Rollback on failure
         console.error('Error during registration:', error);
         res.status(500).json({ message: 'Error during registration' });
+    } finally {
+        client.release();
     }
 });
+
 
 router.get('/login', (req, res) => {
     res.render('login', { error: null });
@@ -81,14 +80,14 @@ router.post('/login', async (req, res) => {
 
     try {
         const result = await pool.query(
-            'SELECT * FROM employees WHERE emp_id = $1 AND pin = $2',
+            'SELECT emp_id, name, role, Assign_city FROM employees WHERE emp_id = $1 AND pin = $2',
             [emp_id, pin]
         );
 
         if (result.rows.length > 0) {
             const user = result.rows[0];
             const token = jwt.sign(
-                { emp_id: user.emp_id, name: user.name, role: user.role },
+                { emp_id: user.emp_id, name: user.name, role: user.role,  assign_city: user.assign_city },
                 secretKey,
                 { expiresIn: '365d' }
             );
@@ -108,8 +107,12 @@ router.post('/login', async (req, res) => {
                 emp_id: user.emp_id,
                 name: user.name,
                 role: user.role,
+                assign_city: user.assign_city,
                 // login_time: loginTime, // Include login time in response
+                
             });
+      
+            
         } else {
             res.status(401).json({
                 status: false,
@@ -200,3 +203,5 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 module.exports = router;
+
+
