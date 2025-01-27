@@ -522,7 +522,7 @@ router.post('/acquisition/screens',verifyToken, async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT screenid, screenname 
+      `SELECT screenid, screenname , status
        FROM public.acquisition_screens 
        WHERE LOWER(city) = LOWER($1)`, // Removed the deleted condition
       [city] // Pass city directly as a string
