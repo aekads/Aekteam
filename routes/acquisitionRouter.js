@@ -462,9 +462,9 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
     // Loop through the screenname array and insert each screenname as a separate row
     const screenInsertQuery = `
       INSERT INTO public.acquisition_screens (
-        screenname, location, city, area, state, pincode, country, deleted, status, households, reach
+        screenname, location, city, area, state, pincode, country, deleted, status, households, reach, created_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *;
     `;
     const insertedRows = [];
@@ -482,6 +482,7 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
         'created_screen', // Hardcoded status
         acquisitionData.household || 0,
         acquisitionData.reach || 0,
+        new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }),
       ]);
       insertedRows.push(screenInsertResult.rows[0]); // Collect inserted rows for response
     }
@@ -504,7 +505,7 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
     res.status(500).json({ status: false, message: 'Internal Server Error' });
   }
 });
-
+  
 
 
 
@@ -522,7 +523,7 @@ router.post('/acquisition/screens',verifyToken, async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT screenid, screenname , status
+      `SELECT screenid, screenname ,status
        FROM public.acquisition_screens 
        WHERE LOWER(city) = LOWER($1)`, // Removed the deleted condition
       [city] // Pass city directly as a string
@@ -557,5 +558,5 @@ router.post('/acquisition/screens',verifyToken, async (req, res) => {
 
   module.exports = router;                                                      
   
-  
+    
                                                                                     
