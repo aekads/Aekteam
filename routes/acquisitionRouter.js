@@ -585,7 +585,7 @@ router.post("/acquisition/add-pairingcode", verifyToken, async (req, res) => {
 
     res.status(200).json({
       status: true,
-      message: "Pairing code and status updated successfully.",
+      message: "Pairing code submited successfully.",
       data: {
         screenid: updatedScreenId,
         pairingcode: updatedPairingCode,
