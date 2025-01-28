@@ -573,7 +573,7 @@ router.post("/acquisition/add-pairingcode", verifyToken, async (req, res) => {
        SET pairingcode = $1, status = $2 
        WHERE screenid = $3 
        RETURNING screenid, pairingcode, status`,
-      [pairingcode, "Pairing code submitted", screenid]
+      [pairingcode, "PCode_Submited", screenid]
     );
 
     if (result.rowCount === 0) {
@@ -612,7 +612,7 @@ router.post("/acquisition/EditPairingCode", verifyToken, async (req, res) => {
        SET pairingcode = $1, status = $2 
        WHERE screenid = $3 
        RETURNING screenid, pairingcode, status`,
-      [pairingcode, "Pairing code submitted", screenid]
+      [pairingcode, "PCode_Submited", screenid]
     );
 
     if (result.rowCount === 0) {
