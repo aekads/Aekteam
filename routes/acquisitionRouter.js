@@ -599,6 +599,46 @@ router.post("/acquisition/add-pairingcode", verifyToken, async (req, res) => {
 });
 
 
+router.post("/acquisition/EditPairingCode", verifyToken, async (req, res) => {
+  const { screenid, pairingcode } = req.body;
+
+  if (!screenid || !pairingcode) {
+    return res.status(400).json({ message: "screenid and pairingcode are required." });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE public.acquisition_screens 
+       SET pairingcode = $1, status = $2 
+       WHERE screenid = $3 
+       RETURNING screenid, pairingcode, status`,
+      [pairingcode, "Pairing code submitted", screenid]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "screenid does not exist." });
+    }
+
+    // Destructure the updated fields from the result
+    const { screenid: updatedScreenId, pairingcode: updatedPairingCode, status } = result.rows[0];
+
+    res.status(200).json({
+      status: true,
+      message: "Pairing code updated successfully.",
+      data: {
+        screenid: updatedScreenId,
+        pairingcode: updatedPairingCode,
+        status: status,
+      },
+    });
+  } catch (error) {
+    console.error("Error updating pairing code and status:", error);
+    res.status(500).json({status: false, message: "Internal server error." });
+  }
+});
+
+
+
 
   
 
