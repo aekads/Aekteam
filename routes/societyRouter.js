@@ -17,61 +17,75 @@ cloudinary.config({
 });
 
 router.post("/society-work/add", upload.single("work_photo"), verifyToken, async (req, res) => {
-    let { society_name, screen_name, employee_work, emp_code } = req.body;
+  let { society_name, screen_name, employee_work, emp_code } = req.body;
 
-    if (!society_name) {
-        return res.status(400).json({ status: false, message: "society_name is required." });
-    }
+  if (!society_name) {
+      return res.status(400).json({ status: false, message: "society_name is required." });
+  }
 
-    try {
-        let workPhotoUrl = null; // Default to null if no file is uploaded
+  try {
+      let workPhotoUrl = null; // Default to null if no file is uploaded
 
-        // Upload photo to Cloudinary only if file exists
-        if (req.file) {
-            const result = await cloudinary.uploader.upload(req.file.path);
-            workPhotoUrl = result.secure_url;
+      // Upload photo to Cloudinary only if file exists
+      if (req.file) {
+          const result = await cloudinary.uploader.upload(req.file.path);
+          workPhotoUrl = result.secure_url;
 
-            // Delete temporary file after uploading to Cloudinary
-            fs.unlinkSync(req.file.path);
-        }
+          // Delete temporary file after uploading to Cloudinary
+          fs.unlinkSync(req.file.path);
+      }
 
-        // Ensure employee_work is parsed correctly
-        try {
-            if (typeof employee_work === "string") {
-                employee_work = JSON.parse(employee_work);
-            }
-        } catch (error) {
-            return res.status(400).json({ status: false, message: "Invalid JSON format for employee_work." });
-        }
+      // Parse employee_work as an array if it's sent as a string
+      try {
+          if (typeof employee_work === "string") {
+              // Remove extra quotes if employee_work is a string, then parse it as JSON
+              employee_work = JSON.parse(employee_work);
+          }
+      } catch (error) {
+          return res.status(400).json({ status: false, message: "Invalid JSON format for employee_work." });
+      }
 
-        // Get current time in Asia/Kolkata timezone (formatted without milliseconds)
-        const createdDate = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
-        const updatedDate = createdDate;
+      // Ensure employee_work is an array and format it correctly
+      if (!Array.isArray(employee_work)) {
+          return res.status(400).json({ status: false, message: "employee_work should be an array." });
+      }
 
-        // Save data into the PostgreSQL table
-        const query = `
-            INSERT INTO public.society_work (society_name, screen_name, employee_work, work_photo, emp_code, created_date, updated_date)
-            VALUES ($1, $2, $3::jsonb, $4, $5, $6, $7)
-            RETURNING *;
-        `;
-        const values = [society_name, screen_name, JSON.stringify(employee_work), workPhotoUrl, emp_code, createdDate, updatedDate];
+      // Ensure emp_code and other fields are plain strings (trim any extra spaces)
+      emp_code = typeof emp_code === 'string' ? emp_code.trim() : emp_code;
+      society_name = typeof society_name === 'string' ? society_name.trim() : society_name;
+      screen_name = typeof screen_name === 'string' ? screen_name.trim() : screen_name;
 
-        const dbResult = await pool.query(query, values);
-        let responseData = dbResult.rows[0];
+      // Get current time in Asia/Kolkata timezone (formatted without milliseconds)
+      const createdDate = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
+      const updatedDate = createdDate;
 
-        // 🔹 Format the dates before sending the response
-        responseData.created_date = moment(responseData.created_date).format("YYYY-MM-DD HH:mm:ss");
-        responseData.updated_date = moment(responseData.updated_date).format("YYYY-MM-DD HH:mm:ss");
+      // Save data into the PostgreSQL table
+      const query = `
+          INSERT INTO public.society_work (society_name, screen_name, employee_work, work_photo, emp_code, created_date, updated_date)
+          VALUES ($1, $2, $3::jsonb, $4, $5, $6, $7)
+          RETURNING *;
+      `;
+      const values = [society_name, screen_name, JSON.stringify(employee_work), workPhotoUrl, emp_code, createdDate, updatedDate];
 
-        res.status(201).json({
-            status: true,
-            message: "Data saved successfully."
-        });
-    } catch (error) {
-        console.error("Error saving data:", error);
-        res.status(500).json({ status: false, message: "Internal server error." });
-    }
+      const dbResult = await pool.query(query, values);
+      let responseData = dbResult.rows[0];
+
+      // Format the dates before sending the response
+      responseData.created_date = moment(responseData.created_date).format("YYYY-MM-DD HH:mm:ss");
+      responseData.updated_date = moment(responseData.updated_date).format("YYYY-MM-DD HH:mm:ss");
+
+      res.status(201).json({
+          status: true,
+          message: "Data saved successfully.",
+          data: responseData
+      });
+  } catch (error) {
+      console.error("Error saving data:", error);
+      res.status(500).json({ status: false, message: "Internal server error." });
+  }
 });
+
+
 
 
 
@@ -120,3 +134,4 @@ router.post("/society-work/list", verifyToken, async (req, res) => {
 
   module.exports = router;                                                      
   
+
