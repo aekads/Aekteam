@@ -113,6 +113,7 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
     final_screen_qty,
     final_per_screen_rent_price,
     remarks,
+    status,
     state,
     city,
     pincode,
@@ -173,7 +174,7 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
         household = $23, 
         reach = $24
       WHERE id = $25
-      RETURNING id, property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, total_tower, total_floor, final_screen_count, contact_person_name, contact_person_mobile_number, contact_person_position, full_address, final_screen_qty, final_per_screen_rent_price, remarks, state,
+      RETURNING id, property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, total_tower, total_floor, final_screen_count, contact_person_name, contact_person_mobile_number, contact_person_position, full_address, final_screen_qty, final_per_screen_rent_price, remarks,status, state,
     city,
     pincode,
     Property_Type,
@@ -207,7 +208,7 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
       finalPerScreenRentPriceValue, // Ensure this is a number (float)
       remarks || null,
       updatedDate,
-      'inquiry', // Status can be set to 'inquiry' or another value
+      status, // Status can be set to 'inquiry' or another value
       state || null,
       city || null,
       pincode || null,
@@ -633,16 +634,15 @@ router.post("/acquisition/EditPairingCode", verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating pairing code and status:", error);
-    res.status(500).json({status: false, message: "Internal server error." });
+    res.status(500).json({status: false, message: "Internal server error." });  
   }
 });
 
 
-
-
+                                                                                
   
 
   module.exports = router;                                                      
   
-    
+
                                                                                     
