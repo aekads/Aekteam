@@ -17,7 +17,7 @@ cloudinary.config({
 });
 
 router.post("/society-work/add", upload.single("work_photo"), verifyToken, async (req, res) => {
-  let { society_name, screen_name, employee_work, emp_code } = req.body;
+  let { society_name, screen_name, employee_work, emp_id } = req.body;
 
   if (!society_name) {
       return res.status(400).json({ status: false, message: "society_name is required." });
@@ -51,7 +51,7 @@ router.post("/society-work/add", upload.single("work_photo"), verifyToken, async
       // }
 
       // Ensure emp_code and other fields are plain strings (trim any extra spaces)
-      emp_code = typeof emp_code === 'string' ? emp_code.trim() : emp_code;
+      emp_id = typeof emp_id === 'string' ? emp_id.trim() : emp_id;
       society_name = typeof society_name === 'string' ? society_name.trim() : society_name;
       screen_name = typeof screen_name === 'string' ? screen_name.trim() : screen_name;
 
@@ -61,11 +61,11 @@ router.post("/society-work/add", upload.single("work_photo"), verifyToken, async
 
       // Save data into the PostgreSQL table
       const query = `
-          INSERT INTO public.society_work (society_name, screen_name, employee_work, work_photo, emp_code, created_date, updated_date)
+          INSERT INTO public.society_work (society_name, screen_name, employee_work, work_photo, emp_id, created_date, updated_date)
           VALUES ($1, $2, $3::jsonb, $4, $5, $6, $7)
           RETURNING *;
       `;
-      const values = [society_name, screen_name, JSON.stringify(employee_work), workPhotoUrl, emp_code, createdDate, updatedDate];
+      const values = [society_name, screen_name, JSON.stringify(employee_work), workPhotoUrl, emp_id, createdDate, updatedDate];
 
       const dbResult = await pool.query(query, values);
       let responseData = dbResult.rows[0];
