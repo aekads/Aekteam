@@ -90,15 +90,15 @@ router.post("/society-work/add", upload.single("work_photo"), verifyToken, async
 
 
 router.post("/society-work/list", verifyToken, async (req, res) => {
-  let { emp_code, filter_date } = req.body; // Read data from JSON body
+  let { emp_id, filter_date } = req.body; // Read data from JSON body
 
-  if (!emp_code) {
-      return res.status(400).json({ status: false, message: "emp_code is required." });
+  if (!emp_id) {
+      return res.status(400).json({ status: false, message: "emp_id is required." });
   }
 
   try {
-      let query = `SELECT * FROM public.society_work WHERE emp_code = $1`;
-      let values = [emp_code];
+      let query = `SELECT * FROM public.society_work WHERE emp_id = $1`;
+      let values = [emp_id];
 
       // If filter_date is provided, filter by created_date
       if (filter_date) {
