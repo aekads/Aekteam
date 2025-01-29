@@ -46,9 +46,9 @@ router.post("/society-work/add", upload.single("work_photo"), verifyToken, async
       }
 
       // Ensure employee_work is an array and format it correctly
-      if (!Array.isArray(employee_work)) {
-          return res.status(400).json({ status: false, message: "employee_work should be an array." });
-      }
+      // if (!Array.isArray(employee_work)) {
+      //     return res.status(400).json({ status: false, message: "employee_work should be an array." });
+      // }
 
       // Ensure emp_code and other fields are plain strings (trim any extra spaces)
       emp_code = typeof emp_code === 'string' ? emp_code.trim() : emp_code;
