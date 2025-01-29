@@ -4,7 +4,7 @@ const { verifyToken } = require('../middleware/authMiddleware'); // Assuming you
 const pool = require('../config/database'); // Assuming you have configured your database connection
 
 router.post('/inquiry-list', verifyToken, async (req, res) => {
-    const { emp_id, filter_date } = req.body; // Extract employee_id and filter_date from the request body
+    const { emp_id, filter_date } = req.body;
 
     if (!emp_id) {
         return res.status(400).json({
@@ -14,30 +14,41 @@ router.post('/inquiry-list', verifyToken, async (req, res) => {
     }
 
     try {
-        // Build the query with optional date filter
         let query = `
-            SELECT id, name, mobile_number, email, budget, screen_count, screen_type, tag, final_screen_count, start_date, end_date, total_value, per_screen_cost, payment_mode, payment_url, remark, creative_video_url, quotation_url, last_update_time, status, total_days, emp_id, city,company_name, created_time, campaign_remark,email
+            SELECT id, name, mobile_number, email, budget, screen_count, screen_type, tag, final_screen_count, start_date, end_date, total_value, per_screen_cost, payment_mode, payment_url, remark, creative_video_url, quotation_url, last_update_time, status, total_days, emp_id, city, company_name, created_time, campaign_remark, email
             FROM public.sales_enquiry
             WHERE emp_id = $1
         `;
 
         const queryParams = [emp_id];
 
-        // Add date filter if provided
         if (filter_date) {
-            query += ` AND DATE(created_time) = $2`; // Filter by the provided date
-            queryParams.push(filter_date); // Add filter_date as a parameter    
+            query += ` AND DATE(created_time) = $2`;
+            queryParams.push(filter_date);
         }
 
-        query += ` ORDER BY created_time DESC;`; // Append the order clause
+        query += ` ORDER BY created_time DESC;`;
 
         const result = await pool.query(query, queryParams);
 
-        // Format `screen_type` back to JSON object
-        const inquiries = result.rows.map((inquiry) => ({
-            ...inquiry,
-            screen_type: inquiry.screen_type ? JSON.parse(inquiry.screen_type) : null,
-        }));
+        // ✅ Safely parse `screen_type`
+        const inquiries = result.rows.map((inquiry) => {
+            let parsedScreenType = null;
+
+            if (inquiry.screen_type) {
+                try {
+                    parsedScreenType = JSON.parse(inquiry.screen_type);
+                } catch (error) {
+                    // console.error(`Invalid JSON in screen_type for ID ${inquiry.id}:`, inquiry.screen_type);
+                    parsedScreenType = inquiry.screen_type; // Keep it as is to debug
+                }
+            }
+
+            return {
+                ...inquiry,
+                screen_type: parsedScreenType,
+            };
+        });
 
         res.status(200).json({
             status: true,
@@ -53,6 +64,7 @@ router.post('/inquiry-list', verifyToken, async (req, res) => {
         });
     }
 });
+
 
 
 router.post('/inquiry', verifyToken, async (req, res) => {
