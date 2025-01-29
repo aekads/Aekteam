@@ -16,9 +16,9 @@ router.post('/inquiry-list', verifyToken, async (req, res) => {
     try {
         // Build the query with optional date filter
         let query = `
-            SELECT id, name, mobile_number, email, budget, screen_count, screen_type, tag, final_screen_count, start_date, end_date, total_value, per_screen_cost, payment_mode, payment_url, remark, creative_video_url, quotation_url, last_update_time, status, total_days, employee_id, city, created_time, campaign_remark,email
+            SELECT id, name, mobile_number, email, budget, screen_count, screen_type, tag, final_screen_count, start_date, end_date, total_value, per_screen_cost, payment_mode, payment_url, remark, creative_video_url, quotation_url, last_update_time, status, total_days, emp_id, city, created_time, campaign_remark,email
             FROM public.sales_enquiry
-            WHERE employee_id = $1
+            WHERE emp_id = $1
         `;
 
         const queryParams = [emp_id];
@@ -72,12 +72,12 @@ router.post('/inquiry', verifyToken, async (req, res) => {
     try {
         const query = `
         INSERT INTO public.sales_enquiry 
-        (name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, email, employee_id, last_update_time, status, created_time) 
+        (name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, email, emp_id, last_update_time, status, created_time) 
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 
                 NOW() AT TIME ZONE 'Asia/Kolkata', 
                 'inquiry', 
                 NOW() AT TIME ZONE 'Asia/Kolkata') 
-        RETURNING id, name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark,email, employee_id, 
+        RETURNING id, name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark,email, emp_id, 
                   TO_CHAR(last_update_time, 'YYYY-MM-DD HH24:MI:SS') AS last_update_time, 
                   status, 
                   TO_CHAR(created_time, 'YYYY-MM-DD HH24:MI:SS') AS created_time;
@@ -147,7 +147,7 @@ router.post('/inquiry/edit',verifyToken, async (req, res) => {
             total_days = $6, 
             campaign_remark = $7, 
 
-            employee_id = $8, 
+            emp_id = $8, 
             email = $9,
             last_update_time = NOW() AT TIME ZONE 'Asia/Kolkata',  -- Corrected line
             status = 'enquiry'
@@ -162,7 +162,7 @@ router.post('/inquiry/edit',verifyToken, async (req, res) => {
             total_days, 
             campaign_remark,
              
-            employee_id,
+            emp_id,
             email, 
             TO_CHAR(last_update_time, 'YYYY-MM-DD HH24:MI:SS') AS last_update_time,  -- Format for response
             status;
@@ -236,12 +236,12 @@ router.post('/inquiry/quotation', verifyToken, async (req, res) => {
                 total_days = $8,
                 payment_mode = $9,
                 payment_url = $10,
-                employee_id = $11,
+                emp_id = $11,
                 remark = $12,
                 status = 'Waiting for approval',
                 last_update_time = NOW()
             WHERE id = $13
-            RETURNING id, city, screen_type, total_value, final_screen_count, tag, start_date, end_date, total_days, payment_mode, payment_url, employee_id, remark, status, last_update_time;
+            RETURNING id, city, screen_type, total_value, final_screen_count, tag, start_date, end_date, total_days, payment_mode, payment_url, emp_id, remark, status, last_update_time;
         `;
 
         const result = await pool.query(query, [
@@ -312,11 +312,11 @@ router.post('/inquiry/quotation/edit', verifyToken, async (req, res) => {
                 total_days = $8,
                 payment_mode = $9,
                 payment_url = $10,
-                employee_id = $11,
+                emp_id = $11,
                 remark = $12,
                 last_update_time = NOW()
             WHERE id = $13
-            RETURNING id, city, screen_type, total_value, final_screen_count, tag, start_date, end_date, total_days, payment_mode, payment_url, employee_id, remark, status, last_update_time;
+            RETURNING id, city, screen_type, total_value, final_screen_count, tag, start_date, end_date, total_days, payment_mode, payment_url, emp_id, remark, status, last_update_time;
         `;
 
         const result = await pool.query(query, [
