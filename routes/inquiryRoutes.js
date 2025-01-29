@@ -16,7 +16,7 @@ router.post('/inquiry-list', verifyToken, async (req, res) => {
     try {
         // Build the query with optional date filter
         let query = `
-            SELECT id, name, mobile_number, email, budget, screen_count, screen_type, tag, final_screen_count, start_date, end_date, total_value, per_screen_cost, payment_mode, payment_url, remark, creative_video_url, quotation_url, last_update_time, status, total_days, emp_id, city, created_time, campaign_remark,email
+            SELECT id, name, mobile_number, email, budget, screen_count, screen_type, tag, final_screen_count, start_date, end_date, total_value, per_screen_cost, payment_mode, payment_url, remark, creative_video_url, quotation_url, last_update_time, status, total_days, emp_id, city,company_name, created_time, campaign_remark,email
             FROM public.sales_enquiry
             WHERE emp_id = $1
         `;
@@ -64,7 +64,8 @@ router.post('/inquiry', verifyToken, async (req, res) => {
         screen_type,
         total_days,
         campaign_remark,
-        email
+        email,
+        company_name // Added company_name field
     } = req.body;
 
     const employee_id = req.user.emp_id; // Extract from token
@@ -72,20 +73,16 @@ router.post('/inquiry', verifyToken, async (req, res) => {
     try {
         const query = `
         INSERT INTO public.sales_enquiry 
-        (name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, email, emp_id, last_update_time, status, created_time) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 
+        (name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, email, company_name, emp_id, last_update_time, status, created_time) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 
                 NOW() AT TIME ZONE 'Asia/Kolkata', 
                 'inquiry', 
                 NOW() AT TIME ZONE 'Asia/Kolkata') 
-        RETURNING id, name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark,email, emp_id, 
+        RETURNING id, name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, email, company_name, emp_id, 
                   TO_CHAR(last_update_time, 'YYYY-MM-DD HH24:MI:SS') AS last_update_time, 
                   status, 
                   TO_CHAR(created_time, 'YYYY-MM-DD HH24:MI:SS') AS created_time;
     `;
-    
-    
-    
-
 
         const screenTypeString = JSON.stringify(screen_type);
 
@@ -98,6 +95,7 @@ router.post('/inquiry', verifyToken, async (req, res) => {
             total_days,
             campaign_remark,
             email,
+            company_name, // Added company_name to query values
             employee_id,
         ]);
 
@@ -109,7 +107,7 @@ router.post('/inquiry', verifyToken, async (req, res) => {
             status: true,
             message: 'inquiry created successfully'
         });
-        console.log(responseData)
+        console.log(responseData);
     } catch (error) {
         console.error('Error during inquiry creation:', error);
 
@@ -120,8 +118,7 @@ router.post('/inquiry', verifyToken, async (req, res) => {
     }
 });
 
-
-router.post('/inquiry/edit',verifyToken, async (req, res) => {
+router.post('/inquiry/edit', verifyToken, async (req, res) => {
     const {
         id,
         name,
@@ -132,9 +129,11 @@ router.post('/inquiry/edit',verifyToken, async (req, res) => {
         total_days,
         campaign_remark,
         email,
-        // employee_id,
+        company_name
     } = req.body;
+
     const employee_id = req.user.emp_id;
+
     try {
         const query = `
         UPDATE public.sales_enquiry 
@@ -146,12 +145,12 @@ router.post('/inquiry/edit',verifyToken, async (req, res) => {
             screen_type = $5, 
             total_days = $6, 
             campaign_remark = $7, 
-
             emp_id = $8, 
             email = $9,
-            last_update_time = NOW() AT TIME ZONE 'Asia/Kolkata',  -- Corrected line
+            company_name = $10,  -- Corrected position
+            last_update_time = NOW() AT TIME ZONE 'Asia/Kolkata',  
             status = 'enquiry'
-        WHERE id = $10
+        WHERE id = $11
         RETURNING 
             id, 
             name, 
@@ -160,16 +159,14 @@ router.post('/inquiry/edit',verifyToken, async (req, res) => {
             screen_count, 
             screen_type, 
             total_days, 
-            campaign_remark,
-             
-            emp_id,
+            campaign_remark, 
+            emp_id, 
             email, 
-            TO_CHAR(last_update_time, 'YYYY-MM-DD HH24:MI:SS') AS last_update_time,  -- Format for response
+            company_name,  -- Added in response
+            TO_CHAR(last_update_time, 'YYYY-MM-DD HH24:MI:SS') AS last_update_time,  
             status;
     `;
-    
-    
- 
+
         const result = await pool.query(query, [
             name,
             mobile_number,
@@ -178,24 +175,24 @@ router.post('/inquiry/edit',verifyToken, async (req, res) => {
             JSON.stringify(screen_type),
             total_days,
             campaign_remark,
-            
-            employee_id,
+            employee_id, // Fixed position
             email,
-            id,
+            company_name, // Moved before id
+            id
         ]);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'inquiry not found' });
+            return res.status(404).json({ message: 'Inquiry not found' });
         }
 
         res.status(200).json({
             status: true,
-            message: 'inquiry updated successfully',
+            message: 'Inquiry updated successfully',
             data: result.rows[0],
         });
     } catch (error) {
         console.error('Error updating inquiry:', error);
-        res.status(500).json({status:false, message: 'Failed to update inquiry' });
+        res.status(500).json({ status: false, message: 'Failed to update inquiry' });
     }
 });
 
