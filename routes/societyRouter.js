@@ -76,8 +76,7 @@ router.post("/society-work/add", upload.single("work_photo"), verifyToken, async
 
       res.status(201).json({
           status: true,
-          message: "Data saved successfully.",
-          data: responseData
+          message: "Data saved successfully."
       });
   } catch (error) {
       console.error("Error saving data:", error);
