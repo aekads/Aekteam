@@ -141,7 +141,8 @@ router.post('/inquiry/edit', verifyToken, async (req, res) => {
         total_days,
         campaign_remark,
         email,
-        company_name
+        company_name,
+        status
     } = req.body;
 
     const employee_id = req.user.emp_id;
@@ -159,10 +160,10 @@ router.post('/inquiry/edit', verifyToken, async (req, res) => {
             campaign_remark = $7, 
             emp_id = $8, 
             email = $9,
-            company_name = $10,  -- Corrected position
+            company_name = $10,  
             last_update_time = NOW() AT TIME ZONE 'Asia/Kolkata',  
-            status = 'enquiry'
-        WHERE id = $11
+            status = $11
+        WHERE id = $12
         RETURNING 
             id, 
             name, 
@@ -174,7 +175,7 @@ router.post('/inquiry/edit', verifyToken, async (req, res) => {
             campaign_remark, 
             emp_id, 
             email, 
-            company_name,  -- Added in response
+            company_name,  
             TO_CHAR(last_update_time, 'YYYY-MM-DD HH24:MI:SS') AS last_update_time,  
             status;
     `;
@@ -190,6 +191,7 @@ router.post('/inquiry/edit', verifyToken, async (req, res) => {
             employee_id, // Fixed position
             email,
             company_name, // Moved before id
+            status,
             id
         ]);
 
@@ -199,8 +201,7 @@ router.post('/inquiry/edit', verifyToken, async (req, res) => {
 
         res.status(200).json({
             status: true,
-            message: 'Inquiry updated successfully',
-            data: result.rows[0],
+            message: 'Inquiry updated successfully'
         });
     } catch (error) {
         console.error('Error updating inquiry:', error);
