@@ -32,28 +32,29 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
     Property_Type
   } = req.body;
 
-  if (!property_name ) {
+  if (!property_name) {
     return res.status(400).json({ message: 'Property name and address are required', status: false });
   }
 
   try {
-    // Get the current timestamp in a simplified format (Asia/Kolkata timezone)
+    // Get the current timestamp in Asia/Kolkata timezone
     const createdDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
 
-    
+    // Default status for new inquiries
+    const inquiryStatus = "New Inquiry";
 
     const query = `
-    INSERT INTO acquisition (property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, state, city, pincode,Property_Type, created_date, emp_id)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-    RETURNING property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, state, city, pincode,Property_Type, created_date, emp_id;
-  `;
+      INSERT INTO acquisition 
+      (property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, state, city, pincode, Property_Type, created_date, emp_id, status)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      RETURNING property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, state, city, pincode, Property_Type, created_date, emp_id, status;
+    `;
 
     const latitudeValue = latitude || null;
     const longitudeValue = longitude || null;
-
     const PropertyTypeString = JSON.stringify(Property_Type);
 
-    // Add `createdDate` to the values array
+    // Add `createdDate` and `inquiryStatus` to the values array
     const values = [
       property_name,
       address,
@@ -66,15 +67,15 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
       pincode,
       PropertyTypeString,
       createdDate,
-      emp_id
+      emp_id,
+      inquiryStatus
     ];
 
     const result = await pool.query(query, values);
 
-    // Extract the specific fields from the query result
-    const data = result.rows[0];
-
     const responseData = result.rows[0];
+
+    // Parse Property_Type if necessary
     if (responseData.Property_Type) {
       try {
         responseData.Property_Type = JSON.parse(responseData.Property_Type);
@@ -83,10 +84,7 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
       }
     }
 
-
-
-    res.status(201).json({ status: true, message: 'Data added successfully' });
-    // console.log(responseData)
+    res.status(201).json({ status: true, message: 'Data added successfully'});
   } catch (error) {
     console.error('Error adding property:', error);
     res.status(500).json({ status: false, message: 'Internal server error' });
