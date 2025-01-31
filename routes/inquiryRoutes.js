@@ -88,7 +88,7 @@ router.post('/inquiry', verifyToken, async (req, res) => {
         (name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, email, company_name, emp_id, last_update_time, status, created_time) 
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 
                 NOW() AT TIME ZONE 'Asia/Kolkata', 
-                'inquiry', 
+                'New Inquiry', 
                 NOW() AT TIME ZONE 'Asia/Kolkata') 
         RETURNING id, name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, email, company_name, emp_id, 
                   TO_CHAR(last_update_time, 'YYYY-MM-DD HH24:MI:SS') AS last_update_time, 
@@ -111,7 +111,7 @@ router.post('/inquiry', verifyToken, async (req, res) => {
             employee_id,
         ]);
 
-        // Parse screen_type back to JSON object to avoid extra escaping
+        // Parse screen_type back to JSON object to avoid extra escaping           
         const responseData = result.rows[0];
         responseData.screen_type = JSON.parse(responseData.screen_type);
 
