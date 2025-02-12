@@ -11,9 +11,9 @@ const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });  
 // Configure Cloudinary
 cloudinary.config({
-  cloud_name: 'dnmdaadrr',
-  api_key: '366566435625199',
-  api_secret: 'JCfg4sL2x3c_EhfPiw6e6eqVIMQ',
+  cloud_name: 'dqfnwh89v',
+  api_key: '451893856554714',
+  api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
 });
 
 router.post("/society-work/add", upload.single("work_photo"), verifyToken, async (req, res) => {
