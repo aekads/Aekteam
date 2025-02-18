@@ -252,7 +252,7 @@ router.post('/employee-location',verifyToken, async (req, res) => {
                     "INSERT INTO attendance (emp_id, date, punch_in_time) VALUES ($1, $2, $3) RETURNING *",
                     [emp_id, date, timestamp]
                 );
-                return res.json({ message: "Punch In Successful", data: newEntry.rows[0] });
+                return res.json({status: true,  message: "Punch In Successful", data: newEntry.rows[0] });
             } 
             
             else if (punch_type === "out") {
@@ -274,18 +274,17 @@ router.post('/employee-location',verifyToken, async (req, res) => {
                     [timestamp, punchInId]
                 );
     
-                return res.json({ message: "Punch Out Successful", punchOutTime: timestamp });
+                return res.json({status: true, message: "Punch Out Successful", punchOutTime: timestamp });
             } 
             
             else {
-                return res.status(400).json({ message: "Invalid punch_type. Use 'in' or 'out'." });
+                return res.status(400).json({status: false,  message: "Invalid punch_type. Use 'in' or 'out'." });
             }
     
         } catch (error) {
-            res.status(500).json({ message: "Error processing punch request", error });
+            res.status(500).json({status: false, message: "Error processing punch request", error });
         }
     });
-
 
 module.exports = router;
 
