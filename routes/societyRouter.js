@@ -157,11 +157,11 @@ router.post("/society-work/list", verifyToken, async (req, res) => {
       return res.status(404).json({ status: false, message: "No records found." });
     }
 
-    // 🔹 Fetch latest completed punch-in/out record
+    // 🔹 Fetch latest punch-in/out record (completed or not)
     const attendanceQuery = `
       SELECT id, emp_id, date, punch_in_time, punch_out_time
       FROM public.attendance
-      WHERE emp_id = $1 AND punch_out_time IS NOT NULL
+      WHERE emp_id = $1
       ORDER BY punch_in_time DESC LIMIT 1
     `;
     const attendanceResult = await pool.query(attendanceQuery, [emp_id]);
@@ -175,7 +175,9 @@ router.post("/society-work/list", verifyToken, async (req, res) => {
         ...attendance,
         date: moment.utc(attendance.date).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss"),
         punch_in_time: moment.utc(attendance.punch_in_time).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss"),
-        punch_out_time: moment.utc(attendance.punch_out_time).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss"),
+        punch_out_time: attendance.punch_out_time
+          ? moment.utc(attendance.punch_out_time).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss")
+          : null, // If punch_out_time is NULL, keep it as null
       };
     }
 
@@ -190,13 +192,14 @@ router.post("/society-work/list", verifyToken, async (req, res) => {
       status: true,
       message: "Data fetched successfully.",
       data: formattedData,
-      latest_attendance: latestAttendance, // ✅ Correctly formatted attendance data
+      latest_attendance: latestAttendance, // ✅ Correctly formatted latest punch record
     });
   } catch (error) {
     console.error("Error fetching data:", error);
     res.status(500).json({ status: false, message: "Internal server error." });
   }
 });
+      
 
       
 
