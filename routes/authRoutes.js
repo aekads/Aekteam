@@ -201,42 +201,42 @@ router.post('/forgot-password', async (req, res) => {
 
 
 
+
 router.post('/employee-location',verifyToken, async (req, res) => {
     try {
-      const { emp_id, latitude, longitude, created_time } = req.body;
-  
-      // Validate required fields
-      if (!emp_id || latitude === undefined || longitude === undefined) {
-        return res.status(400).json({
-          error: 'emp_id, latitude, and longitude are required.'
-        });
+        const { emp_id, latitude, longitude } = req.body;
+    
+        // Validate required fields
+        if (!emp_id || latitude === undefined || longitude === undefined) {
+          return res.status(400).json({
+            error: 'emp_id, latitude, and longitude are required.'
+          });
+        }
+    
+        // Insert without providing created_time. The default value is used.
+        const queryText = `
+          INSERT INTO public.employee_locations (emp_id, latitude, longitude)
+          VALUES ($1, $2, $3)
+          RETURNING *;
+        `;
+        const values = [emp_id, latitude, longitude];
+    
+        const { rows } = await pool.query(queryText, values);
+    
+        // Respond with the inserted record (including the auto-set created_time)
+        res.status(201).json({
+            status: true,
+            message: 'Location data added successfully.',
+            // data: rows[0]
+          });
+        } catch (error) {
+          console.error('Error inserting location data:', error);
+          res.status(500).json({
+            status: false,
+            message: 'An error occurred while adding location data.'
+          });
       }
-  
-      // Insert new location record; if created_time is not provided, use NOW()
-      const queryText = `
-        INSERT INTO public.employee_locations (emp_id, latitude, longitude, created_time)
-        VALUES ($1, $2, $3, COALESCE($4, NOW()))
-        RETURNING *;
-      `;
-      const values = [emp_id, latitude, longitude, created_time];
-  
-      const { rows } = await pool.query(queryText, values);
-  
-      // Respond with the inserted record
-      res.status(201).json({
-        status: true,
-        message: 'Location data added successfully.',
-        // data: rows[0]
-      });
-    } catch (error) {
-      console.error('Error inserting location data:', error);
-      res.status(500).json({
-        status: false,
-        message: 'An error occurred while adding location data.'
-      });
-    }
-  });  
-
+    });
 
 module.exports = router;
 
