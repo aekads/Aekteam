@@ -26,16 +26,14 @@ async function generateUniquePin() {
     return pin;
 }
 
-
 router.get('/register', (req, res) => {
     res.render('register');
 });
 
-
 // Routes
 router.post('/register', async (req, res) => {
     const { name, emp_number, email, role, Assign_city } = req.body;
-
+    
     const client = await pool.connect(); // Use client for transactions
     try {
         await client.query('BEGIN'); // Start transaction
@@ -44,23 +42,21 @@ router.post('/register', async (req, res) => {
         const pin = await generateUniquePin();
 
         await client.query(
-            `INSERT INTO employees (emp_id, name, emp_number, email, pin, role, Assign_city) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-            [emp_id, name, emp_number, email, pin, role, Assign_city]
+            `INSERT INTO employees (emp_id, name, emp_number, email, pin, role, Assign_city) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [emp_id, name, emp_number, email || null, pin, role, Assign_city]
         );
 
         await client.query('COMMIT'); // Commit transaction
 
-        // Send email and respond
-        const mailOptions = {
-            from: 'your_email@gmail.com',
-            to: email,
-            subject: 'Registration Successful',
-            text: `Hello ${name},\n\nYour registration is successful!\n\nEmployee ID: ${emp_id}\nPIN: ${pin}\nRole: ${role}\n\nThank you.`,
-        };
+        res.status(201).json({ 
+            message: 'Registration successful', 
+            emp_id, 
+            pin, 
+            role, 
+            city: Assign_city 
+        });
 
-        await transporter.sendMail(mailOptions);
-
-        res.status(201).json({ message: 'Registration successful', emp_id, pin, role,  Assign_city });
     } catch (error) {
         await client.query('ROLLBACK'); // Rollback on failure
         console.error('Error during registration:', error);
@@ -69,6 +65,7 @@ router.post('/register', async (req, res) => {
         client.release();
     }
 });
+
 
 
 router.get('/login', (req, res) => {
