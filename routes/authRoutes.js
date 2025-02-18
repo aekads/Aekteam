@@ -238,6 +238,54 @@ router.post('/employee-location',verifyToken, async (req, res) => {
       }
     });
 
+
+  router.post("/punch", async (req, res) => {
+        const { emp_id, punch_type } = req.body;
+        const date = moment().tz(TIMEZONE).format("YYYY-MM-DD");
+        const timestamp = moment().tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss");
+    
+        try {
+            if (punch_type === "in") {
+                // 🔹 Punch In: Create a new entry
+                const newEntry = await pool.query(
+                    "INSERT INTO attendance (emp_id, date, punch_in_time) VALUES ($1, $2, $3) RETURNING *",
+                    [emp_id, date, timestamp]
+                );
+                return res.json({ message: "Punch In Successful", data: newEntry.rows[0] });
+            } 
+            
+            else if (punch_type === "out") {
+                // 🔹 Punch Out: Find the last punch-in without a punch-out
+                const result = await pool.query(
+                    "SELECT * FROM attendance WHERE emp_id = $1 AND punch_out_time IS NULL ORDER BY punch_in_time DESC LIMIT 1",
+                    [emp_id]
+                );
+    
+                if (result.rows.length === 0) {
+                    return res.status(400).json({ message: "No open punch-in record found!" });
+                }
+    
+                const punchInId = result.rows[0].id;
+    
+                // Update punch-out time
+                await pool.query(
+                    "UPDATE attendance SET punch_out_time = $1 WHERE id = $2",
+                    [timestamp, punchInId]
+                );
+    
+                return res.json({ message: "Punch Out Successful", punchOutTime: timestamp });
+            } 
+            
+            else {
+                return res.status(400).json({ message: "Invalid punch_type. Use 'in' or 'out'." });
+            }
+    
+        } catch (error) {
+            res.status(500).json({ message: "Error processing punch request", error });
+        }
+    });
+
+
 module.exports = router;
 
 
