@@ -274,7 +274,7 @@ router.post('/employee-location',verifyToken, async (req, res) => {
                     [timestamp, punchInId]
                 );
     
-                return res.json({status: true, message: "Punch Out Successful", punchOutTime: timestamp });
+                return res.json({status: true, message: "Punch Out Successful", punch_out_time: timestamp });
             } 
             
             else {
