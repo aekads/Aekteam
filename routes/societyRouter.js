@@ -88,50 +88,116 @@ router.post("/society-work/add", upload.single("work_photo"), verifyToken, async
 
 
 
+// router.post("/society-work/list", verifyToken, async (req, res) => {
+//     let { emp_id, filter_date } = req.body; // Read data from JSON body
+
+//     if (!emp_id) {
+//         return res.status(400).json({ status: false, message: "emp_id is required." });
+//     }
+
+//     try {
+//         let query = `SELECT * FROM public.society_work WHERE emp_id = $1`;
+//         let values = [emp_id];
+
+//         // If filter_date is provided, filter by created_date
+//         if (filter_date) {
+//             query += ` AND DATE(created_date) = $2`;
+//             values.push(filter_date);
+//         }
+
+//         // 🔹 Sort data in descending order
+//         query += ` ORDER BY created_date DESC`;
+
+//         const dbResult = await pool.query(query, values);
+
+//         if (dbResult.rows.length === 0) {
+//             return res.status(404).json({ status: false, message: "No records found." });
+//         }
+
+//         // 🔹 Format the dates before sending the response
+//         const formattedData = dbResult.rows.map((row) => ({
+//             ...row,
+//             created_date: moment(row.created_date).format("YYYY-MM-DD HH:mm:ss"),
+//             updated_date: moment(row.updated_date).format("YYYY-MM-DD HH:mm:ss"),
+//         }));
+
+//         res.status(200).json({
+//             status: true,
+//             message: "Data fetched successfully.",
+//             data: formattedData,
+//         });
+//     } catch (error) {
+//         console.error("Error fetching data:", error);
+//         res.status(500).json({ status: false, message: "Internal server error." });
+//     }
+// });
+
+
 router.post("/society-work/list", verifyToken, async (req, res) => {
-    let { emp_id, filter_date } = req.body; // Read data from JSON body
+  let { emp_id, filter_date } = req.body; // Read data from JSON body
 
-    if (!emp_id) {
-        return res.status(400).json({ status: false, message: "emp_id is required." });
-    }
+  if (!emp_id) {
+      return res.status(400).json({ status: false, message: "emp_id is required." });
+  }
 
-    try {
-        let query = `SELECT * FROM public.society_work WHERE emp_id = $1`;
-        let values = [emp_id];
+  try {
+      let query = `SELECT * FROM public.society_work WHERE emp_id = $1`;
+      let values = [emp_id];
 
-        // If filter_date is provided, filter by created_date
-        if (filter_date) {
-            query += ` AND DATE(created_date) = $2`;
-            values.push(filter_date);
-        }
+      // If filter_date is provided, filter by created_date
+      if (filter_date) {
+          query += ` AND DATE(created_date) = $2`;
+          values.push(filter_date);
+      }
 
-        // 🔹 Sort data in descending order
-        query += ` ORDER BY created_date DESC`;
+      // 🔹 Sort data in descending order
+      query += ` ORDER BY created_date DESC`;
 
-        const dbResult = await pool.query(query, values);
+      const dbResult = await pool.query(query, values);
 
-        if (dbResult.rows.length === 0) {
-            return res.status(404).json({ status: false, message: "No records found." });
-        }
+      if (dbResult.rows.length === 0) {
+          return res.status(404).json({ status: false, message: "No records found." });
+      }
 
-        // 🔹 Format the dates before sending the response
-        const formattedData = dbResult.rows.map((row) => ({
-            ...row,
-            created_date: moment(row.created_date).format("YYYY-MM-DD HH:mm:ss"),
-            updated_date: moment(row.updated_date).format("YYYY-MM-DD HH:mm:ss"),
-        }));
+      // 🔹 Fetch latest completed punch-in/out record
+      const attendanceQuery = `
+          SELECT id, emp_id, date, punch_in_time, punch_out_time
+          FROM public.attendance
+          WHERE emp_id = $1 AND punch_out_time IS NOT NULL
+          ORDER BY punch_in_time DESC LIMIT 1
+      `;
+      const attendanceResult = await pool.query(attendanceQuery, [emp_id]);
 
-        res.status(200).json({
-            status: true,
-            message: "Data fetched successfully.",
-            data: formattedData,
-        });
-    } catch (error) {
-        console.error("Error fetching data:", error);
-        res.status(500).json({ status: false, message: "Internal server error." });
-    }
+      if (attendanceResult.rows.length > 0) {
+        const attendance = attendanceResult.rows[0];
+  
+        latestAttendance = {
+          ...attendance,
+          date: moment(attendance.date).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss"),
+          punch_in_time: moment(attendance.punch_in_time).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss"),
+          punch_out_time: moment(attendance.punch_out_time).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss"),
+        };
+      }
+  
+      // 🔹 Format the dates before sending the response
+      const formattedData = dbResult.rows.map((row) => ({
+        ...row,
+        created_date: moment(row.created_date).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss"),
+        updated_date: moment(row.updated_date).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss"),
+      }));
+  
+      res.status(200).json({
+          status: true,
+          message: "Data fetched successfully.",
+          data: formattedData,
+          latest_attendance: latestAttendance, // ✅ Include latest completed punch record
+      });
+  } catch (error) {
+      console.error("Error fetching data:", error);
+      res.status(500).json({ status: false, message: "Internal server error." });
+  }
 });
-
+      
 
   
 
