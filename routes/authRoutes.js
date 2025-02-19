@@ -7,7 +7,7 @@ const secretKey = 'your-secret-key';
 const moment = require("moment-timezone");
 const TIMEZONE = "Asia/Kolkata";
 const router = express.Router();
-
+const cron = require("node-cron");
 // Helper functions
 async function generateEmpId() {
     const result = await pool.query("SELECT nextval('emp_id_seq') AS id");
@@ -286,6 +286,39 @@ router.post('/employee-location',verifyToken, async (req, res) => {
   //       }
   //   });
 
+
+    //cron job
+    cron.schedule("0 21 * * *", async () => {
+        console.log("🔄 Running Auto Punch-Out Task at 9:00 PM...");
+    
+        try {
+            const date = moment().tz(TIMEZONE).format("YYYY-MM-DD");
+            const punchOutTime = moment().tz(TIMEZONE).set({ hour: 21, minute: 0, second: 0 }).format("YYYY-MM-DD HH:mm:ss");
+    
+            // Find employees who forgot to punch out
+            const result = await pool.query(
+                `SELECT id FROM attendance WHERE punch_out_time IS NULL AND date = $1`,
+                [date]
+            );
+    
+            if (result.rows.length === 0) {
+                console.log("✅ No pending punch-outs found.");
+                return;
+            }
+    
+            // Update punch-out time to 11:52 AM
+            const idsToUpdate = result.rows.map(row => row.id);
+            await pool.query(
+                `UPDATE attendance SET punch_out_time = $1 WHERE id = ANY($2::int[])`,
+                [punchOutTime, idsToUpdate]
+            );
+    
+            console.log(`✅ Auto Punch-Out completed for ${idsToUpdate.length} employees.`);
+        } catch (error) {
+            console.error("❌ Error in Auto Punch-Out Task:", error);
+        }
+    });
+    
 
 
     router.post("/punch", async (req, res) => {
