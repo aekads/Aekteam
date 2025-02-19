@@ -133,6 +133,78 @@ router.post("/society-work/add", upload.single("work_photo"), verifyToken, async
 // });
 
 
+// router.post("/society-work/list", verifyToken, async (req, res) => {
+//   let { emp_id, filter_date } = req.body;
+
+//   if (!emp_id) {
+//     return res.status(400).json({ status: false, message: "emp_id is required." });
+//   }
+
+//   try {
+//     let query = `SELECT * FROM public.society_work WHERE emp_id = $1`;
+//     let values = [emp_id];
+
+//     if (filter_date) {
+//       query += ` AND DATE(created_date) = $2`;
+//       values.push(filter_date);
+//     }
+
+//     query += ` ORDER BY created_date DESC`;
+
+//     const dbResult = await pool.query(query, values);
+
+//     // 🔹 Fetch latest punch-in/out record (always execute this)
+//     const attendanceQuery = `
+//       SELECT id, emp_id, date, punch_in_time, punch_out_time
+//       FROM public.attendance
+//       WHERE emp_id = $1
+//       ORDER BY punch_in_time DESC LIMIT 1
+//     `;
+//     const attendanceResult = await pool.query(attendanceQuery, [emp_id]);
+
+//     let latestAttendance = null;
+
+//     if (attendanceResult.rows.length > 0) {
+//       const attendance = attendanceResult.rows[0];
+
+//       latestAttendance = {
+//         ...attendance,
+//         date: moment.utc(attendance.date).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss"),
+//         punch_in_time: moment.utc(attendance.punch_in_time).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss"),
+//         punch_out_time: attendance.punch_out_time
+//           ? moment.utc(attendance.punch_out_time).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss")
+//           : null, // If punch_out_time is NULL, keep it as null
+//       };
+//     }
+
+//     if (dbResult.rows.length === 0) {
+//       return res.status(404).json({
+//         status: false,
+//         message: "No records found.",
+//         latest_attendance: latestAttendance, // ✅ Always include attendance
+//       });
+//     }
+
+//     // 🔹 Format the dates before sending the response
+//     const formattedData = dbResult.rows.map((row) => ({
+//       ...row,
+//       created_date: moment.utc(row.created_date).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss"),
+//       updated_date: moment.utc(row.updated_date).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss"),
+//     }));
+
+//     res.status(200).json({
+//       status: true,
+//       message: "Data fetched successfully.",
+//       data: formattedData,
+//       latest_attendance: latestAttendance,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching data:", error);
+//     res.status(500).json({ status: false, message: "Internal server error." });
+//   }
+// });
+
+      
 router.post("/society-work/list", verifyToken, async (req, res) => {
   let { emp_id, filter_date } = req.body;
 
@@ -162,13 +234,20 @@ router.post("/society-work/list", verifyToken, async (req, res) => {
     `;
     const attendanceResult = await pool.query(attendanceQuery, [emp_id]);
 
-    let latestAttendance = null;
+    let latestAttendance = {
+      id: null,
+      emp_id: "null",
+      date: "null",
+      punch_in_time: null,
+      punch_out_time: null
+    };
 
     if (attendanceResult.rows.length > 0) {
       const attendance = attendanceResult.rows[0];
 
       latestAttendance = {
-        ...attendance,
+        id: attendance.id,
+        emp_id: attendance.emp_id,
         date: moment.utc(attendance.date).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss"),
         punch_in_time: moment.utc(attendance.punch_in_time).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss"),
         punch_out_time: attendance.punch_out_time
@@ -181,7 +260,7 @@ router.post("/society-work/list", verifyToken, async (req, res) => {
       return res.status(404).json({
         status: false,
         message: "No records found.",
-        latest_attendance: latestAttendance, // ✅ Always include attendance
+        latest_attendance: latestAttendance, // ✅ Always include attendance 
       });
     }
 
@@ -204,7 +283,7 @@ router.post("/society-work/list", verifyToken, async (req, res) => {
   }
 });
 
-      
+
 
   
 
