@@ -89,51 +89,6 @@ router.post("/society-work/add", upload.single("work_photo"), verifyToken, async
 
 
 // router.post("/society-work/list", verifyToken, async (req, res) => {
-//     let { emp_id, filter_date } = req.body; // Read data from JSON body
-
-//     if (!emp_id) {
-//         return res.status(400).json({ status: false, message: "emp_id is required." });
-//     }
-
-//     try {
-//         let query = `SELECT * FROM public.society_work WHERE emp_id = $1`;
-//         let values = [emp_id];
-
-//         // If filter_date is provided, filter by created_date
-//         if (filter_date) {
-//             query += ` AND DATE(created_date) = $2`;
-//             values.push(filter_date);
-//         }
-
-//         // 🔹 Sort data in descending order
-//         query += ` ORDER BY created_date DESC`;
-
-//         const dbResult = await pool.query(query, values);
-
-//         if (dbResult.rows.length === 0) {
-//             return res.status(404).json({ status: false, message: "No records found." });
-//         }
-
-//         // 🔹 Format the dates before sending the response
-//         const formattedData = dbResult.rows.map((row) => ({
-//             ...row,
-//             created_date: moment(row.created_date).format("YYYY-MM-DD HH:mm:ss"),
-//             updated_date: moment(row.updated_date).format("YYYY-MM-DD HH:mm:ss"),
-//         }));
-
-//         res.status(200).json({
-//             status: true,
-//             message: "Data fetched successfully.",
-//             data: formattedData,
-//         });
-//     } catch (error) {
-//         console.error("Error fetching data:", error);
-//         res.status(500).json({ status: false, message: "Internal server error." });
-//     }
-// });
-
-
-// router.post("/society-work/list", verifyToken, async (req, res) => {
 //   let { emp_id, filter_date } = req.body;
 
 //   if (!emp_id) {
@@ -236,7 +191,7 @@ router.post("/society-work/list", verifyToken, async (req, res) => {
 
     let latestAttendance = {
       id: null,
-      emp_id: "null",
+      emp_id: emp_id,
       date: "null",
       punch_in_time: null,
       punch_out_time: null
@@ -282,7 +237,6 @@ router.post("/society-work/list", verifyToken, async (req, res) => {
     res.status(500).json({ status: false, message: "Internal server error." });
   }
 });
-
 
 
   
