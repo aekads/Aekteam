@@ -153,11 +153,7 @@ router.post("/society-work/list", verifyToken, async (req, res) => {
 
     const dbResult = await pool.query(query, values);
 
-    if (dbResult.rows.length === 0) {
-      return res.status(404).json({ status: false, message: "No records found." });
-    }
-
-    // 🔹 Fetch latest punch-in/out record (completed or not)
+    // 🔹 Fetch latest punch-in/out record (always execute this)
     const attendanceQuery = `
       SELECT id, emp_id, date, punch_in_time, punch_out_time
       FROM public.attendance
@@ -181,6 +177,14 @@ router.post("/society-work/list", verifyToken, async (req, res) => {
       };
     }
 
+    if (dbResult.rows.length === 0) {
+      return res.status(404).json({
+        status: false,
+        message: "No records found.",
+        latest_attendance: latestAttendance, // ✅ Always include attendance
+      });
+    }
+
     // 🔹 Format the dates before sending the response
     const formattedData = dbResult.rows.map((row) => ({
       ...row,
@@ -192,14 +196,13 @@ router.post("/society-work/list", verifyToken, async (req, res) => {
       status: true,
       message: "Data fetched successfully.",
       data: formattedData,
-      latest_attendance: latestAttendance, // ✅ Correctly formatted latest punch record
+      latest_attendance: latestAttendance,
     });
   } catch (error) {
     console.error("Error fetching data:", error);
     res.status(500).json({ status: false, message: "Internal server error." });
   }
 });
-      
 
       
 
