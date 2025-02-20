@@ -6,8 +6,9 @@ const jwt = require('jsonwebtoken');
 const secretKey = 'your-secret-key';
 const moment = require("moment-timezone");
 const TIMEZONE = "Asia/Kolkata";
-const router = express.Router();
 const cron = require("node-cron");
+const router = express.Router();
+
 // Helper functions
 async function generateEmpId() {
     const result = await pool.query("SELECT nextval('emp_id_seq') AS id");
@@ -202,7 +203,6 @@ router.post('/forgot-password', async (req, res) => {
 
 
 
-
 router.post('/employee-location',verifyToken, async (req, res) => {
     try {
         const { emp_id, latitude, longitude } = req.body;
@@ -240,60 +240,14 @@ router.post('/employee-location',verifyToken, async (req, res) => {
     });
 
 
-  // router.post("/punch", async (req, res) => {
-  //       const { emp_id, punch_type } = req.body;
-  //       const date = moment().tz(TIMEZONE).format("YYYY-MM-DD");
-  //       const timestamp = moment().tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss");
-    
-  //       try {
-  //           if (punch_type === "in") {
-  //               // 🔹 Punch In: Create a new entry
-  //               const newEntry = await pool.query(
-  //                   "INSERT INTO attendance (emp_id, date, punch_in_time) VALUES ($1, $2, $3) RETURNING *",
-  //                   [emp_id, date, timestamp]
-  //               );
-  //               return res.json({status: true,  message: "Punch In Successful", data: newEntry.rows[0] });
-  //           } 
-            
-  //           else if (punch_type === "out") {
-  //               // 🔹 Punch Out: Find the last punch-in without a punch-out
-  //               const result = await pool.query(
-  //                   "SELECT * FROM attendance WHERE emp_id = $1 AND punch_out_time IS NULL ORDER BY punch_in_time DESC LIMIT 1",
-  //                   [emp_id]
-  //               );
-    
-  //               if (result.rows.length === 0) {
-  //                   return res.status(400).json({ message: "No open punch-in record found!" });
-  //               }
-    
-  //               const punchInId = result.rows[0].id;
-    
-  //               // Update punch-out time
-  //               await pool.query(
-  //                   "UPDATE attendance SET punch_out_time = $1 WHERE id = $2",
-  //                   [timestamp, punchInId]
-  //               );
-    
-  //               return res.json({status: true, message: "Punch Out Successful", punch_out_time: timestamp });
-  //           } 
-            
-  //           else {
-  //               return res.status(400).json({status: false,  message: "Invalid punch_type. Use 'in' or 'out'." });
-  //           }
-    
-  //       } catch (error) {
-  //           res.status(500).json({status: false, message: "Error processing punch request", error });
-  //       }
-  //   });
 
-
-    //cron job
-    cron.schedule("45 10 * * *", async () => {
+    // cron job
+    cron.schedule("46 10 * * *", async () => {
         console.log("🔄 Running Auto Punch-Out Task at 9:00 PM...");
     
         try {
             const date = moment().tz(TIMEZONE).format("YYYY-MM-DD");
-            const punchOutTime = moment().tz(TIMEZONE).set({ hour: 10, minute: 45, second: 0 }).format("YYYY-MM-DD HH:mm:ss");
+            const punchOutTime = moment().tz(TIMEZONE).set({ hour: 10, minute: 46, second: 0 }).format("YYYY-MM-DD HH:mm:ss");
     
             // Find employees who forgot to punch out
             const result = await pool.query(
@@ -321,6 +275,8 @@ router.post('/employee-location',verifyToken, async (req, res) => {
     
 
 
+    
+    
     router.post("/punch", async (req, res) => {
         const { emp_id, punch_type } = req.body;
         const date = moment().tz(TIMEZONE).format("YYYY-MM-DD");
@@ -376,13 +332,13 @@ router.post('/employee-location',verifyToken, async (req, res) => {
             res.status(500).json({status: false, message: "Error processing punch request", error });
         }
     });
+    
+    
 
 
 
 
-
-
-       router.get("/employee-report", async (req, res) => {
+    router.get("/employee-report", async (req, res) => {
         try {
             const query = `
           SELECT 
@@ -535,7 +491,7 @@ ORDER BY e.emp_id;
         // Email options
         const mailOptions = {
             from: "your-email@gmail.com", // Replace with your email
-            to: "shaikhanish1992@gmail.com, hp9537213@gmail.com",
+            to: "hp9537213@gmail.com",
             // to: "hp9537213@gmail.com",
 
             subject: "Daily Employee Report",
@@ -553,7 +509,7 @@ ORDER BY e.emp_id;
     }
     
     // Schedule the cron job to run every day at 4:30 PM
-    cron.schedule("05 11 * * *", () => {
+    cron.schedule("03 10 * * *", () => {
         console.log("Running daily employee report job at 4:30 PM...");
         sendEmailReport();
     }, {
@@ -562,8 +518,5 @@ ORDER BY e.emp_id;
     });
 
 
-
-
 module.exports = router;
-
 
