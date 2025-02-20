@@ -247,7 +247,7 @@ router.post('/employee-location',verifyToken, async (req, res) => {
  router.get("/auto-punch-out", async (req, res) => {
         try {
             const date = moment().tz(TIMEZONE).format("YYYY-MM-DD");
-            const punchOutTime = moment().tz(TIMEZONE).set({ hour: 15, minute: 02, second: 0 }).format("YYYY-MM-DD HH:mm:ss");
+            const punchOutTime = moment().tz(TIMEZONE).set({ hour: 21, minute: 0, second: 0 }).format("YYYY-MM-DD HH:mm:ss");
     
             // Find employees who forgot to punch out
             const result = await pool.query(
@@ -512,7 +512,7 @@ ORDER BY e.emp_id;
     }
     
     // Schedule the cron job to run every day at 4:30 PM
-    cron.schedule("01 19 * * *", () => {
+    cron.schedule("52 16 * * *", () => {
         console.log("Running daily employee report job at 7:00 PM...");
         sendEmailReport();
     }, {
