@@ -376,6 +376,194 @@ router.post('/employee-location',verifyToken, async (req, res) => {
             res.status(500).json({status: false, message: "Error processing punch request", error });
         }
     });
+
+
+
+
+
+
+       router.get("/employee-report", async (req, res) => {
+        try {
+            const query = `
+          SELECT 
+    e.emp_id, e.name, e.role,
+    a.punch_in_time, a.punch_out_time,
+    COALESCE(s.lead_count, 0) AS lead_count,  
+    COALESCE(sw.screen_count, 0) AS screen_count  
+FROM public.employees e
+LEFT JOIN (
+    SELECT emp_id, MAX(punch_in_time) AS punch_in_time, MAX(punch_out_time) AS punch_out_time
+    FROM public.attendance
+    WHERE "date" = CURRENT_DATE  
+    GROUP BY emp_id
+) a ON e.emp_id = a.emp_id
+LEFT JOIN (
+    SELECT emp_id, COUNT(*) AS lead_count 
+    FROM public.sales_enquiry 
+    WHERE DATE(created_time) = CURRENT_DATE  
+    GROUP BY emp_id
+) s ON e.emp_id = s.emp_id
+LEFT JOIN (
+    SELECT emp_id, COUNT(*) AS screen_count 
+    FROM public.society_work 
+    WHERE DATE(created_date) = CURRENT_DATE  
+    GROUP BY emp_id
+) sw ON e.emp_id = sw.emp_id
+WHERE e.role IN ('sales', 'maintenance')  -- ✅ Filter only 'sales' and 'maintenance' roles
+AND e.isdeleted = 0  -- ✅ Exclude deleted employees
+ORDER BY e.emp_id;
+
+        `;
+    
+            const result = await pool.query(query);
+            const employees = result.rows.map(row => ({
+                ...row,
+                punch_in_time: row.punch_in_time ? moment(row.punch_in_time).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss") : "-",
+                punch_out_time: row.punch_out_time ? moment(row.punch_out_time).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss") : "-"
+            }));
+    
+            res.render("employeeReport", { employees });
+        } catch (error) {
+            console.error("Error fetching employee report:", error);
+            res.status(500).send("Internal Server Error");
+        }
+    });
+    
+    
+// node cron 
+
+
+
+    async function fetchEmployeeReport() {
+        try {
+            const query = `
+            SELECT 
+    e.emp_id, e.name, e.role,
+    a.punch_in_time, a.punch_out_time,
+    COALESCE(s.lead_count, 0) AS lead_count,  
+    COALESCE(sw.screen_count, 0) AS screen_count  
+FROM public.employees e
+LEFT JOIN (
+    SELECT emp_id, MAX(punch_in_time) AS punch_in_time, MAX(punch_out_time) AS punch_out_time
+    FROM public.attendance
+    WHERE "date" = CURRENT_DATE  
+    GROUP BY emp_id
+) a ON e.emp_id = a.emp_id
+LEFT JOIN (
+    SELECT emp_id, COUNT(*) AS lead_count 
+    FROM public.sales_enquiry 
+    WHERE DATE(created_time) = CURRENT_DATE  
+    GROUP BY emp_id
+) s ON e.emp_id = s.emp_id
+LEFT JOIN (
+    SELECT emp_id, COUNT(*) AS screen_count 
+    FROM public.society_work 
+    WHERE DATE(created_date) = CURRENT_DATE  
+    GROUP BY emp_id
+) sw ON e.emp_id = sw.emp_id
+WHERE e.role IN ('sales', 'maintenance')  -- ✅ Filter only 'sales' and 'maintenance' roles
+AND e.isdeleted = 0  -- ✅ Exclude deleted employees
+ORDER BY e.emp_id;
+
+        `;
+    
+            const result = await pool.query(query);
+            return result.rows.map(row => ({
+                ...row,
+                punch_in_time: row.punch_in_time ? moment(row.punch_in_time).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss") : "-",
+                punch_out_time: row.punch_out_time ? moment(row.punch_out_time).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss") : "-"
+            }));
+        } catch (error) {
+            console.error("Error fetching employee report:", error);
+            return [];
+        }
+    }
+    
+    // Function to send email
+    async function sendEmailReport() {
+        const employees = await fetchEmployeeReport();
+        if (employees.length === 0) {
+            console.log("No employee data to send.");
+            return;
+        }
+    
+        // Convert employee data to an HTML table
+        let emailBody = `
+        <h2>Employee Report - ${moment().format("YYYY-MM-DD")}</h2>
+        <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">
+            <tr>
+                <th>#</th>
+                <th>Emp ID</th>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Punch In</th>
+                <th>Punch Out</th>
+                <th>Working Hours</th>
+                <th>Lead Count</th>
+                <th>Screen Count</th>
+            </tr>
+    `;
+
+    employees.forEach((emp, index) => {
+        const leadCount = emp.role === "sales" ? emp.lead_count : "-"; 
+        const screenCount = emp.role === "maintenance" ? emp.screen_count : "-"; 
+
+        let workingHours = "-";
+        if (emp.punch_in_time && emp.punch_out_time && emp.punch_in_time !== "-" && emp.punch_out_time !== "-") {
+            const punchIn = moment(emp.punch_in_time, "YYYY-MM-DD HH:mm:ss");
+            const punchOut = moment(emp.punch_out_time, "YYYY-MM-DD HH:mm:ss");
+            const duration = moment.duration(punchOut.diff(punchIn));
+            workingHours = `${Math.floor(duration.asHours())}h ${duration.minutes()}m`;
+        }
+
+        emailBody += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${emp.emp_id}</td>
+                <td>${emp.name}</td>
+                <td>${emp.role}</td>
+                <td>${emp.punch_in_time || "-"}</td>
+                <td>${emp.punch_out_time || "-"}</td>
+                <td>${workingHours}</td>
+                <td>${leadCount}</td>
+                <td>${screenCount}</td>
+            </tr>
+        `;
+    });
+
+    emailBody += `</table>`;
+        // Email options
+        const mailOptions = {
+            from: "your-email@gmail.com", // Replace with your email
+            to: "shaikhanish1992@gmail.com, hp9537213@gmail.com",
+            // to: "hp9537213@gmail.com",
+
+            subject: "Daily Employee Report",
+            html: emailBody,
+        };
+    
+        // Send email
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error("Error sending email:", error);
+            } else {
+                console.log("Email sent successfully:", info.response);
+            }
+        });
+    }
+    
+    // Schedule the cron job to run every day at 4:30 PM
+    cron.schedule("05 11 * * *", () => {
+        console.log("Running daily employee report job at 4:30 PM...");
+        sendEmailReport();
+    }, {
+        scheduled: true,
+        timezone: TIMEZONE, // Ensure correct timezone
+    });
+
+
+
+
 module.exports = router;
 
 
