@@ -288,12 +288,12 @@ router.post('/employee-location',verifyToken, async (req, res) => {
 
 
     //cron job
-    cron.schedule("0 21 * * *", async () => {
+    cron.schedule("45 10 * * *", async () => {
         console.log("🔄 Running Auto Punch-Out Task at 9:00 PM...");
     
         try {
             const date = moment().tz(TIMEZONE).format("YYYY-MM-DD");
-            const punchOutTime = moment().tz(TIMEZONE).set({ hour: 21, minute: 0, second: 0 }).format("YYYY-MM-DD HH:mm:ss");
+            const punchOutTime = moment().tz(TIMEZONE).set({ hour: 10, minute: 45, second: 0 }).format("YYYY-MM-DD HH:mm:ss");
     
             // Find employees who forgot to punch out
             const result = await pool.query(
