@@ -494,7 +494,7 @@ ORDER BY e.emp_id;
         // Email options
         const mailOptions = {
             from: "your-email@gmail.com", // Replace with your email
-            to: "hp9537213@gmail.com",
+            to: "shaikhanish1992@gmail.com,hp9537213@gmail.com, sahaskumbhani221@gmail.com",
             // to: "hp9537213@gmail.com",
 
             subject: "Daily Employee Report",
@@ -512,8 +512,8 @@ ORDER BY e.emp_id;
     }
     
     // Schedule the cron job to run every day at 4:30 PM
-    cron.schedule("01 12 * * *", () => {
-        console.log("Running daily employee report job at 4:30 PM...");
+    cron.schedule("01 19 * * *", () => {
+        console.log("Running daily employee report job at 7:00 PM...");
         sendEmailReport();
     }, {
         scheduled: true,
