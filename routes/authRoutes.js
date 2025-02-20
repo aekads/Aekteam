@@ -509,7 +509,7 @@ ORDER BY e.emp_id;
     }
     
     // Schedule the cron job to run every day at 4:30 PM
-    cron.schedule("03 10 * * *", () => {
+    cron.schedule("10 11 * * *", () => {
         console.log("Running daily employee report job at 4:30 PM...");
         sendEmailReport();
     }, {
