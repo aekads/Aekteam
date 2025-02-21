@@ -247,7 +247,7 @@ router.post('/employee-location',verifyToken, async (req, res) => {
  router.get("/auto-punch-out", async (req, res) => {
         try {
             const date = moment().tz(TIMEZONE).format("YYYY-MM-DD");
-            const punchOutTime = moment().tz(TIMEZONE).set({ hour: 10, minute: 40, second: 0 }).format("YYYY-MM-DD HH:mm:ss");
+            const punchOutTime = moment().tz(TIMEZONE).set({ hour: 21, minute: 0, second: 0 }).format("YYYY-MM-DD HH:mm:ss");
     
             // Find employees who forgot to punch out
             const result = await pool.query(
