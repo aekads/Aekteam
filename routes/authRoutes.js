@@ -393,6 +393,8 @@ ORDER BY e.emp_id;
 
 
 
+
+
     async function fetchEmployeeReport() {
         try {
             const query = `
@@ -447,54 +449,84 @@ ORDER BY e.emp_id;
         }
     
         // Convert employee data to an HTML table
-        let emailBody = `
-        <h2>Employee Report - ${moment().format("YYYY-MM-DD")}</h2>
-        <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">
-            <tr>
-                <th>#</th>
-                <th>Emp ID</th>
-                <th>Name</th>
-                <th>Role</th>
-                <th>Punch In</th>
-                <th>Punch Out</th>
-                <th>Working Hours</th>
-                <th>Lead Count</th>
-                <th>Screen Count</th>
-            </tr>
-    `;
-
-    employees.forEach((emp, index) => {
-        const leadCount = emp.role === "sales" ? emp.lead_count : "-"; 
-        const screenCount = emp.role === "maintenance" ? emp.screen_count : "-"; 
-
-        let workingHours = "-";
-        if (emp.punch_in_time && emp.punch_out_time && emp.punch_in_time !== "-" && emp.punch_out_time !== "-") {
-            const punchIn = moment(emp.punch_in_time, "YYYY-MM-DD HH:mm:ss");
-            const punchOut = moment(emp.punch_out_time, "YYYY-MM-DD HH:mm:ss");
-            const duration = moment.duration(punchOut.diff(punchIn));
-            workingHours = `${Math.floor(duration.asHours())}h ${duration.minutes()}m`;
-        }
-
-        emailBody += `
-            <tr>
-                <td>${index + 1}</td>
-                <td>${emp.emp_id}</td>
-                <td>${emp.name}</td>
-                <td>${emp.role}</td>
-                <td>${emp.punch_in_time || "-"}</td>
-                <td>${emp.punch_out_time || "-"}</td>
-                <td>${workingHours}</td>
-                <td>${leadCount}</td>
-                <td>${screenCount}</td>
-            </tr>
-        `;
-    });
-
-    emailBody += `</table>`;
+         // Define styles for table
+         let emailBody = `
+         <h2 style="text-align: center; color: #007BFF;">Employee Report - ${moment().format("YYYY-MM-DD")}</h2>
+         <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; text-align: center; font-family: Arial, sans-serif;">
+             <tr style="background-color: #007BFF; color: white; font-weight: bold;">
+                 <th>#</th>
+                 <th>Emp ID</th>
+                 <th>Name</th>
+                 <th>Role</th>
+                 <th>Punch In</th>
+                 <th>Punch Out</th>
+                 <th>Working Hours</th>
+                 <th>Lead Count (Sales)</th>
+                 <th>Screen Count (Maintenance)</th>
+             </tr>
+         `;
+     
+         employees.forEach((emp, index) => {
+             const leadCount = emp.role === "sales" ? emp.lead_count : "-";
+             const screenCount = emp.role === "maintenance" ? emp.screen_count : "-";
+     
+             let workingHours = "-";
+             let nameStyle = "font-weight: normal;"; // Default styling
+             let bgColor = "";
+             let textColor = "black";
+     
+             // 🛑 If employee is maintenance & forgot to punch in, make name Bold & Red
+             if (emp.role === "maintenance" && (!emp.punch_in_time || emp.punch_in_time === "-")) {
+                 nameStyle = "font-weight: bold; color: red;";
+             }
+     
+             // ✅ If employee has both punch-in and punch-out
+             if (emp.punch_in_time && emp.punch_out_time && emp.punch_in_time !== "-" && emp.punch_out_time !== "-") {
+                 const punchIn = moment(emp.punch_in_time, "YYYY-MM-DD HH:mm:ss");
+                 const punchOut = moment(emp.punch_out_time, "YYYY-MM-DD HH:mm:ss");
+                 const duration = moment.duration(punchOut.diff(punchIn));
+                 workingHours = `${Math.floor(duration.asHours())}h ${duration.minutes()}m`;
+     
+                 // 🔴 Red Background if Worked Less Than 9 Hours
+                 if (duration.asHours() < 9) {
+                     nameStyle = "font-weight: bold;";
+                     bgColor = "red";
+                     textColor = "black"; // White Text for visibility
+                 }
+             }
+     
+             // 🟡 Yellow Highlight if:
+             // - Sales has No Lead (lead_count = 0)
+             // - Maintenance has No Screen Entry (screen_count = 0)
+             if (
+                 (emp.role === "sales" && emp.lead_count === 0) || 
+                 (emp.role === "maintenance" && emp.screen_count === 0)
+             ) {
+                 bgColor = "yellow";
+                 textColor = "black";
+             }
+     
+             emailBody += `
+             <tr>
+                 <td>${index + 1}</td>
+                 <td>${emp.emp_id}</td>
+                 <td style="${nameStyle} background-color: ${bgColor}; color: ${textColor};">${emp.name}</td>
+                 <td>${emp.role}</td>
+                 <td>${emp.punch_in_time || "-"}</td>
+                 <td>${emp.punch_out_time || "-"}</td>
+                 <td>${workingHours}</td>
+                 <td>${leadCount}</td>
+                 <td>${screenCount}</td>
+             </tr>
+             `;
+         });
+     
+         emailBody += `</table>`;
+    
         // Email options
         const mailOptions = {
             from: "your-email@gmail.com", // Replace with your email
-            to: "shaikhanish1992@gmail.com,hp9537213@gmail.com, sahaskumbhani221@gmail.com",
+            to: "hp9537213@gmail.com",
             // to: "hp9537213@gmail.com",
 
             subject: "Daily Employee Report",
@@ -512,14 +544,14 @@ ORDER BY e.emp_id;
     }
     
     // Schedule the cron job to run every day at 4:30 PM
-    cron.schedule("30 19 * * *", () => {
-        console.log("Running daily employee report job at 7:30 PM...");
+    cron.schedule("42 15 * * 1-6", () => {
+        console.log("Running daily employee report job at 4:30 PM (excluding Sundays)...");
         sendEmailReport();
     }, {
         scheduled: true,
         timezone: TIMEZONE, // Ensure correct timezone
     });
-
+    
 
 module.exports = router;
 
