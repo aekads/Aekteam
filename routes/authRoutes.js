@@ -395,6 +395,8 @@ ORDER BY e.emp_id;
 
 
 
+   
+
     async function fetchEmployeeReport() {
         try {
             const query = `
@@ -451,7 +453,7 @@ ORDER BY e.emp_id;
         // Convert employee data to an HTML table
          // Define styles for table
          let emailBody = `
-         <h2 style="text-align: center; color: #007BFF;">Employee Report - ${moment().format("YYYY-MM-DD")}</h2>
+         <h2 style="text-align: center; color: #007BFF;">Employee Daily Work & Progress Report - ${moment().format("YYYY-MM-DD")}</h2>
          <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; text-align: center; font-family: Arial, sans-serif;">
              <tr style="background-color: #007BFF; color: white; font-weight: bold;">
                  <th>#</th>
@@ -522,13 +524,38 @@ ORDER BY e.emp_id;
          });
      
          emailBody += `</table>`;
+
+         emailBody += `</table>
+    
+         <p style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+             <strong>Employee Daily Activity-Progress Report</strong> tracks employee productivity throughout the workday. 
+             This report allows employees to document the tasks they performed, the time spent on each task, 
+             whether the task was successfully completed, and any challenges they encountered.
+         </p>
+         
+         <p style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+             This report benefits both managers and employees, providing supervisors with a comprehensive overview 
+             of each team member’s progress while helping individuals analyze their productivity and work habits.
+         </p>
+         
+         <p style="font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; color: #007BFF;">
+             Thank you for your dedication and hard work. Your contributions are valuable to our company’s success.
+         </p>
+         
+         <p style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+             Best Regards,<br>
+             <strong>AekAds Team</strong>
+         </p>
+     `;
     
         // Email options
         const mailOptions = {
             from: "your-email@gmail.com", // Replace with your email
-            to: "hp9537213@gmail.com",
-            // to: "hp9537213@gmail.com",
-
+            to: "hp9537213@gmail.com, shaikhanish1992@gmail.com, sahaskumbhani221@gmail.com",
+        
+         
+            
+            
             subject: "Daily Employee Report",
             html: emailBody,
         };
@@ -544,7 +571,7 @@ ORDER BY e.emp_id;
     }
     
     // Schedule the cron job to run every day at 4:30 PM
-    cron.schedule("42 15 * * 1-6", () => {
+    cron.schedule("10 21 * * 1-6", () => {
         console.log("Running daily employee report job at 4:30 PM (excluding Sundays)...");
         sendEmailReport();
     }, {
