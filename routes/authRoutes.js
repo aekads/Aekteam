@@ -493,7 +493,7 @@ ORDER BY e.emp_id;
                  if (duration.asHours() < 9) {
                      nameStyle = "font-weight: bold;";
                      bgColor = "red";
-                     textColor = "black"; // White Text for visibility
+                     textColor = "white"; // White Text for visibility
                  }
              }
      
