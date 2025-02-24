@@ -14,12 +14,12 @@ const getClientIP = (req) => {
     return ip || 'Unknown IP';
 };
 
-const logAction = async (req, action, message) => {
+const logAction = async (req, action, message, salesEnquiryId = null) => {
     try {
         const ip = getClientIP(req);
 
         // Fetch user details from database if needed
-        let userName = "Anonymous"; // Default
+        let userName = "Anonymous"; // Default name
         if (req.user && req.user.emp_id) {
             const userQuery = `SELECT name FROM employees WHERE emp_id = $1`;
             const userResult = await pool.query(userQuery, [req.user.emp_id]);
@@ -28,12 +28,19 @@ const logAction = async (req, action, message) => {
 
         const logMessage = `${userName} ${message}`;
 
-        await pool.query(
-            `INSERT INTO public.sales_logs (action, message, ip, "createdAt", "updatedAt") VALUES ($1, $2, $3, NOW(), NOW())`,
-            [action, logMessage, ip]
-        );
+        // Insert log into database and return the inserted log ID
+        const logQuery = `
+            INSERT INTO public.sales_logs (action, message, ip, sales_enquiry_id, "createdAt", "updatedAt") 
+            VALUES ($1, $2, $3, $4, NOW(), NOW()) 
+            RETURNING id;
+        `;
+        
+        const result = await pool.query(logQuery, [action, logMessage, ip, salesEnquiryId]);
+
+        return result.rows[0].id; // Return the inserted log ID
     } catch (error) {
-        console.error('Error logging action:', error);
+        console.error("Error logging action:", error);
+        return null;
     }
 };
 
@@ -158,15 +165,15 @@ router.post('/inquiry', verifyToken, async (req, res) => {
         // Parse screen_type back to JSON object to avoid extra escaping           
         const responseData = result.rows[0];
         responseData.screen_type = JSON.parse(responseData.screen_type);
-
+        const newInquiry = result.rows[0];
+        const inquiryId = newInquiry.id; // Extract the ID of the created inquiry
         //add logs
 
         const user = req.session.user || req.user || { name: "Anonymous" }; 
 
-        const logMessage = `add a new inquiry. ${company_name}`;
+        const logMessage = `add new inquiry. ${company_name}`;
 
-        await logAction(req, "sales", logMessage, user);
-     
+        await logAction(req, "sales", logMessage, inquiryId);
         console.log(logMessage)
 
 
@@ -186,7 +193,7 @@ router.post('/inquiry', verifyToken, async (req, res) => {
     }
 });
 
-router.post('/inquiry/edit', verifyToken, async (req, res) => { 
+router.post('/inquiry/edit', verifyToken, async (req, res) => {                                                  
     const { 
         id,
         name,
@@ -270,14 +277,15 @@ router.post('/inquiry/edit', verifyToken, async (req, res) => {
         // const user = req.session.user || { name: "Anonymous" };
         const user = req.session.user || req.user || { name: "Anonymous" }; 
 
-        const logMessage = `Updated inquiry. Status: '${previousStatus}' → '${status}', is ${company}`;
+        const logMessage = `Updated inquiry. Status: '${previousStatus}' → '${status}', is ${company} `;
 
-        await logAction(req, "sales", logMessage, user);
-        // await logAction(
-        //     req,
-        //     "sales",
-        //     `Updated inquiry. Status: '${previousStatus}' → '${status}', is ${company}`
-        // );
+        await logAction(
+            req,
+            "sales",
+            `${logMessage}`,
+            id // Store the modified row ID
+        );
+     
         console.log(logMessage)
 
         res.status(200).json({
@@ -294,7 +302,7 @@ router.post('/inquiry/edit', verifyToken, async (req, res) => {
 
 
 
-// currently not use  that two API
+//not use  that two API
 
 
 router.post('/inquiry/quotation', verifyToken, async (req, res) => {
