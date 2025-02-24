@@ -163,14 +163,10 @@ router.post('/inquiry', verifyToken, async (req, res) => {
 
         const user = req.session.user || req.user || { name: "Anonymous" }; 
 
-        const logMessage = `add neq inquiry. ${company_name}`;
+        const logMessage = `add a new inquiry. ${company_name}`;
 
         await logAction(req, "sales", logMessage, user);
-        // await logAction(
-        //     req,
-        //     "sales",
-        //     `add new  inquiry.  ${company_name}`
-        // );
+     
         console.log(logMessage)
 
 
