@@ -3,6 +3,46 @@ const router = express.Router();
 const { verifyToken } = require('../middleware/authMiddleware'); // Assuming you have a verifyToken middleware
 const pool = require('../config/database'); // Assuming you have configured your database connection
 
+
+//for sales person
+
+
+
+const getClientIP = (req) => {
+    let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    if (ip.includes(',')) ip = ip.split(',')[0]; // Handle multiple IPs
+    return ip || 'Unknown IP';
+};
+
+const logAction = async (req, action, message) => {
+    try {
+        const ip = getClientIP(req);
+
+        // Fetch user details from database if needed
+        let userName = "Anonymous"; // Default
+        if (req.user && req.user.emp_id) {
+            const userQuery = `SELECT name FROM employees WHERE emp_id = $1`;
+            const userResult = await pool.query(userQuery, [req.user.emp_id]);
+            userName = userResult.rows.length > 0 ? userResult.rows[0].name : "Anonymous";
+        }
+
+        const logMessage = `${userName} ${message}`;
+
+        await pool.query(
+            `INSERT INTO public.sales_logs (action, message, ip, "createdAt", "updatedAt") VALUES ($1, $2, $3, NOW(), NOW())`,
+            [action, logMessage, ip]
+        );
+    } catch (error) {
+        console.error('Error logging action:', error);
+    }
+};
+
+  
+
+
+
+
+
 router.post('/inquiry-list', verifyToken, async (req, res) => {
     const { emp_id, filter_date } = req.body;
 
@@ -83,6 +123,10 @@ router.post('/inquiry', verifyToken, async (req, res) => {
     const employee_id = req.user.emp_id; // Extract from token
 
     try {
+
+        
+
+
         const query = `
         INSERT INTO public.sales_enquiry 
         (name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, email, company_name, emp_id, last_update_time, status, created_time) 
@@ -115,6 +159,22 @@ router.post('/inquiry', verifyToken, async (req, res) => {
         const responseData = result.rows[0];
         responseData.screen_type = JSON.parse(responseData.screen_type);
 
+        //add logs
+
+        const user = req.session.user || req.user || { name: "Anonymous" }; 
+
+        const logMessage = `add neq inquiry. ${company_name}`;
+
+        await logAction(req, "sales", logMessage, user);
+        // await logAction(
+        //     req,
+        //     "sales",
+        //     `add new  inquiry.  ${company_name}`
+        // );
+        console.log(logMessage)
+
+
+
         res.status(201).json({
             status: true,
             message: 'inquiry created successfully'
@@ -130,8 +190,8 @@ router.post('/inquiry', verifyToken, async (req, res) => {
     }
 });
 
-router.post('/inquiry/edit', verifyToken, async (req, res) => {
-    const {
+router.post('/inquiry/edit', verifyToken, async (req, res) => { 
+    const { 
         id,
         name,
         mobile_number,
@@ -148,6 +208,17 @@ router.post('/inquiry/edit', verifyToken, async (req, res) => {
     const employee_id = req.user.emp_id;
 
     try {
+         // Fetch current status and company_name before update
+         const existingQuery = `SELECT status, company_name FROM public.sales_enquiry WHERE id = $1`;
+         const existingResult = await pool.query(existingQuery, [id]);
+ 
+         if (existingResult.rows.length === 0) {
+             return res.status(404).json({ message: 'Inquiry not found' });
+         }
+ 
+         const previousStatus = existingResult.rows[0].status || "";
+         const company = existingResult.rows[0].company_name || "";
+
         const query = `
         UPDATE public.sales_enquiry 
         SET 
@@ -199,6 +270,20 @@ router.post('/inquiry/edit', verifyToken, async (req, res) => {
             return res.status(404).json({ message: 'Inquiry not found' });
         }
 
+        // Log the action with formatted message
+        // const user = req.session.user || { name: "Anonymous" };
+        const user = req.session.user || req.user || { name: "Anonymous" }; 
+
+        const logMessage = `Updated inquiry. Status: '${previousStatus}' → '${status}', is ${company}`;
+
+        await logAction(req, "sales", logMessage, user);
+        // await logAction(
+        //     req,
+        //     "sales",
+        //     `Updated inquiry. Status: '${previousStatus}' → '${status}', is ${company}`
+        // );
+        console.log(logMessage)
+
         res.status(200).json({
             status: true,
             message: 'Inquiry updated successfully'
@@ -208,6 +293,12 @@ router.post('/inquiry/edit', verifyToken, async (req, res) => {
         res.status(500).json({ status: false, message: 'Failed to update inquiry' });
     }
 });
+
+
+
+
+
+// currently not use  that two API
 
 
 router.post('/inquiry/quotation', verifyToken, async (req, res) => {
