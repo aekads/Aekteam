@@ -15,33 +15,44 @@ const getClientIP = (req) => {
 };
 
 const logAction = async (req, action, message, salesEnquiryId = null) => {
-    try {
-        const ip = getClientIP(req);
+  try {
+    const ip = getClientIP(req);
 
-        // Fetch user details from database if needed
-        let userName = "Anonymous"; // Default name
-        if (req.user && req.user.emp_id) {
-            const userQuery = `SELECT name FROM employees WHERE emp_id = $1`;
-            const userResult = await pool.query(userQuery, [req.user.emp_id]);
-            userName = userResult.rows.length > 0 ? userResult.rows[0].name : "Anonymous";
-        }
-
-        const logMessage = `${userName} ${message}`;
-
-        // Insert log into database and return the inserted log ID
-        const logQuery = `
-            INSERT INTO public.sales_logs (action, message, ip, sales_enquiry_id, "createdAt", "updatedAt") 
-            VALUES ($1, $2, $3, $4, NOW(), NOW()) 
-            RETURNING id;
-        `;
-        
-        const result = await pool.query(logQuery, [action, logMessage, ip, salesEnquiryId]);
-
-        return result.rows[0].id; // Return the inserted log ID
-    } catch (error) {
-        console.error("Error logging action:", error);
-        return null;
+    // Fetch user details from database if needed
+    let userName = "Anonymous"; // Default name
+    if (req.user && req.user.emp_id) {
+      const userQuery = `SELECT name FROM employees WHERE emp_id = $1`;
+      const userResult = await pool.query(userQuery, [req.user.emp_id]);
+      userName =
+        userResult.rows.length > 0 ? userResult.rows[0].name : "Anonymous";
     }
+
+    const logMessage = `${userName} ${message}`;
+
+    // Insert log into database and return the inserted log ID
+    // const logQuery = `
+    //         INSERT INTO public.sales_logs (action, message, ip, sales_enquiry_id, "createdAt", "updatedAt") 
+    //         VALUES ($1, $2, $3, $4, NOW(), NOW()) 
+    //         RETURNING id;
+    //     `;
+    const logQuery = `
+        INSERT INTO public.sales_logs (action, message, ip, sales_enquiry_id, "createdAt", "updatedAt") 
+        VALUES ($1, $2, $3, $4, NOW() AT TIME ZONE 'Asia/Kolkata', NOW() AT TIME ZONE 'Asia/Kolkata') 
+        RETURNING id;
+    `;
+
+    const result = await pool.query(logQuery, [
+      action,
+      logMessage,
+      ip,
+      salesEnquiryId,
+    ]);
+
+    return result.rows[0].id; // Return the inserted log ID
+  } catch (error) {
+    console.error("Error logging action:", error);
+    return null;
+  }
 };
 
   
