@@ -71,6 +71,17 @@ const logAction = async (req, action, message, salesEnquiryId = null) => {
 
 
 
+//render frontend page
+
+router.get('/acquisition', (req, res) => {
+  res.render('acquisition', { emp_id: req.query.emp_id, name: req.query.name, assign_city: req.query.assign_city });
+});
+
+
+
+
+
+
 
 router.post('/acquisition/add', verifyToken, async (req, res) => {
   const {
