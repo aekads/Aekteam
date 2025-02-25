@@ -16,6 +16,35 @@ cloudinary.config({
   api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
 });
 
+
+
+//frontend Dashbaboard
+router.get('/society-work', (req, res) => {
+  res.render('maintenance', { emp_id: req.query.emp_id, name: req.query.name, assign_city: req.query.assign_city });
+});
+router.get("/society-work/list", verifyToken, async (req, res) => {
+  const emp_id = req.query.emp_id;
+
+  if (!emp_id) {
+      return res.status(400).json({ status: false, message: "emp_id is required." });
+  }
+
+  try {
+      const query = `
+          SELECT id, society_name, screen_name, employee_work, work_photo, created_date 
+          FROM public.society_work 
+          WHERE emp_id = $1
+          ORDER BY created_date DESC;
+      `;
+      const result = await pool.query(query, [emp_id]);
+
+      res.status(200).json({ status: true, data: result.rows });
+  } catch (error) {
+      console.error("Error fetching work data:", error);
+      res.status(500).json({ status: false, message: "Internal server error." });
+  }
+});
+
 router.post("/society-work/add", upload.single("work_photo"), verifyToken, async (req, res) => {
   let { society_name, screen_name, employee_work, emp_id } = req.body;
 
