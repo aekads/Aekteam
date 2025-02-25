@@ -279,7 +279,7 @@ router.post('/employee-location',verifyToken, async (req, res) => {
 
           function scheduleAutoPunchOut() {
     const now = moment().tz(TIMEZONE);
-    let targetTime = moment().tz(TIMEZONE).set({ hour: 11, minute: 10, second: 0 }); // 9:00 PM
+    let targetTime = moment().tz(TIMEZONE).set({ hour: 21, minute: 0, second: 0 }); 
 
     if (now.isAfter(targetTime)) {
         targetTime.add(1, "day"); // Schedule for the next day if time has passed
@@ -300,7 +300,7 @@ router.post('/employee-location',verifyToken, async (req, res) => {
 async function autoPunchOutTask() {
     try {
         const date = moment().tz(TIMEZONE).format("YYYY-MM-DD");
-        const punchOutTime = moment().tz(TIMEZONE).set({ hour: 11, minute: 10, second: 0 }).format("YYYY-MM-DD HH:mm:ss"); // 9:00 PM
+        const punchOutTime = moment().tz(TIMEZONE).set({ hour: 21, minute: 0, second: 0 }).format("YYYY-MM-DD HH:mm:ss"); // 9:00 PM
 
         const result = await pool.query(
             `SELECT id FROM attendance WHERE punch_out_time IS NULL AND date = $1`,
