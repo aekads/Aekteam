@@ -56,6 +56,33 @@ const logAction = async (req, action, message, salesEnquiryId = null) => {
 };
 
   
+//for frontend part
+//render frontend page
+router.get('/inquiry', (req, res) => {
+  res.render('sales', { emp_id: req.query.emp_id, name: req.query.name, assign_city: req.query.assign_city });
+});
+
+router.get("/inquiry/list", verifyToken, async (req, res) => { 
+  try {
+      const emp_id = req.user.emp_id; // Get employee ID from token
+
+      const query = `
+          SELECT id, name, mobile_number, budget, screen_count, screen_type, 
+                 total_days, campaign_remark, email, company_name, status,
+                 TO_CHAR(created_time, 'YYYY-MM-DD HH24:MI:SS') AS created_time
+          FROM public.sales_enquiry 
+          WHERE emp_id = $1
+          ORDER BY created_time DESC;
+      `;
+
+      const result = await pool.query(query, [emp_id]);
+      res.status(200).json({ status: true, data: result.rows });
+
+  } catch (error) {
+      console.error("Error fetching inquiries:", error);
+      res.status(500).json({ status: false, message: "Failed to fetch inquiries" });
+  }
+});
 
 
 
