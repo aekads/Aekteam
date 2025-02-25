@@ -99,6 +99,9 @@ router.post('/login', async (req, res) => {
                 [token, 1, emp_id]
             );
 
+
+            
+
             res.status(200).json({
                 status: true,
                 message: 'Login successful',
@@ -107,8 +110,10 @@ router.post('/login', async (req, res) => {
                 name: user.name,
                 role: user.role,
                 assign_city: user.assign_city,
-                // login_time: loginTime, // Include login time in response
-                //city: user.assign_city
+                redirect_url: user.role === 'acquisition' ? '/api/acquisition'
+                             : user.role === 'sales' ? '/api/inquiry'
+                             : user.role === 'maintenance' ? '/api/society-work'
+                             : '/'
             });
       
             
@@ -126,7 +131,6 @@ router.post('/login', async (req, res) => {
         });
     }
 });
-
 router.post('/logout', async (req, res) => {
     const { emp_id } = req.body; // Extract emp_id from the request body
 
