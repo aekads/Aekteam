@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance Work</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            text-align: center;
+        }
+        .close {
+            color: red;
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .hidden { display: none; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th { background-color: #f4f4f4; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Welcome, <%= name %> </h2>
+        <h2>Maintenance Work</h2>
+        
+        <button id="openModalBtn">Add Work</button> 
+        <button id="logoutBtn" style="background-color: red; color: white; padding: 10px; border: none; cursor: pointer;">
+            Logout
+        </button>
+        
+
+        <!-- Popup Modal -->
+        <div id="workModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeModalBtn">&times;</span>
+                <h3>Add Work</h3>
+
+                <form id="maintenanceForm" enctype="multipart/form-data">
+                    <input type="hidden" id="emp_id" name="emp_id" value="<%= emp_id %>">
+
+                    <label for="society_name">Society Name:</label>
+                    <input type="text" id="society_name" name="society_name" required>
+
+                    <label for="screen_name">Screen Name:</label>
+                    <input type="text" id="screen_name" name="screen_name" required>
+
+                    <label>Employee Work Type:</label>
+                    <div>
+                        <input type="checkbox" id="installation" name="employee_work" value="Installation">
+                        <label for="installation">Installation</label>
+
+                        <input type="checkbox" id="maintenance" name="employee_work" value="Maintenance">
+                        <label for="maintenance">Maintenance</label>
+                    </div>
+
+                    <label for="work_photo">Work Photo:</label>
+                    <input type="file" id="work_photo" name="work_photo" accept="image/*">
+
+                    <button type="submit">Submit</button>
+                </form>
+
+                <p id="message"></p>
+            </div>
+        </div>
+
+        <!-- Work List -->
+        <h3>Your Work History</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Society Name</th>
+                    <th>Screen Name</th>
+                    <th>Work Type</th>
+                    <th>Photo</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="workList"></tbody>
+        </table>
+    </div>
+
+
+
+    <script>
+        const modal = document.getElementById("workModal");
+        const openModalBtn = document.getElementById("openModalBtn");
+        const closeModalBtn = document.getElementById("closeModalBtn");
+
+        // Open modal
+        openModalBtn.addEventListener("click", () => { modal.style.display = "flex"; });
+
+        // Close modal
+        closeModalBtn.addEventListener("click", () => { modal.style.display = "none"; });
+
+        // Close modal when clicking outside
+        window.addEventListener("click", (event) => {
+            if (event.target === modal) { modal.style.display = "none"; }
+        });
+
+        async function fetchWorkList() {
+            const emp_id = document.getElementById("emp_id").value;
+            const token = localStorage.getItem("token");
+
+            try {
+                const response = await fetch(`/api/society-work/list?emp_id=${emp_id}`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.status) {
+                    const workList = document.getElementById("workList");
+                    workList.innerHTML = "";
+
+                    data.data.forEach(work => {
+                        const row = document.createElement("tr");
+
+                        row.innerHTML = `
+                            <td>${work.society_name}</td>
+                            <td>${work.screen_name}</td>
+                            <td>${JSON.parse(work.employee_work).join(", ")}</td>
+                            <td>${work.work_photo ? `<img src="${work.work_photo}" width="50">` : "No Photo"}</td>
+                            <td>${new Date(work.created_date).toLocaleString()}</td>
+                        `;
+                        workList.appendChild(row);
+                    });
+                } else {
+                    document.getElementById("message").innerText = "Error loading work data.";
+                }
+            } catch (error) {
+                console.error("Error fetching work data:", error);
+            }
+        }
+
+        // Fetch data on page load
+        fetchWorkList();
+
+        document.getElementById("maintenanceForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            
+            const formData = new FormData();
+            formData.append("emp_id", document.getElementById("emp_id").value);
+            formData.append("society_name", document.getElementById("society_name").value);
+            formData.append("screen_name", document.getElementById("screen_name").value);
+
+            const workTypes = [];
+            if (document.getElementById("installation").checked) workTypes.push("Installation");
+            if (document.getElementById("maintenance").checked) workTypes.push("Maintenance");
+
+            if (workTypes.length === 0) {
+                document.getElementById("message").innerText = "Please select at least one work type.";
+                return;
+            }
+
+            formData.append("employee_work", JSON.stringify(workTypes));
+
+            const workPhoto = document.getElementById("work_photo").files[0];
+            if (workPhoto) formData.append("work_photo", workPhoto);
+
+            try {
+                const token = localStorage.getItem("token");
+                const response = await fetch("/api/society-work/add", {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${token}` },
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.status) {
+                    modal.style.display = "none";
+                    fetchWorkList(); // Refresh list
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        });
+
+
+
+        document.getElementById("logoutBtn").addEventListener("click", async function () {
+        const emp_id = "<%= emp_id %>"; // Get employee ID from EJS variable
+        const token = localStorage.getItem("token");
+
+        if (!emp_id) {
+            alert("Employee ID not found.");
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/logout", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ emp_id })
+            });
+
+            const data = await response.json();
+
+            if (data.status) {
+                // Clear local storage and redirect to login
+                localStorage.removeItem("token");
+                window.location.href = "/api/login";
+            } else {
+                alert(data.message);
+            }
+        } catch (error) {
+            console.error("Error during logout:", error);
+            alert("Logout failed. Please try again.");
+        }
+    });
+
+
+
+    </script>
+</body>
+</html>
