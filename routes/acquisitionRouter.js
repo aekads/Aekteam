@@ -3,7 +3,7 @@ const router = express.Router();
 const { verifyToken } = require('../middleware/authMiddleware'); // Assuming you have a verifyToken middleware
 const pool = require('../config/database');
 const moment = require('moment-timezone');
-
+// const { logAction } = require('../utils/logger');
 
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
@@ -16,6 +16,53 @@ cloudinary.config({
   api_key: '451893856554714',
   api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
 });
+
+
+
+const getClientIP = (req) => {
+  let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+  if (ip.includes(",")) ip = ip.split(",")[0]; // Handle multiple IPs
+  return ip || "Unknown IP";
+};
+
+const logAction = async (req, action, message, salesEnquiryId = null) => {
+  try {
+    const ip = getClientIP(req);
+
+    // Fetch user details from database if needed
+    let userName = "Anonymous"; // Default name
+    if (req.user && req.user.emp_id) {
+      const userQuery = `SELECT name FROM employees WHERE emp_id = $1`;
+      const userResult = await pool.query(userQuery, [req.user.emp_id]);
+      userName =
+        userResult.rows.length > 0 ? userResult.rows[0].name : "Anonymous";
+    }
+
+    const logMessage = `${userName} ${message}`;
+
+    // Insert log into database and return the inserted log ID
+    const logQuery = `
+            INSERT INTO public.sales_logs (action, message, ip, sales_enquiry_id, "createdAt", "updatedAt") 
+            VALUES ($1, $2, $3, $4, NOW(), NOW()) 
+            RETURNING id;
+        `;
+
+    const result = await pool.query(logQuery, [
+      action,
+      logMessage,
+      ip,
+      salesEnquiryId,
+    ]);
+
+    return result.rows[0].id; // Return the inserted log ID
+  } catch (error) {
+    console.error("Error logging action:", error);
+    return null;
+  }
+}; 
+
+
+
 
 
 router.post('/acquisition/add', verifyToken, async (req, res) => {
@@ -48,7 +95,7 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
       INSERT INTO acquisition 
       (property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, state, city, pincode, Property_Type, created_date, emp_id, status)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-      RETURNING property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, state, city, pincode, Property_Type, created_date, emp_id, status;
+      RETURNING id, property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, state, city, pincode, Property_Type, created_date, emp_id, status;
     `;
 
     const latitudeValue = latitude || null;
@@ -74,23 +121,32 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
 
     const result = await pool.query(query, values);
 
-    const responseData = result.rows[0];
+    // Retrieve the newly created property ID
+    const newInquiry = result.rows[0];
+    const propertyId = newInquiry.id;  // Ensure 'id' is returned from the query
 
     // Parse Property_Type if necessary
-    if (responseData.Property_Type) {
+    if (newInquiry.Property_Type) {
       try {
-        responseData.Property_Type = JSON.parse(responseData.Property_Type);
+        newInquiry.Property_Type = JSON.parse(newInquiry.Property_Type);
       } catch (err) {
         console.error('Error parsing Property_Type:', err);
       }
     }
 
-    res.status(201).json({ status: true, message: 'Data added successfully'});
+    const logMessage = `Added new property: ${property_name}`;
+    
+    // Log the action with the correct propertyId
+    await logAction(req, "acquisition", logMessage, propertyId);
+    console.log(logMessage);
+
+    res.status(201).json({ status: true, message: 'Data added successfully' });
   } catch (error) {
     console.error('Error adding property:', error);
     res.status(500).json({ status: false, message: 'Internal server error' });
   }
 });
+
   
 
 router.post('/acquisition/edit', verifyToken, async (req, res) => {
@@ -131,7 +187,16 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
   }
 
   try {
-    // Ensure correct data type conversion for integers                         
+    // Ensure correct data type conversion for integers  
+
+      // Fetch the previous status before updating
+      const previousStatusQuery = `SELECT status FROM acquisition WHERE id = $1`;
+      const previousStatusResult = await pool.query(previousStatusQuery, [id]);
+      if (previousStatusResult.rowCount === 0) {
+        return res.status(404).json({ status: false, message: 'No property found with the given ID' });
+      }
+      const previousStatus = previousStatusResult.rows[0].status;    
+    
     const parseValue = (value, type = 'int') => {
       if (!value || value === '') return null;
       return type === 'int' ? parseInt(value, 10) : parseFloat(value);          
@@ -232,6 +297,13 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
       ...row,
       updated_date: moment(row.updated_date).tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss'),
     }));
+
+    if (previousStatus !== status) {
+      const logMessage = `The acquisition status has been updated from '${previousStatus}' to '${status}' for '${property_name}'`;
+      await logAction(req, "acquisition", logMessage, id);
+      console.log(logMessage);
+    }
+                                                
 
     res.status(200).json({
       status: true,
