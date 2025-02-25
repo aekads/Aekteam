@@ -1,23 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Login</title>
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <h1>Employee Login</h1>
-    <form action="/api/login" method="POST">
-        <label for="emp_id">Employee ID:</label><br>
-        <input type="text" id="emp_id" name="emp_id" placeholder="Enter Employee Id" required><br><br>
+    <div class="login-container">
+        <h2>Employee Login</h2>
+        <p id="error-message" class="error" style="display: none;"></p>
 
-        <label for="pin">PIN:</label><br>
-        <input type="password" id="pin" name="pin" required><br><br>
+        <form id="loginForm">
+            <label for="emp_id">Employee ID:</label>
+            <input type="text" id="emp_id" name="emp_id" required>
 
-        <button type="submit">Login</button>
-    </form>
-    <% if (error) { %>
-        <p style="color: red;"><%= error %></p> 
-    <% } %>
+            <label for="pin">PIN:</label>
+            <input type="password" id="pin" name="pin" required>
+
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById("loginForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const emp_id = document.getElementById("emp_id").value;
+            const pin = document.getElementById("pin").value;
+
+            const response = await fetch("/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ emp_id, pin })
+            });
+
+            const data = await response.json();
+
+            if (data.status) {
+                localStorage.setItem("token", data.token); // Store JWT in localStorage
+                window.location.href = data.redirect_url + `?emp_id=${data.emp_id}&name=${data.name}&assign_city=${data.assign_city}`;
+            } else {
+                document.getElementById("error-message").innerText = data.message;
+                document.getElementById("error-message").style.display = "block";
+            }
+        });
+    </script>
 </body>
 </html>
-
-                                                                                 
