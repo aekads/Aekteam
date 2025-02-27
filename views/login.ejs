@@ -134,25 +134,57 @@ button:hover {
     </div>
 
     <script>
+         document.addEventListener("DOMContentLoaded", async function () {
+            const token = localStorage.getItem("token");
+            const emp_id = localStorage.getItem("emp_id");
+            const name = localStorage.getItem("name");
+            const role = localStorage.getItem("role");
+            const assign_city = localStorage.getItem("assign_city");
+    
+            if (token && emp_id && role) {
+                // Auto redirect based on role
+                const redirect_url = role === 'acquisition' ? '/api/acquisition'
+                                : role === 'sales' ? '/api/inquiry'
+                                : role === 'maintenance' ? '/api/society-work'
+                                : '/';
+    
+                window.location.href = `${redirect_url}?emp_id=${emp_id}&name=${name}&assign_city=${assign_city}`;
+                return;
+            }
+        });
+    
         document.getElementById("loginForm").addEventListener("submit", async function (event) {
             event.preventDefault();
-
+    
             const emp_id = document.getElementById("emp_id").value;
             const pin = document.getElementById("pin").value;
-
-            const response = await fetch("/api/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ emp_id, pin })
-            });
-
-            const data = await response.json();
-
-            if (data.status) {
-                localStorage.setItem("token", data.token); // Store JWT in localStorage
-                window.location.href = data.redirect_url + `?emp_id=${data.emp_id}&name=${data.name}&assign_city=${data.assign_city}`;
-            } else {
-                document.getElementById("error-message").innerText = data.message;
+    
+            try {
+                const response = await fetch("/api/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ emp_id, pin })
+                });
+    
+                const data = await response.json();
+    
+                if (data.status) {
+                    // Store user data in localStorage for auto-login
+                    localStorage.setItem("token", data.token);
+                    localStorage.setItem("emp_id", data.emp_id);
+                    localStorage.setItem("name", data.name);
+                    localStorage.setItem("role", data.role);
+                    localStorage.setItem("assign_city", data.assign_city);
+    
+                    // Redirect based on user role
+                    window.location.href = `${data.redirect_url}?emp_id=${data.emp_id}&name=${data.name}&assign_city=${data.assign_city}`;
+                } else {
+                    document.getElementById("error-message").innerText = data.message;
+                    document.getElementById("error-message").style.display = "block";
+                }
+            } catch (error) {
+                console.error("Login Error:", error);
+                document.getElementById("error-message").innerText = "Something went wrong. Try again.";
                 document.getElementById("error-message").style.display = "block";
             }
         });
