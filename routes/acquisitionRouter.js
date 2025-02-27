@@ -79,6 +79,49 @@ router.get('/acquisition', (req, res) => {
 
 
 
+router.get('/acquisition/DataList', verifyToken, async (req, res) => {
+  const emp_id = req.query.emp_id; // Get emp_id from request query
+
+  if (!emp_id) {
+      return res.status(400).json({ status: false, message: "emp_id is required" });
+  }
+
+  try {
+      const query = `SELECT * FROM acquisition WHERE emp_id = $1`;
+      const result = await pool.query(query, [emp_id]);
+
+      res.status(200).json({ status: true, data: result.rows });
+  } catch (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).json({ status: false, message: "Internal server error" });
+  }
+});
+
+router.get('/acquisition/details', verifyToken, async (req, res) => {
+  const { id } = req.query;
+
+  if (!id) {
+      return res.status(400).json({ status: false, message: "ID is required" });
+  }
+
+  try {
+      const query = `SELECT * FROM acquisition WHERE id = $1`;
+      const result = await pool.query(query, [id]);
+
+      if (result.rowCount === 0) {
+          return res.status(404).json({ status: false, message: "No property found" });
+      }
+
+      res.status(200).json({ status: true, data: result.rows[0] });
+  } catch (error) {
+      console.error("Error fetching property:", error);
+      res.status(500).json({ status: false, message: "Internal server error" });
+  }
+});
+
+
+
+//for APk API
 
 
 
@@ -105,7 +148,7 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
   try {
     // Get the current timestamp in Asia/Kolkata timezone
     const createdDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
-
+ const emp_id = req.user?.emp_id;
     // Default status for new inquiries
     const inquiryStatus = "New Inquiry";
 
