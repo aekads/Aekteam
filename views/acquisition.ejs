@@ -3,11 +3,607 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acquisition Dashboard</title>
+    <title>Acquisition Form</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+     /* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f4f4f4;
+    text-align: center;
+}
+
+h2 {
+    color: #333;
+}
+
+button {
+    padding: 10px 15px;
+    margin: 10px;
+    border: none;
+    background: #007bff;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+/* Modal & Overlay */
+.modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    z-index: 1000;
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.modal-content {
+    width: 100%;
+}
+
+.close {
+    float: right;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* Form Styles */
+form {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+label {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+input,
+select {
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    width: 100%;
+}
+
+input[type="number"] {
+    width: 100%;
+}
+
+button[type="submit"] {
+    background: #28a745;
+}
+
+button[type="submit"]:hover {
+    background: #218838;
+}
+
+button#closeModal {
+    background: #dc3545;
+}
+
+button#closeModal:hover {
+    background: #c82333;
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    max-width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+th {
+    background: #007bff;
+    color: white;
+}
+
+td {
+    background: white;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    h2 {
+        font-size: 18px;
+    }
+
+    button {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+
+    .modal {
+        width: 95%;
+        max-width: 350px;
+    }
+
+    input,
+    select {
+        font-size: 12px;
+    }
+
+    table {
+        font-size: 12px;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+}
+
+/* Extra Small Screens */
+@media screen and (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+
+    h2 {
+        font-size: 16px;
+    }
+
+    button {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+
+    table {
+        font-size: 10px;
+    }
+
+    th, td {
+        padding: 5px;
+    }
+}
+.hidden {
+    display: none;
+}
+
+    </style>
 </head>
 <body>
+
+
+
+
     <h2>Welcome, <%= name %> (Acquisition)</h2>
     <p>Employee ID: <%= emp_id %></p>
     <p>Assigned City: <%= assign_city %></p>
+
+    <button id="openModal">Add Property</button>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="modal" id="propertyModal">
+        <h2>Add New Property</h2>
+        <form id="propertyForm">
+            <label>Property Name:</label>
+            <input type="text" id="property_name" name="property_name" required>
+
+            <label>Property Type:</label>
+            <select id="Property_Type" name="Property_Type">
+                <option value="Residential">Residential</option>
+                <option value="Corporate">Corporate</option>
+                <option value="Outdoor">Outdoor</option>
+            </select>
+
+            <label>State:</label>
+            <select id="state" name="state">
+                <option value="">Select State</option>
+            </select>
+
+            <label>City:</label>
+            <select id="city" name="city">
+                <option value="">Select City</option>
+            </select>
+
+            <label>Pincode:</label>
+            <input type="text" id="pincode" name="pincode" required>
+
+            <label>Screen Quantity:</label>
+            <input type="number" id="screen_qty" name="screen_qty" required>
+
+            <label>Per Screen Rent Price:</label>
+            <input type="number" id="per_screen_rent_price" name="per_screen_rent_price" required>
+
+            <button type="submit">Submit</button>
+            <button type="button" id="closeModal">Close</button>
+        </form>
+    </div>
+
+
+    <button id="btnInquiry">Inquiry</button>
+    <button id="btnApprove">Approve</button>
+    
+    <table id="inquiryTable">
+        <thead>
+            <tr>
+                <th>Property Name</th>
+                <th>State</th>
+                <th>City</th>
+                <th>Pincode</th>
+                <th>Screen Qty</th>
+                <th>Per Screen Rent Price</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    
+    <table id="approveTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>Property Name</th>
+                <th>State</th>
+                <th>City</th>
+                <th>Pincode</th>
+                <th>Screen Qty</th>
+                <th>Per Screen Rent Price</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    
+
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Edit Property</h2>
+            <form id="editForm">
+                <input type="hidden" id="edit_id">
+    
+                <label>Property Name:</label>
+                <input type="text" id="edit_property_name">
+    
+                <label>Property Type:</label>
+                <select id="edit_Property_Type">
+                    <option value="Residential">Residential</option>
+                    <option value="Corporate">Corporate</option>
+                    <option value="Outdoor">Outdoor</option>
+                </select>
+    
+                <label>State:</label>
+                <select id="edit_state"></select>
+    
+                <label>City:</label>
+                <select id="edit_city"></select>
+    
+                <label>Pincode:</label>
+                <input type="text" id="edit_pincode">
+    
+                <label>Screen Qty:</label>
+                <input type="number" id="edit_screen_qty">
+    
+                <label>Per Screen Rent Price:</label>
+                <input type="number" id="edit_per_screen_rent_price">
+    
+                <label>Status:</label>
+                <select id="edit_status">
+                    <option value="New Inquiry">New Inquiry</option>
+                    <option value="Proposal Sent">Proposal Sent</option>
+                    <option value="Attempted to Contact">Attempted to Contact</option>
+                    <option value="Discussion Done">Discussion Done</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Agreement Done">Agreement Done</option>
+                    <option value="Not Interested">Not Interested</option>
+                </select>
+    
+                <button type="submit">Update</button>
+            </form>
+        </div>
+    </div>
+    
+    <style>
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0,0,0,0.2); }
+        .modal-content { width: 400px; }
+        .close { float: right; font-size: 20px; cursor: pointer; }
+    </style>
+    
+    
+
+    <script>
+        $(document).ready(function () {
+            // Open modal
+            $("#openModal").click(function () {
+                $("#overlay, #propertyModal").show();
+                fetchLocations(); // Load state & city data
+            });
+
+            // Close modal
+            $("#closeModal, #overlay").click(function () {
+                $("#overlay, #propertyModal").hide();
+            });
+
+            // Fetch states & cities from API
+            function fetchLocations() {
+    $.ajax({
+        url: "/api/acquisition/locations",
+        type: "GET",
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("token")  // Add token here
+        },
+        success: function (response) {
+            if (response.status) {
+                let stateDropdown = $("#state");
+                let cityDropdown = $("#city");
+
+                stateDropdown.empty().append('<option value="">Select State</option>');
+                cityDropdown.empty().append('<option value="">Select City</option>');
+
+                response.data.states.forEach(state => {
+                    stateDropdown.append(`<option value="${state}">${state}</option>`);
+                });
+
+                response.data.cities.forEach(city => {
+                    cityDropdown.append(`<option value="${city}">${city}</option>`);
+                });
+            }
+        },
+        error: function (xhr) {
+            alert("Error fetching locations: " + xhr.responseJSON.message);
+        }
+    });
+}
+
+            // Submit form via AJAX
+            $("#propertyForm").submit(function (e) {
+    e.preventDefault();
+
+    let formData = {
+        property_name: $("#property_name").val(),
+        Property_Type: JSON.stringify([$("#Property_Type").val()]),  
+        state: $("#state").val(),
+        city: $("#city").val(),
+        pincode: $("#pincode").val(),
+        screen_qty: $("#screen_qty").val(),
+        per_screen_rent_price: $("#per_screen_rent_price").val()
+    };
+
+    $.ajax({
+        url: "/api/acquisition/add",
+        type: "POST",
+        contentType: "application/json",
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("token")  // Send token in header
+        },
+        data: JSON.stringify(formData),
+        success: function (response) {
+            alert(response.message);
+            $("#overlay, #propertyModal").hide();
+            $("#propertyForm")[0].reset();
+        },
+        error: function (xhr) {
+            alert("Error: " + xhr.responseJSON.message);
+        }
+    });
+});
+
+
+//show data in page
+$(document).ready(function () {
+    fetchData(); // Load all data when page loads
+
+    $("#btnInquiry").click(function () {
+        $("#inquiryTable").show();
+        $("#approveTable").hide();
+        fetchData("New Inquiry");
+    });
+
+    $("#btnApprove").click(function () {
+        $("#approveTable").show();
+        $("#inquiryTable").hide();
+        fetchData("Approved"); // Fetch all except "New Inquiry"
+    });
+
+    // Initially, show only the Inquiry table
+    $("#inquiryTable").show();
+    $("#approveTable").hide();
+});
+
+function fetchData(filterStatus = "") {
+    let emp_id = localStorage.getItem("emp_id"); // Get emp_id from localStorage
+
+    if (!emp_id) {
+        alert("User ID not found. Please log in again.");
+        return;
+    }
+
+    $.ajax({
+        url: "/api/acquisition/DataList",
+        type: "GET",
+        data: { emp_id: emp_id }, // Send emp_id as query parameter
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") },
+        success: function (response) {
+            if (response.status) {
+                let acquisitions = response.data;
+                let inquiryData = acquisitions.filter(item => item.status === "New Inquiry");
+                let approveData = acquisitions.filter(item => item.status !== "New Inquiry");
+
+                displayData("#inquiryTable tbody", inquiryData);
+                displayData("#approveTable tbody", approveData);
+            }
+        },
+        error: function () {
+            alert("Error fetching properties.");
+        }
+    });
+}
+
+// Function to display fetched data
+function displayData(tableSelector, data) {
+    let tableBody = $(tableSelector);
+    tableBody.empty();
+
+    data.forEach(item => {
+        let row = `
+            <tr>
+                <td>${item.property_name}</td>
+                <td>${item.state}</td>
+                <td>${item.city}</td>
+                <td>${item.pincode}</td>
+                <td>${item.screen_qty}</td>
+                <td>${item.per_screen_rent_price}</td>
+                <td><button class="edit-btn" data-id="${item.id}">Edit</button></td>
+            </tr>
+        `;
+        tableBody.append(row);
+    });
+
+    $(".edit-btn").click(function () {
+        let id = $(this).data("id");
+        fetchPropertyDetails(id);
+    });
+}
+
+
+function fetchPropertyDetails(id) {
+    $.ajax({
+        url: "/api/acquisition/details?id=" + id,  // Make sure backend has this route
+        type: "GET",
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") },
+        success: function (response) {
+            if (response.status) {
+                let property = response.data;
+
+                $("#edit_id").val(property.id);
+                $("#edit_property_name").val(property.property_name);
+                $("#edit_Property_Type").val(property.Property_Type);
+                $("#edit_state").val(property.state);
+                $("#edit_city").val(property.city);
+                $("#edit_pincode").val(property.pincode);
+                $("#edit_screen_qty").val(property.screen_qty);
+                $("#edit_per_screen_rent_price").val(property.per_screen_rent_price);
+                $("#edit_status").val(property.status);
+
+                $("#editModal").show();
+            } else {
+                alert("No data found");
+            }
+        },
+        error: function () {
+            alert("Error fetching property details");
+        }
+    });
+}
+
+// Close modal on click
+$(".close").click(function () {
+    $("#editModal").hide();
+});
+
+$(document).ready(function () {
+    $.ajax({
+        url: "/api/acquisition/locations",
+        type: "GET",
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") },
+        success: function (response) {
+            if (response.status) {
+                let states = response.data.states;
+                let cities = response.data.cities;
+
+                states.forEach(state => {
+                    $("#edit_state").append(`<option value="${state}">${state}</option>`);
+                });
+
+                cities.forEach(city => {
+                    $("#edit_city").append(`<option value="${city}">${city}</option>`);
+                });
+            }
+        },
+        error: function () {
+            alert("Error fetching locations");
+        }
+    });
+});
+
+
+
+$("#editForm").submit(function (e) {
+    e.preventDefault();
+
+    let formData = {
+        id: $("#edit_id").val(),
+        property_name: $("#edit_property_name").val(),
+        Property_Type: JSON.stringify([$("#Property_Type").val()]), 
+        state: $("#edit_state").val(),
+        city: $("#edit_city").val(),
+        pincode: $("#edit_pincode").val(),
+        screen_qty: $("#edit_screen_qty").val(),
+        per_screen_rent_price: $("#edit_per_screen_rent_price").val(),
+        status: $("#edit_status").val()
+    };
+
+    $.ajax({
+        url: "/api/acquisition/edit",
+        type: "POST",
+        contentType: "application/json",
+        headers: { "Authorization": "Bearer " + localStorage.getItem("token") },
+        data: JSON.stringify(formData),
+        success: function (response) {
+            alert(response.message);
+            $("#editModal").hide();
+            fetchData();  // Reload table data
+        },
+        error: function (xhr) {
+            alert("Error: " + xhr.responseJSON.message);
+        }
+    });
+});
+
+
+        });
+    </script>
+
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
