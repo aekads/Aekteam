@@ -177,7 +177,7 @@ router.post("/inquiry", verifyToken, async (req, res) => {
     if (existing.rows.length > 0) {
       return res.status(400).json({
         status: false,
-        message: "Mobile number already exists. Please use a different number.",
+        message: "The mobile number already exists, and the lead is being handled by another person",
       });
     }
 
