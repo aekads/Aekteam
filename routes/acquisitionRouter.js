@@ -202,7 +202,7 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
       }
     }
 
-    const logMessage = `Added new property: ${property_name} with contact ${contact_person_mobile_number}`;
+    const logMessage = `Added new property: ${property_name}`;
     
     await logAction(req, "acquisition", logMessage, propertyId);
     console.log(logMessage);
