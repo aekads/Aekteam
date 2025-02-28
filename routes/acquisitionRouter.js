@@ -140,23 +140,25 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
     pincode,
     Property_Type
   } = req.body;
-
+ 
   if (!property_name) {
     return res.status(400).json({ message: 'Property name and address are required', status: false });
   }
 
   try {
     // Get the current timestamp in Asia/Kolkata timezone
-    const createdDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
- const emp_id = req.user?.emp_id;
+    // const createdDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
+    const currentTimestamp = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
+
+    const emp_id = req.user?.emp_id;
     // Default status for new inquiries
     const inquiryStatus = "New Inquiry";
 
     const query = `
       INSERT INTO acquisition 
-      (property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, state, city, pincode, Property_Type, created_date, emp_id, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-      RETURNING id, property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, state, city, pincode, Property_Type, created_date, emp_id, status;
+      (property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, state, city, pincode, Property_Type, created_date,updated_date, emp_id, status)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,$14)
+      RETURNING id, property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, state, city, pincode, Property_Type, created_date,updated_date, emp_id, status;
     `;
 
     const latitudeValue = latitude || null;
@@ -175,7 +177,8 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
       city,
       pincode,
       PropertyTypeString,
-      createdDate,
+      currentTimestamp,
+      currentTimestamp,
       emp_id,
       inquiryStatus
     ];
@@ -207,6 +210,7 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
     res.status(500).json({ status: false, message: 'Internal server error' });
   }
 });
+
 
   
 
