@@ -152,27 +152,38 @@ router.post('/inquiry-list', verifyToken, async (req, res) => {
 
 
 
-router.post('/inquiry', verifyToken, async (req, res) => {
-    const {
-        name,
-        mobile_number,
-        budget,
-        screen_count,
-        screen_type,
-        total_days,
-        campaign_remark,
-        email,
-        company_name // Added company_name field
-    } = req.body;
+router.post("/inquiry", verifyToken, async (req, res) => {
+  const {
+    name,
+    mobile_number,
+    budget,
+    screen_count,
+    screen_type,
+    total_days,
+    campaign_remark,
+    email,
+    company_name, // Added company_name field
+  } = req.body;
 
-    const employee_id = req.user.emp_id; // Extract from token
-
-    try {
-
-        
+  const employee_id = req.user.emp_id; // Extract from token
 
 
-        const query = `
+
+  try {
+
+    const checkQuery = `SELECT id FROM public.sales_enquiry WHERE mobile_number = $1 LIMIT 1;`;
+    const existing = await pool.query(checkQuery, [mobile_number]);
+
+    if (existing.rows.length > 0) {
+      return res.status(400).json({
+        status: false,
+        message: "Mobile number already exists. Please use a different number.",
+      });
+    }
+
+    
+
+    const query = `
         INSERT INTO public.sales_enquiry 
         (name, mobile_number, budget, screen_count, screen_type, total_days, campaign_remark, email, company_name, emp_id, last_update_time, status, created_time) 
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 
@@ -185,51 +196,50 @@ router.post('/inquiry', verifyToken, async (req, res) => {
                   TO_CHAR(created_time, 'YYYY-MM-DD HH24:MI:SS') AS created_time;
     `;
 
-        const screenTypeString = JSON.stringify(screen_type);
+    const screenTypeString = JSON.stringify(screen_type);
 
-        const result = await pool.query(query, [
-            name,
-            mobile_number,
-            budget,
-            screen_count,
-            screenTypeString,
-            total_days,
-            campaign_remark,
-            email,
-            company_name, // Added company_name to query values
-            employee_id,
-        ]);
+    const result = await pool.query(query, [
+      name,
+      mobile_number,
+      budget,
+      screen_count,
+      screenTypeString,
+      total_days,
+      campaign_remark,
+      email,
+      company_name, // Added company_name to query values
+      employee_id,
+    ]);
 
-        // Parse screen_type back to JSON object to avoid extra escaping           
-        const responseData = result.rows[0];
-        responseData.screen_type = JSON.parse(responseData.screen_type);
-        const newInquiry = result.rows[0];
-        const inquiryId = newInquiry.id; // Extract the ID of the created inquiry
-        //add logs
+    // Parse screen_type back to JSON object to avoid extra escaping
+    const responseData = result.rows[0];
+    responseData.screen_type = JSON.parse(responseData.screen_type);
+    const newInquiry = result.rows[0];
+    const inquiryId = newInquiry.id; // Extract the ID of the created inquiry
+    //add logs
 
-        const user = req.session.user || req.user || { name: "Anonymous" }; 
+    const user = req.session.user || req.user || { name: "Anonymous" };
 
-        const logMessage = `add new inquiry. ${company_name}`;
+    const logMessage = `,a new inquiry has been added for '${company_name}`;
 
-        await logAction(req, "sales", logMessage, inquiryId);
-        console.log(logMessage)
+    await logAction(req, "sales", logMessage, inquiryId);
+    console.log(logMessage);
 
+    res.status(201).json({
+      status: true,
+      message: "inquiry created successfully",
+    });
+    console.log(responseData);
+  } catch (error) {
+    console.error("Error during inquiry creation:", error);
 
-
-        res.status(201).json({
-            status: true,
-            message: 'inquiry created successfully'
-        });
-        console.log(responseData);
-    } catch (error) {
-        console.error('Error during inquiry creation:', error);
-
-        res.status(500).json({
-            status: false,
-            message: 'Failed to create inquiry',
-        });
-    }
+    res.status(500).json({
+      status: false,
+      message: "Failed to create inquiry",
+    });
+  }
 });
+
 
 router.post('/inquiry/edit', verifyToken, async (req, res) => {                                                  
     const { 
