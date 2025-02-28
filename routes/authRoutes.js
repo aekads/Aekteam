@@ -70,6 +70,74 @@ router.post('/register', async (req, res) => {
 
 
 
+
+
+router.get('/list', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM employees');
+        res.render('list', { employees: result.rows });
+    } catch (error) {
+        console.error('Error fetching employees:', error);
+        res.status(500).send('Error loading data');
+    }
+});
+
+router.get('/edit/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query('SELECT * FROM employees WHERE emp_id = $1', [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).send('Employee not found');
+        }
+
+        res.render('edit', { employee: result.rows[0] });
+    } catch (error) {
+        console.error('Error fetching employee for edit:', error);
+        res.status(500).send('Error loading data');
+    }
+});
+
+router.post('/edit/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, emp_number, email, assign_city, role } = req.body;
+
+  
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN'); // Start transaction
+
+        const result = await client.query(
+            `UPDATE employees 
+             SET name = $1, emp_number = $2, email = $3, assign_city = $4, role = $5 
+             WHERE emp_id = $6 
+             RETURNING *`,  // Returning updated row for verification
+            [name, emp_number, email || null, assign_city, role, id]
+        );
+
+        if (result.rowCount === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).send('Employee not found.');
+        }
+
+        await client.query('COMMIT'); // Commit transaction
+        res.redirect('/api/list');
+    } catch (error) {
+        await client.query('ROLLBACK'); // Rollback on failure
+        console.error('Error updating employee:', error);
+        res.status(500).send('Error updating employee.');
+    } finally {
+        client.release();
+    }
+});
+
+
+
+
+
+
+
+
 router.get('/login', (req, res) => {
     res.render('login', { error: null });
 });
