@@ -134,38 +134,43 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
     per_screen_rent_price,
     latitude,
     longitude,
-    emp_id,
     state,
     city,
     pincode,
-    Property_Type
+    Property_Type,
+    contact_person_mobile_number // New field added
   } = req.body;
  
-  if (!property_name) {
-    return res.status(400).json({ message: 'Property name and address are required', status: false });
+  if (!property_name || !contact_person_mobile_number) {
+    return res.status(400).json({ message: 'Property name and contact person mobile number are required', status: false });
   }
 
   try {
     // Get the current timestamp in Asia/Kolkata timezone
-    // const createdDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
     const currentTimestamp = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
-
     const emp_id = req.user?.emp_id;
-    // Default status for new inquiries
     const inquiryStatus = "New Inquiry";
 
+    // Check if the mobile number already exists
+    const checkQuery = `SELECT id FROM acquisition WHERE contact_person_mobile_number = $1`;
+    const checkResult = await pool.query(checkQuery, [contact_person_mobile_number]);
+
+    if (checkResult.rows.length > 0) {
+      return res.status(400).json({ status: false, message: 'Contact person mobile number already exists' });
+    }
+
+    // Insert Query
     const query = `
       INSERT INTO acquisition 
-      (property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, state, city, pincode, Property_Type, created_date,updated_date, emp_id, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,$14)
-      RETURNING id, property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, state, city, pincode, Property_Type, created_date,updated_date, emp_id, status;
+      (property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, state, city, pincode, Property_Type, created_date, updated_date, emp_id, status, contact_person_mobile_number)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      RETURNING id, property_name, address, screen_qty, per_screen_rent_price, latitude, longitude, state, city, pincode, Property_Type, created_date, updated_date, emp_id, status, contact_person_mobile_number;
     `;
 
     const latitudeValue = latitude || null;
     const longitudeValue = longitude || null;
     const PropertyTypeString = JSON.stringify(Property_Type);
 
-    // Add `createdDate` and `inquiryStatus` to the values array
     const values = [
       property_name,
       address,
@@ -177,17 +182,16 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
       city,
       pincode,
       PropertyTypeString,
-      currentTimestamp,
-      currentTimestamp,
+      currentTimestamp, // created_date
+      currentTimestamp, // updated_date
       emp_id,
-      inquiryStatus
+      inquiryStatus,
+      contact_person_mobile_number // New field added
     ];
 
     const result = await pool.query(query, values);
-
-    // Retrieve the newly created property ID
     const newInquiry = result.rows[0];
-    const propertyId = newInquiry.id;  // Ensure 'id' is returned from the query
+    const propertyId = newInquiry.id;
 
     // Parse Property_Type if necessary
     if (newInquiry.Property_Type) {
@@ -198,9 +202,8 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
       }
     }
 
-    const logMessage = `Added new property: ${property_name}`;
+    const logMessage = `Added new property: ${property_name} with contact ${contact_person_mobile_number}`;
     
-    // Log the action with the correct propertyId
     await logAction(req, "acquisition", logMessage, propertyId);
     console.log(logMessage);
 
