@@ -54,7 +54,7 @@ router.get("/All_Data",verifyToken, async (req, res) => {
 
 
 // POST API - Fetch screens based on assign_city
-router.post("/getScreens", async (req, res) => {
+router.post("/getScreens",verifyToken, async (req, res) => {
     const { assign_city } = req.body;
 
     if (!assign_city) {
