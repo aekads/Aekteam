@@ -259,6 +259,18 @@ router.post('/inquiry/edit', verifyToken, async (req, res) => {
     const employee_id = req.user.emp_id;
 
     try {
+
+        const checkQuery = `SELECT id FROM public.sales_enquiry WHERE mobile_number = $1 AND id != $2 LIMIT 1;`;
+    const existingMobile = await pool.query(checkQuery, [mobile_number, id]);
+
+    if (existingMobile.rows.length > 0) {
+      return res.status(400).json({
+        status: false,
+        message: "The mobile number already exists, and the lead is being handled by another person",
+      });
+    }
+
+        
          // Fetch current status and company_name before update
          const existingQuery = `SELECT status, company_name FROM public.sales_enquiry WHERE id = $1`;
          const existingResult = await pool.query(existingQuery, [id]);
