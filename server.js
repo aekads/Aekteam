@@ -4,7 +4,7 @@ const session = require("express-session");
 const app = express();
 const authRoutes = require("./routes/authRoutes");
 const acquisitionRouter = require('./routes/acquisitionRouter');
-
+const inventoryRoutes = require("./routes/inventoryRoutes");
 //sociey router reporting
 const societyRouter = require('./routes/societyRouter');
 const fileUpload = require('express-fileupload');
@@ -26,6 +26,7 @@ app.use('/api', acquisitionRouter);
 
 app.use('/api', societyRouter)
 
+app.use("/api/inventory", inventoryRoutes);
 app.use(fileUpload());
 // Render Dashboard
 app.get("/dashboard", (req, res) => {
