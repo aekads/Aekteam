@@ -53,4 +53,36 @@ router.get("/All_Data",verifyToken, async (req, res) => {
 
 
 
+// POST API - Fetch screens based on assign_city
+router.post("/getScreens", async (req, res) => {
+    const { assign_city } = req.body;
+
+    if (!assign_city) {
+        return res.status(400).json({ error: "assign_city is required" });
+    }
+
+    try {
+        let query;
+        let values;
+
+        if (assign_city.toLowerCase() === "ahmedabad" || assign_city.toLowerCase() === "gandhinagar") {
+            // Return screens for Ahmedabad and Gandhinagar
+            query = `SELECT screenid, screenname FROM screens WHERE city IN ('Ahmedabad', 'Gandhinagar')`;
+            values = [];
+        } else {
+            // Return screens only for the requested city
+            query = `SELECT screenid, screenname FROM screens WHERE city = $1`;
+            values = [assign_city];
+        }
+
+        const result = await pool.query(query, values);
+        res.json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
+
+
 module.exports = router;
