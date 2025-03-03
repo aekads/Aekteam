@@ -461,6 +461,8 @@ router.post(
 
 
 //fetches data  
+
+//fetches data  
 router.post('/acquisition-list', verifyToken, async (req, res) => {
   const { emp_id } = req.body;
 
@@ -517,10 +519,50 @@ router.post('/acquisition-list', verifyToken, async (req, res) => {
       created_date: moment(row.created_date).tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss'),
     }));
 
+
+       // 🔹 Fetch Latest Attendance Record
+       const attendanceQuery = `
+       SELECT id, emp_id, date, punch_in_time, punch_out_time
+       FROM public.attendance
+       WHERE emp_id = $1
+       ORDER BY punch_in_time DESC 
+       LIMIT 1;
+     `;
+     const attendanceResult = await pool.query(attendanceQuery, [emp_id]);
+ 
+     let latestAttendance = {
+      id: null,
+      emp_id: emp_id,
+      date: "null",
+      punch_in_time: null,
+      punch_out_time: null
+    };
+
+     if (attendanceResult.rows.length > 0) {
+       const attendance = attendanceResult.rows[0];
+       latestAttendance = {
+         id: attendance.id,
+         emp_id: attendance.emp_id,
+         date: moment.utc(attendance.date)
+           .tz('Asia/Kolkata')
+           .format('YYYY-MM-DD HH:mm:ss'),
+         punch_in_time: moment.utc(attendance.punch_in_time)
+           .tz('Asia/Kolkata')
+           .format('YYYY-MM-DD HH:mm:ss'),
+         punch_out_time: attendance.punch_out_time
+           ? moment.utc(attendance.punch_out_time)
+               .tz('Asia/Kolkata')
+               .format('YYYY-MM-DD HH:mm:ss')
+           : null,
+       };
+     }
+ 
+
     res.status(200).json({
       status: true,
       message: 'Data fetched successfully',
       data: formattedData,
+      latestAttendance: latestAttendance,
     });
   } catch (error) {
     console.error('Error fetching properties:', error);
@@ -530,6 +572,9 @@ router.post('/acquisition-list', verifyToken, async (req, res) => {
     });
   }
 });
+
+  
+
 
   
 
