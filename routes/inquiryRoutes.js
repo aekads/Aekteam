@@ -183,7 +183,7 @@ router.post("/inquiry-list", verifyToken, async (req, res) => {
       status: true,
       message: "Inquiries Data fetched successfully",
       data: inquiries,
-      attendance: latestAttendance,
+      latest_attendance: latestAttendance,
 
     });
   } catch (error) {
