@@ -27,7 +27,7 @@
             <th>Price</th>
             <th>GST</th>
             <th>Unit</th>
-            <!-- <th>Actions</th> -->
+            <th>Actions</th>
         </tr>
         <% inventory.forEach(item => { %>
         <tr>
@@ -37,13 +37,13 @@
             <td><%= item.price %></td>
             <td><%= item.gst %></td>
             <td><%= item.unit %></td>
-            <!-- <td>
-                <form action="/inventory/delete/<%= item.id %>" method="POST">
-                    <button type="submit">Delete</button>
-                </form>
-            </td> -->
+            <td>
+                <a href="/api/inventory/edit/<%= item.id %>">Edit</a>
+            </td>
         </tr>
         <% }); %>
     </table>
+
+    
 </body>
 </html>
