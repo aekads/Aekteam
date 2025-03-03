@@ -562,7 +562,7 @@ router.post('/acquisition-list', verifyToken, async (req, res) => {
       status: true,
       message: 'Data fetched successfully',
       data: formattedData,
-      latestAttendance: latestAttendance,
+      latest_attendance: latestAttendance,
     });
   } catch (error) {
     console.error('Error fetching properties:', error);
