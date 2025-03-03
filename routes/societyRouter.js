@@ -44,9 +44,8 @@ router.get("/society-work/list", verifyToken, async (req, res) => {
       res.status(500).json({ status: false, message: "Internal server error." });
   }
 });
-
 router.post("/society-work/add", upload.single("work_photo"), verifyToken, async (req, res) => {
-  let { society_name, screen_name, employee_work, emp_id } = req.body;
+  let { society_name, screen_name, employee_work, emp_id,ScreenId, inventoryId,inventoryQTY  } = req.body;
 
   if (!society_name) {
       return res.status(400).json({ status: false, message: "society_name is required." });
@@ -79,6 +78,12 @@ router.post("/society-work/add", upload.single("work_photo"), verifyToken, async
       //     return res.status(400).json({ status: false, message: "employee_work should be an array." });
       // }
 
+       // Check if employee_work includes "maintenance" and require ScreenId
+       if (employee_work.includes("maintenance") && !ScreenId) {
+        return res.status(400).json({ status: false, message: "ScreenId is required for maintenance work." });
+    }
+
+
       // Ensure emp_code and other fields are plain strings (trim any extra spaces)
       emp_id = typeof emp_id === 'string' ? emp_id.trim() : emp_id;
       society_name = typeof society_name === 'string' ? society_name.trim() : society_name;
@@ -88,17 +93,22 @@ router.post("/society-work/add", upload.single("work_photo"), verifyToken, async
       const createdDate = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
       const updatedDate = createdDate;
 
+      ScreenId = ScreenId ? parseInt(ScreenId) : null;
+      inventoryId = inventoryId ? parseInt(inventoryId) : null;
+      inventoryQTY = inventoryQTY ? parseInt(inventoryQTY) : null;
+
       // Save data into the PostgreSQL table
       const query = `
-          INSERT INTO public.society_work (society_name, screen_name, employee_work, work_photo, emp_id, created_date, updated_date)
-          VALUES ($1, $2, $3::jsonb, $4, $5, $6, $7)
+          INSERT INTO public.society_work (society_name, screen_name, employee_work, work_photo, emp_id, created_date, updated_date, ScreenId, inventoryId,inventoryQTY)
+          VALUES ($1, $2, $3::jsonb, $4, $5, $6, $7, $8, $9, $10)
           RETURNING *;
       `;
-      const values = [society_name, screen_name, JSON.stringify(employee_work), workPhotoUrl, emp_id, createdDate, updatedDate];
-
+      const values = [society_name, screen_name, JSON.stringify(employee_work), workPhotoUrl, emp_id, createdDate, updatedDate, ScreenId, inventoryId,inventoryQTY];
+      console.log(values)
       const dbResult = await pool.query(query, values);
       let responseData = dbResult.rows[0];
 
+      console.log(responseData)
       // Format the dates before sending the response
       responseData.created_date = moment(responseData.created_date).format("YYYY-MM-DD HH:mm:ss");
       responseData.updated_date = moment(responseData.updated_date).format("YYYY-MM-DD HH:mm:ss");
