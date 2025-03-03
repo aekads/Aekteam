@@ -110,7 +110,14 @@ router.post("/inquiry-list", verifyToken, async (req, res) => {
     `;
     const attendanceResult = await pool.query(attendanceQuery, [emp_id]);
 
-    let latestAttendance = null;
+    let latestAttendance = {
+      id: null,
+      emp_id: emp_id,
+      date: "null",
+      punch_in_time: null,
+      punch_out_time: null
+    };
+
 
     if (attendanceResult.rows.length > 0) {
       const attendance = attendanceResult.rows[0];
