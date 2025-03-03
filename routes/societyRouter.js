@@ -44,8 +44,10 @@ router.get("/society-work/list", verifyToken, async (req, res) => {
       res.status(500).json({ status: false, message: "Internal server error." });
   }
 });
+
+
 router.post("/society-work/add", upload.single("work_photo"), verifyToken, async (req, res) => {
-  let { society_name, screen_name, employee_work, emp_id,ScreenId, inventoryId,inventoryQTY  } = req.body;
+  let { society_name, screen_name, employee_work, emp_id,ScreenId, inventoryId,inventoryQTY, remarks   } = req.body;
 
   if (!society_name) {
       return res.status(400).json({ status: false, message: "society_name is required." });
@@ -99,11 +101,11 @@ router.post("/society-work/add", upload.single("work_photo"), verifyToken, async
 
       // Save data into the PostgreSQL table
       const query = `
-          INSERT INTO public.society_work (society_name, screen_name, employee_work, work_photo, emp_id, created_date, updated_date, ScreenId, inventoryId,inventoryQTY)
-          VALUES ($1, $2, $3::jsonb, $4, $5, $6, $7, $8, $9, $10)
+          INSERT INTO public.society_work (society_name, screen_name, employee_work, work_photo, emp_id, created_date, updated_date, ScreenId, inventoryId,inventoryQTY, remarks )
+          VALUES ($1, $2, $3::jsonb, $4, $5, $6, $7, $8, $9, $10, $11)
           RETURNING *;
       `;
-      const values = [society_name, screen_name, JSON.stringify(employee_work), workPhotoUrl, emp_id, createdDate, updatedDate, ScreenId, inventoryId,inventoryQTY];
+      const values = [society_name, screen_name, JSON.stringify(employee_work), workPhotoUrl, emp_id, createdDate, updatedDate, ScreenId, inventoryId,inventoryQTY, remarks ];
       console.log(values)
       const dbResult = await pool.query(query, values);
       let responseData = dbResult.rows[0];
@@ -122,6 +124,7 @@ router.post("/society-work/add", upload.single("work_photo"), verifyToken, async
       res.status(500).json({ status: false, message: "Internal server error." });
   }
 });
+
 
 
 
