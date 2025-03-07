@@ -89,7 +89,6 @@ router.get("/inquiry/list", verifyToken, async (req, res) => {
 
 
 
-
 router.post("/inquiry-list", verifyToken, async (req, res) => {
   const { emp_id, filter_date } = req.body;
 
@@ -101,9 +100,8 @@ router.post("/inquiry-list", verifyToken, async (req, res) => {
   }
 
   try {
-
-      // 🔹 Fetch latest punch-in/out record (always execute this)
-      const attendanceQuery = `
+    // 🔹 Fetch latest punch-in/out record
+    const attendanceQuery = `
       SELECT id, emp_id, date, punch_in_time, punch_out_time
       FROM public.attendance
       WHERE emp_id = $1
@@ -120,64 +118,50 @@ router.post("/inquiry-list", verifyToken, async (req, res) => {
       punch_out_time: null
     };
 
-
     if (attendanceResult.rows.length > 0) {
       const attendance = attendanceResult.rows[0];
 
       latestAttendance = {
         id: attendance.id,
         emp_id: attendance.emp_id,
-        date: moment
-          .utc(attendance.date)
-          .tz("Asia/Kolkata")
-          .format("YYYY-MM-DD HH:mm:ss"),
-        punch_in_time: moment
-          .utc(attendance.punch_in_time)
-          .tz("Asia/Kolkata")
-          .format("YYYY-MM-DD HH:mm:ss"),
-        punch_out_time: attendance.punch_out_time
-          ? moment
-              .utc(attendance.punch_out_time)
-              .tz("Asia/Kolkata")
-              .format("YYYY-MM-DD HH:mm:ss")
-          : null,
+        date: attendance.date ? moment.utc(attendance.date).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss") : null,
+        punch_in_time: attendance.punch_in_time ? moment.utc(attendance.punch_in_time).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss") : null,
+        punch_out_time: attendance.punch_out_time ? moment.utc(attendance.punch_out_time).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss") : null
       };
     }
 
-
+    // 🔹 Inquiry list query with conditional filters
     let query = `
-          SELECT se.id, se.name, se.mobile_number, se.budget, se.screen_count, 
-       se.screen_type, se.total_days, se.campaign_remark, se.email, 
-       se.company_name, se.status, se.assign_emp_id, 
-       e.name AS assigned_employee_name, 
-       TO_CHAR(se.created_time, 'YYYY-MM-DD HH24:MI:SS') AS created_time
-        FROM public.sales_enquiry se
-        LEFT JOIN public.employees e ON se.assign_emp_id = e.emp_id
-        ORDER BY se.created_time DESC;
-
-        `;
+      SELECT se.id, se.name, se.mobile_number, se.budget, se.screen_count, 
+             se.screen_type, se.total_days, se.campaign_remark, se.email, 
+             se.company_name, se.status, se.assign_emp_id, 
+             e.name AS assigned_employee_name, 
+             TO_CHAR(se.created_time, 'YYYY-MM-DD HH24:MI:SS') AS created_time
+      FROM public.sales_enquiry se
+      LEFT JOIN public.employees e ON se.assign_emp_id = e.emp_id
+      WHERE se.assign_emp_id = $1
+    `;
 
     const queryParams = [emp_id];
 
     if (filter_date) {
-      query += ` AND DATE(created_time) = $2`;
+      query += ` AND DATE(se.created_time) = $2`;
       queryParams.push(filter_date);
     }
 
-    query += ` ORDER BY created_time DESC;`;
+    query += ` ORDER BY se.created_time DESC;`;
 
     const result = await pool.query(query, queryParams);
 
     // ✅ Safely parse `screen_type`
     const inquiries = result.rows.map((inquiry) => {
-      let parsedScreenType = null;
+      let parsedScreenType = inquiry.screen_type;
 
-      if (inquiry.screen_type) {
+      if (typeof inquiry.screen_type === "string") {
         try {
           parsedScreenType = JSON.parse(inquiry.screen_type);
         } catch (error) {
-          // console.error(`Invalid JSON in screen_type for ID ${inquiry.id}:`, inquiry.screen_type);
-          parsedScreenType = inquiry.screen_type; // Keep it as is to debug
+          console.error(`Invalid JSON in screen_type for ID ${inquiry.id}:`, inquiry.screen_type);
         }
       }
 
@@ -192,7 +176,6 @@ router.post("/inquiry-list", verifyToken, async (req, res) => {
       message: "Inquiries Data fetched successfully",
       data: inquiries,
       latest_attendance: latestAttendance,
-
     });
   } catch (error) {
     console.error("Error fetching inquiries data:", error);
@@ -203,6 +186,7 @@ router.post("/inquiry-list", verifyToken, async (req, res) => {
     });
   }
 });
+
 
 
 
