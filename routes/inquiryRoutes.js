@@ -153,14 +153,14 @@ router.post("/inquiry-list", verifyToken, async (req, res) => {
       se.remark, se.creative_video_url, se.quotation_url, se.last_update_time, 
       se.status, se.total_days, se.emp_id, se.city, se.company_name, 
       se.created_time, se.campaign_remark, se.assign_emp_id,
-  
+
       e.name AS assigned_employee_name
-  
+
     FROM public.sales_enquiry se
     LEFT JOIN public.employees e ON se.assign_emp_id = e.emp_id
     WHERE se.emp_id = $1
+      AND ($2::int IS NULL OR se.assign_emp_id = $2)
   `;
-
     const queryParams = [emp_id];
 
     if (filter_date) {
