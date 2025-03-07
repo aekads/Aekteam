@@ -407,14 +407,13 @@ router.post('/inquiry/edit', verifyToken, async (req, res) => {
 
 
 
-
 router.get("/inquiry/salesteamlist", verifyToken, async (req, res) => {
   try {
     // Fetch only emp_id and name for sales employees
     const query = `
       SELECT emp_id, name 
       FROM public.employees 
-      WHERE role = $1 AND isdeleted = false
+      WHERE role = $1 AND isdeleted = 0
       ORDER BY created_at DESC;
     `;
 
