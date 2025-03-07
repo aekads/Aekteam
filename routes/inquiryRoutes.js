@@ -146,9 +146,15 @@ router.post("/inquiry-list", verifyToken, async (req, res) => {
 
 
     let query = `
-            SELECT id, name, mobile_number, email, budget, screen_count, screen_type, tag, final_screen_count, start_date, end_date, total_value, per_screen_cost, payment_mode, payment_url, remark, creative_video_url, quotation_url, last_update_time, status, total_days, emp_id, city, company_name, created_time, campaign_remark, email
-            FROM public.sales_enquiry
-            WHERE emp_id = $1
+          SELECT se.id, se.name, se.mobile_number, se.budget, se.screen_count, 
+       se.screen_type, se.total_days, se.campaign_remark, se.email, 
+       se.company_name, se.status, se.assign_emp_id, 
+       e.name AS assigned_employee_name, 
+       TO_CHAR(se.created_time, 'YYYY-MM-DD HH24:MI:SS') AS created_time
+        FROM public.sales_enquiry se
+        LEFT JOIN public.employees e ON se.assign_emp_id = e.emp_id
+        ORDER BY se.created_time DESC;
+
         `;
 
     const queryParams = [emp_id];
