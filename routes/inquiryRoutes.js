@@ -165,6 +165,20 @@ router.post("/inquiry-list", verifyToken, async (req, res) => {
 
     const result = await pool.query(query, queryParams);
 
+
+    // Count inquiries where `emp_id = $1` and `assign_emp_id IS NOT NULL`
+    const countQuery = `
+    SELECT COUNT(*) AS total_count
+    FROM public.sales_enquiry AS se
+    WHERE se.emp_id = $1 AND se.assign_emp_id IS NOT NULL
+    `;
+
+    const countResult = await pool.query(countQuery, [emp_id]);
+    const totalCount = countResult.rows[0].total_count;
+
+
+
+
     // ✅ Safely parse `screen_type`
     const inquiries = result.rows.map((inquiry) => {
       let parsedScreenType = null;
