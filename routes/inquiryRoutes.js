@@ -67,12 +67,15 @@ router.get("/inquiry/list", verifyToken, async (req, res) => {
       const emp_id = req.user.emp_id; // Get employee ID from token
 
       const query = `
-          SELECT id, name, mobile_number, budget, screen_count, screen_type, 
-                 total_days, campaign_remark, email, company_name, status,
-                 TO_CHAR(created_time, 'YYYY-MM-DD HH24:MI:SS') AS created_time
-          FROM public.sales_enquiry 
-          WHERE emp_id = $1
-          ORDER BY created_time DESC;
+        SELECT se.id, se.name, se.mobile_number, se.budget, se.screen_count, 
+       se.screen_type, se.total_days, se.campaign_remark, se.email, 
+       se.company_name, se.status, se.assign_emp_id, 
+       e.name AS assigned_employee_name, 
+       TO_CHAR(se.created_time, 'YYYY-MM-DD HH24:MI:SS') AS created_time
+        FROM public.sales_enquiry se
+        LEFT JOIN public.employees e ON se.assign_emp_id = e.emp_id
+        ORDER BY se.created_time DESC;
+
       `;
 
       const result = await pool.query(query, [emp_id]);
@@ -83,7 +86,6 @@ router.get("/inquiry/list", verifyToken, async (req, res) => {
       res.status(500).json({ status: false, message: "Failed to fetch inquiries" });
   }
 });
-
 
 
 
@@ -288,121 +290,122 @@ router.post("/inquiry", verifyToken, async (req, res) => {
 
 
 router.post('/inquiry/edit', verifyToken, async (req, res) => {                                                  
-    const { 
-        id,
-        name,
-        mobile_number,
-        budget,
-        screen_count,
-        screen_type,
-        total_days,
-        campaign_remark,
-        email,
-        company_name,
-        status
-    } = req.body;
+  const { 
+      id,
+      name,
+      mobile_number,
+      budget,
+      screen_count,
+      screen_type,
+      total_days,
+      campaign_remark,
+      email,
+      company_name,
+      status,
+      assign_emp_id // This can be NULL if not provided
+  } = req.body;
 
-    const employee_id = req.user.emp_id;
+  const employee_id = req.user.emp_id;
 
-    try {
+  try {
+      // Check if mobile number exists for another inquiry
+      const checkQuery = `SELECT id FROM public.sales_enquiry WHERE mobile_number = $1 AND id != $2 LIMIT 1;`;
+      const existingMobile = await pool.query(checkQuery, [mobile_number, id]);
 
-        const checkQuery = `SELECT id FROM public.sales_enquiry WHERE mobile_number = $1 AND id != $2 LIMIT 1;`;
-    const existingMobile = await pool.query(checkQuery, [mobile_number, id]);
+      if (existingMobile.rows.length > 0) {
+          return res.status(400).json({
+              status: false,
+              message: "The mobile number already exists, and the lead is being handled by another person",
+          });
+      }
 
-    if (existingMobile.rows.length > 0) {
-      return res.status(400).json({
-        status: false,
-        message: "The mobile number already exists, and the lead is being handled by another person",
+      // Fetch current status and company_name before update
+      const existingQuery = `SELECT status, company_name FROM public.sales_enquiry WHERE id = $1`;
+      const existingResult = await pool.query(existingQuery, [id]);
+
+      if (existingResult.rows.length === 0) {
+          return res.status(404).json({ message: 'Inquiry not found' });
+      }
+
+      const previousStatus = existingResult.rows[0].status || "";
+      const company = existingResult.rows[0].company_name || "";
+
+      // Update the inquiry
+      const query = `
+          UPDATE public.sales_enquiry 
+          SET 
+              name = $1, 
+              mobile_number = $2, 
+              budget = $3, 
+              screen_count = $4, 
+              screen_type = $5, 
+              total_days = $6, 
+              campaign_remark = $7, 
+              emp_id = $8, 
+              email = $9,
+              company_name = $10,  
+              last_update_time = NOW() AT TIME ZONE 'Asia/Kolkata',  
+              status = $11,
+              assign_emp_id = COALESCE($12, NULL)  -- If NULL, store NULL
+          WHERE id = $13
+          RETURNING 
+              id, 
+              name, 
+              mobile_number, 
+              budget, 
+              screen_count, 
+              screen_type, 
+              total_days, 
+              campaign_remark, 
+              emp_id, 
+              email, 
+              company_name,  
+              TO_CHAR(last_update_time, 'YYYY-MM-DD HH24:MI:SS') AS last_update_time,  
+              status,
+              assign_emp_id;  -- Return assign_emp_id
+      `;
+
+      const result = await pool.query(query, [
+          name,
+          mobile_number,
+          budget,
+          screen_count,
+          JSON.stringify(screen_type),
+          total_days,
+          campaign_remark,
+          employee_id,
+          email,
+          company_name,
+          status,
+          assign_emp_id || null, // If undefined, store NULL
+          id
+      ]);
+
+      if (result.rows.length === 0) {
+          return res.status(404).json({ message: 'Inquiry not found' });
+      }
+
+      // Log the action with formatted message
+      const user = req.session.user || req.user || { name: "Anonymous" }; 
+      const assignedEmpLog = assign_emp_id ? `Assigned Employee ID: ${assign_emp_id}` : "No assigned employee";
+
+      const logMessage = `Updated inquiry. Status: '${previousStatus}' → '${status}', is ${company}, ${assignedEmpLog}`;
+
+      await logAction(req, "sales", logMessage, id);
+
+      console.log(logMessage);
+
+      res.status(200).json({
+          status: true,
+          message: 'Inquiry updated successfully'
       });
-    }
-
-        
-         // Fetch current status and company_name before update
-         const existingQuery = `SELECT status, company_name FROM public.sales_enquiry WHERE id = $1`;
-         const existingResult = await pool.query(existingQuery, [id]);
- 
-         if (existingResult.rows.length === 0) {
-             return res.status(404).json({ message: 'Inquiry not found' });
-         }
- 
-         const previousStatus = existingResult.rows[0].status || "";
-         const company = existingResult.rows[0].company_name || "";
-
-        const query = `
-        UPDATE public.sales_enquiry 
-        SET 
-            name = $1, 
-            mobile_number = $2, 
-            budget = $3, 
-            screen_count = $4, 
-            screen_type = $5, 
-            total_days = $6, 
-            campaign_remark = $7, 
-            emp_id = $8, 
-            email = $9,
-            company_name = $10,  
-            last_update_time = NOW() AT TIME ZONE 'Asia/Kolkata',  
-            status = $11
-        WHERE id = $12
-        RETURNING 
-            id, 
-            name, 
-            mobile_number, 
-            budget, 
-            screen_count, 
-            screen_type, 
-            total_days, 
-            campaign_remark, 
-            emp_id, 
-            email, 
-            company_name,  
-            TO_CHAR(last_update_time, 'YYYY-MM-DD HH24:MI:SS') AS last_update_time,  
-            status;
-    `;
-
-        const result = await pool.query(query, [
-            name,
-            mobile_number,
-            budget,
-            screen_count,
-            JSON.stringify(screen_type),
-            total_days,
-            campaign_remark,
-            employee_id, // Fixed position
-            email,
-            company_name, // Moved before id
-            status,
-            id
-        ]);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'Inquiry not found' });
-        }
-
-        // Log the action with formatted message
-        // const user = req.session.user || { name: "Anonymous" };
-        const user = req.session.user || req.user || { name: "Anonymous" }; 
-
-        const logMessage = `Updated inquiry. Status: '${previousStatus}' → '${status}', is ${company} `;
-
-        await logAction(
-            req,
-            "sales",
-            `${logMessage}`,
-            id // Store the modified row ID
-        );
-     
-        console.log(logMessage)
-
-        res.status(200).json({
-            status: true,
-            message: 'Inquiry updated successfully'
-        });
-    } catch (error) {
-        console.error('Error updating inquiry:', error);
-        res.status(500).json({ status: false, message: 'Failed to update inquiry' });
-    }
+  } catch (error) {
+      console.error('Error updating inquiry:', error);
+      res.status(500).json({ status: false, message: 'Failed to update inquiry' });
+  }
 });
+
+
 
 
 router.get("/inquiry/salesteamlist", verifyToken, async (req, res) => {
