@@ -88,7 +88,6 @@ router.get("/inquiry/list", verifyToken, async (req, res) => {
 });
 
 
-
 router.post("/inquiry-list", verifyToken, async (req, res) => {
   const { emp_id, filter_date } = req.body;
 
@@ -108,29 +107,19 @@ router.post("/inquiry-list", verifyToken, async (req, res) => {
       ORDER BY punch_in_time DESC
       LIMIT 1
     `;
+
     const attendanceResult = await pool.query(attendanceQuery, [emp_id]);
+    const latestAttendance = attendanceResult.rows.length > 0
+      ? {
+          id: attendanceResult.rows[0].id,
+          emp_id: attendanceResult.rows[0].emp_id,
+          date: moment.utc(attendanceResult.rows[0].date).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss") || null,
+          punch_in_time: moment.utc(attendanceResult.rows[0].punch_in_time).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss") || null,
+          punch_out_time: moment.utc(attendanceResult.rows[0].punch_out_time).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss") || null,
+        }
+      : { id: null, emp_id, date: null, punch_in_time: null, punch_out_time: null };
 
-    let latestAttendance = {
-      id: null,
-      emp_id: emp_id,
-      date: "null",
-      punch_in_time: null,
-      punch_out_time: null
-    };
-
-    if (attendanceResult.rows.length > 0) {
-      const attendance = attendanceResult.rows[0];
-
-      latestAttendance = {
-        id: attendance.id,
-        emp_id: attendance.emp_id,
-        date: attendance.date ? moment.utc(attendance.date).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss") : null,
-        punch_in_time: attendance.punch_in_time ? moment.utc(attendance.punch_in_time).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss") : null,
-        punch_out_time: attendance.punch_out_time ? moment.utc(attendance.punch_out_time).tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss") : null
-      };
-    }
-
-    // 🔹 Inquiry list query with conditional filters
+    // 🔹 Inquiry list query
     let query = `
       SELECT se.id, se.name, se.mobile_number, se.budget, se.screen_count, 
              se.screen_type, se.total_days, se.campaign_remark, se.email, 
@@ -153,23 +142,18 @@ router.post("/inquiry-list", verifyToken, async (req, res) => {
 
     const result = await pool.query(query, queryParams);
 
-    // ✅ Safely parse `screen_type`
-    const inquiries = result.rows.map((inquiry) => {
-      let parsedScreenType = inquiry.screen_type;
-
-      if (typeof inquiry.screen_type === "string") {
+    // ✅ Parse `screen_type` safely
+    const inquiries = result.rows.map((inquiry) => ({
+      ...inquiry,
+      screen_type: (() => {
         try {
-          parsedScreenType = JSON.parse(inquiry.screen_type);
+          return typeof inquiry.screen_type === "string" ? JSON.parse(inquiry.screen_type) : inquiry.screen_type;
         } catch (error) {
           console.error(`Invalid JSON in screen_type for ID ${inquiry.id}:`, inquiry.screen_type);
+          return inquiry.screen_type; // Return original value if parsing fails
         }
-      }
-
-      return {
-        ...inquiry,
-        screen_type: parsedScreenType,
-      };
-    });
+      })(),
+    }));
 
     res.status(200).json({
       status: true,
@@ -179,14 +163,12 @@ router.post("/inquiry-list", verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching inquiries data:", error);
-
     res.status(500).json({
       status: false,
       message: "Failed to fetch inquiries Data",
     });
   }
 });
-
 
 
 
