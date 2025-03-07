@@ -405,6 +405,38 @@ router.post('/inquiry/edit', verifyToken, async (req, res) => {
 });
 
 
+router.get("/inquiry/salesteamlist", verifyToken, async (req, res) => {
+  try {
+    // Fetch only emp_id and name for sales employees
+    const query = `
+      SELECT emp_id, name 
+      FROM public.employees 
+      WHERE role = $1 AND isdeleted = false
+      ORDER BY created_at DESC;
+    `;
+
+    const result = await pool.query(query, ["sales"]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        status: false,
+        message: "No sales employees found",
+      });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Sales employees retrieved successfully",
+      data: result.rows, // Returns only emp_id and name
+    });
+  } catch (error) {
+    console.error("Error fetching sales employees:", error);
+    res.status(500).json({
+      status: false,
+      message: "Failed to retrieve sales employees",
+    });
+  }
+});
 
 
 
