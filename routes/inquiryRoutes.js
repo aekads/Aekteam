@@ -9,9 +9,9 @@ const moment = require('moment-timezone');
 
 
 const getClientIP = (req) => {
-    let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    if (ip.includes(',')) ip = ip.split(',')[0]; // Handle multiple IPs
-    return ip || 'Unknown IP';
+  let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  if (ip.includes(',')) ip = ip.split(',')[0]; // Handle multiple IPs
+  return ip || 'Unknown IP';
 };
 
 const logAction = async (req, action, message, salesEnquiryId = null) => {
@@ -55,18 +55,18 @@ const logAction = async (req, action, message, salesEnquiryId = null) => {
   }
 };
 
-  
+
 //for frontend part
 //render frontend page
 router.get('/inquiry', (req, res) => {
   res.render('sales', { emp_id: req.query.emp_id, name: req.query.name, assign_city: req.query.assign_city });
 });
 
-router.get("/inquiry/list", verifyToken, async (req, res) => { 
+router.get("/inquiry/list", verifyToken, async (req, res) => {
   try {
-      const emp_id = req.user.emp_id; // Get employee ID from token
+    const emp_id = req.user.emp_id; // Get employee ID from token
 
-      const query = `
+    const query = `
         SELECT se.id, se.name, se.mobile_number, se.budget, se.screen_count, 
        se.screen_type, se.total_days, se.campaign_remark, se.email, 
        se.company_name, se.status, se.assign_emp_id, 
@@ -78,12 +78,12 @@ router.get("/inquiry/list", verifyToken, async (req, res) => {
 
       `;
 
-      const result = await pool.query(query, [emp_id]);
-      res.status(200).json({ status: true, data: result.rows });
+    const result = await pool.query(query, [emp_id]);
+    res.status(200).json({ status: true, data: result.rows });
 
   } catch (error) {
-      console.error("Error fetching inquiries:", error);
-      res.status(500).json({ status: false, message: "Failed to fetch inquiries" });
+    console.error("Error fetching inquiries:", error);
+    res.status(500).json({ status: false, message: "Failed to fetch inquiries" });
   }
 });
 
@@ -102,8 +102,8 @@ router.post("/inquiry-list", verifyToken, async (req, res) => {
 
   try {
 
-      // 🔹 Fetch latest punch-in/out record (always execute this)
-      const attendanceQuery = `
+    // 🔹 Fetch latest punch-in/out record (always execute this)
+    const attendanceQuery = `
       SELECT id, emp_id, date, punch_in_time, punch_out_time
       FROM public.attendance
       WHERE emp_id = $1
@@ -137,9 +137,9 @@ router.post("/inquiry-list", verifyToken, async (req, res) => {
           .format("YYYY-MM-DD HH:mm:ss"),
         punch_out_time: attendance.punch_out_time
           ? moment
-              .utc(attendance.punch_out_time)
-              .tz("Asia/Kolkata")
-              .format("YYYY-MM-DD HH:mm:ss")
+            .utc(attendance.punch_out_time)
+            .tz("Asia/Kolkata")
+            .format("YYYY-MM-DD HH:mm:ss")
           : null,
       };
     }
@@ -239,7 +239,7 @@ router.post("/inquiry", verifyToken, async (req, res) => {
       });
     }
 
-    
+
 
     const query = `
         INSERT INTO public.sales_enquiry 
@@ -299,49 +299,49 @@ router.post("/inquiry", verifyToken, async (req, res) => {
 });
 
 
-router.post('/inquiry/edit', verifyToken, async (req, res) => {                                                  
-  const { 
-      id,
-      name,
-      mobile_number,
-      budget,
-      screen_count,
-      screen_type,
-      total_days,
-      campaign_remark,
-      email,
-      company_name,
-      status,
-      assign_emp_id // This can be NULL if not provided
+router.post('/inquiry/edit', verifyToken, async (req, res) => {
+  const {
+    id,
+    name,
+    mobile_number,
+    budget,
+    screen_count,
+    screen_type,
+    total_days,
+    campaign_remark,
+    email,
+    company_name,
+    status,
+    assign_emp_id // This can be NULL if not provided
   } = req.body;
 
   const employee_id = req.user.emp_id;
 
   try {
-      // Check if mobile number exists for another inquiry
-      const checkQuery = `SELECT id FROM public.sales_enquiry WHERE mobile_number = $1 AND id != $2 LIMIT 1;`;
-      const existingMobile = await pool.query(checkQuery, [mobile_number, id]);
+    // Check if mobile number exists for another inquiry
+    const checkQuery = `SELECT id FROM public.sales_enquiry WHERE mobile_number = $1 AND id != $2 LIMIT 1;`;
+    const existingMobile = await pool.query(checkQuery, [mobile_number, id]);
 
-      if (existingMobile.rows.length > 0) {
-          return res.status(400).json({
-              status: false,
-              message: "The mobile number already exists, and the lead is being handled by another person",
-          });
-      }
+    if (existingMobile.rows.length > 0) {
+      return res.status(400).json({
+        status: false,
+        message: "The mobile number already exists, and the lead is being handled by another person",
+      });
+    }
 
-      // Fetch current status and company_name before update
-      const existingQuery = `SELECT status, company_name FROM public.sales_enquiry WHERE id = $1`;
-      const existingResult = await pool.query(existingQuery, [id]);
+    // Fetch current status and company_name before update
+    const existingQuery = `SELECT status, company_name FROM public.sales_enquiry WHERE id = $1`;
+    const existingResult = await pool.query(existingQuery, [id]);
 
-      if (existingResult.rows.length === 0) {
-          return res.status(404).json({ message: 'Inquiry not found' });
-      }
+    if (existingResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Inquiry not found' });
+    }
 
-      const previousStatus = existingResult.rows[0].status || "";
-      const company = existingResult.rows[0].company_name || "";
+    const previousStatus = existingResult.rows[0].status || "";
+    const company = existingResult.rows[0].company_name || "";
 
-      // Update the inquiry
-      const query = `
+    // Update the inquiry
+    const query = `
           UPDATE public.sales_enquiry 
           SET 
               name = $1, 
@@ -375,43 +375,43 @@ router.post('/inquiry/edit', verifyToken, async (req, res) => {
               assign_emp_id;  -- Return assign_emp_id
       `;
 
-      const result = await pool.query(query, [
-          name,
-          mobile_number,
-          budget,
-          screen_count,
-          JSON.stringify(screen_type),
-          total_days,
-          campaign_remark,
-          employee_id,
-          email,
-          company_name,
-          status,
-          assign_emp_id || null, // If undefined, store NULL
-          id
-      ]);
+    const result = await pool.query(query, [
+      name,
+      mobile_number,
+      budget,
+      screen_count,
+      JSON.stringify(screen_type),
+      total_days,
+      campaign_remark,
+      employee_id,
+      email,
+      company_name,
+      status,
+      assign_emp_id || null, // If undefined, store NULL
+      id
+    ]);
 
-      if (result.rows.length === 0) {
-          return res.status(404).json({ message: 'Inquiry not found' });
-      }
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Inquiry not found' });
+    }
 
-      // Log the action with formatted message
-      const user = req.session.user || req.user || { name: "Anonymous" }; 
-      const assignedEmpLog = assign_emp_id ? `Assigned Employee ID: ${assign_emp_id}` : "No assigned employee";
+    // Log the action with formatted message
+    const user = req.session.user || req.user || { name: "Anonymous" };
+    const assignedEmpLog = assign_emp_id ? `Assigned Employee ID: ${assign_emp_id}` : "No assigned employee";
 
-      const logMessage = `Updated inquiry. Status: '${previousStatus}' → '${status}', is ${company}, ${assignedEmpLog}`;
+    const logMessage = `Updated inquiry. Status: '${previousStatus}' → '${status}', is ${company}, ${assignedEmpLog}`;
 
-      await logAction(req, "sales", logMessage, id);
+    await logAction(req, "sales", logMessage, id);
 
-      console.log(logMessage);
+    console.log(logMessage);
 
-      res.status(200).json({
-          status: true,
-          message: 'Inquiry updated successfully'
-      });
+    res.status(200).json({
+      status: true,
+      message: 'Inquiry updated successfully'
+    });
   } catch (error) {
-      console.error('Error updating inquiry:', error);
-      res.status(500).json({ status: false, message: 'Failed to update inquiry' });
+    console.error('Error updating inquiry:', error);
+    res.status(500).json({ status: false, message: 'Failed to update inquiry' });
   }
 });
 
@@ -456,29 +456,29 @@ router.get("/inquiry/salesteamlist", verifyToken, async (req, res) => {
 
 
 router.post('/inquiry/quotation', verifyToken, async (req, res) => {
-    const {
-        id, // Campaign ID
-        city,
-        screen_type,
-        total_amount,
-        final_screen_count,
-        tag,
-        start_date,
-        end_date,
-        number_of_days,
-        payment_mode,
-        payment_url,
-        // employee_id, // Employee responsible for submission
-        remark // Additional remark
-    } = req.body;
-    const employee_id = req.user.emp_id;
+  const {
+    id, // Campaign ID
+    city,
+    screen_type,
+    total_amount,
+    final_screen_count,
+    tag,
+    start_date,
+    end_date,
+    number_of_days,
+    payment_mode,
+    payment_url,
+    // employee_id, // Employee responsible for submission
+    remark // Additional remark
+  } = req.body;
+  const employee_id = req.user.emp_id;
 
-    if (!id) {
-        return res.status(400).json({ message: 'inquiry ID is required' });
-    }
+  if (!id) {
+    return res.status(400).json({ message: 'inquiry ID is required' });
+  }
 
-    try {
-        const query = `
+  try {
+    const query = `
             UPDATE public.sales_enquiry
             SET
                 city = $1,
@@ -499,62 +499,62 @@ router.post('/inquiry/quotation', verifyToken, async (req, res) => {
             RETURNING id, city, screen_type, total_value, final_screen_count, tag, start_date, end_date, total_days, payment_mode, payment_url, emp_id, remark, status, last_update_time;
         `;
 
-        const result = await pool.query(query, [
-            city,
-            JSON.stringify(screen_type),
-            total_amount,
-            final_screen_count,
-            JSON.stringify(tag),
-            start_date,
-            end_date,
-            number_of_days,
-            payment_mode,
-            payment_url,
-            employee_id,
-            remark,
-            id,
-        ]);
+    const result = await pool.query(query, [
+      city,
+      JSON.stringify(screen_type),
+      total_amount,
+      final_screen_count,
+      JSON.stringify(tag),
+      start_date,
+      end_date,
+      number_of_days,
+      payment_mode,
+      payment_url,
+      employee_id,
+      remark,
+      id,
+    ]);
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'inquiry not found or invalid ID' });
-        }
-
-        res.status(200).json({
-            status: true,
-            message: 'Quotation details submitted successfully for approval',
-            data: result.rows[0],
-        });
-    } catch (error) {
-        console.error('Error submitting quotation:', error);
-        res.status(500).json({ status:false, message: 'Failed to submit quotation' });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'inquiry not found or invalid ID' });
     }
+
+    res.status(200).json({
+      status: true,
+      message: 'Quotation details submitted successfully for approval',
+      data: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Error submitting quotation:', error);
+    res.status(500).json({ status: false, message: 'Failed to submit quotation' });
+  }
 });
 
 
 
 router.post('/inquiry/quotation/edit', verifyToken, async (req, res) => {
-    const {
-        id, // Campaign ID
-        city,
-        screen_type,
-        total_amount,
-        final_screen_count,
-        tag,
-        start_date,
-        end_date,
-        number_of_days,
-        payment_mode,
-        payment_url,
-        // employee_id, 
-        remark // Additional remark
-    } = req.body;
-    const employee_id = req.user.emp_id;
-    if (!id) {
-        return res.status(400).json({ message: 'inquiry ID is required' });
-    }
+  const {
+    id, // Campaign ID
+    city,
+    screen_type,
+    total_amount,
+    final_screen_count,
+    tag,
+    start_date,
+    end_date,
+    number_of_days,
+    payment_mode,
+    payment_url,
+    // employee_id, 
+    remark // Additional remark
+  } = req.body;
+  const employee_id = req.user.emp_id;
+  if (!id) {
+    return res.status(400).json({ message: 'inquiry ID is required' });
+  }
 
-    try {
-        const query = `
+  try {
+    const query = `
             UPDATE public.sales_enquiry
             SET
                 city = $1,
@@ -574,35 +574,35 @@ router.post('/inquiry/quotation/edit', verifyToken, async (req, res) => {
             RETURNING id, city, screen_type, total_value, final_screen_count, tag, start_date, end_date, total_days, payment_mode, payment_url, emp_id, remark, status, last_update_time;
         `;
 
-        const result = await pool.query(query, [
-            city,
-            JSON.stringify(screen_type),
-            total_amount,
-            final_screen_count,
-            JSON.stringify(tag),
-            start_date,
-            end_date,
-            number_of_days,
-            payment_mode,
-            payment_url,
-            employee_id,
-            remark,
-            id,
-        ]);
+    const result = await pool.query(query, [
+      city,
+      JSON.stringify(screen_type),
+      total_amount,
+      final_screen_count,
+      JSON.stringify(tag),
+      start_date,
+      end_date,
+      number_of_days,
+      payment_mode,
+      payment_url,
+      employee_id,
+      remark,
+      id,
+    ]);
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'inquiry not found' });
-        }
-
-        res.status(200).json({
-            status: true,
-            message: 'inquiry quotation updated successfully',
-            data: result.rows[0],
-        });
-    } catch (error) {
-        console.error('Error updating inquiry quotation:', error);
-        res.status(500).json({ status: false ,message: 'Failed to update inquiry quotation' });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'inquiry not found' });
     }
+
+    res.status(200).json({
+      status: true,
+      message: 'inquiry quotation updated successfully',
+      data: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Error updating inquiry quotation:', error);
+    res.status(500).json({ status: false, message: 'Failed to update inquiry quotation' });
+  }
 });
 
 
