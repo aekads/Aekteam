@@ -152,12 +152,16 @@ router.post("/inquiry-list", verifyToken, async (req, res) => {
       se.status, se.total_days, se.emp_id, se.city, se.company_name, 
       se.created_time, se.campaign_remark, se.assign_emp_id,
 
-      e.name AS assigned_employee_name
+      e1.name AS assigned_employee_name,
+      e2.name AS From_employee_name,
+      e2.emp_id AS created_employee_id
 
     FROM public.sales_enquiry se
-    LEFT JOIN public.employees e ON se.assign_emp_id = e.emp_id
+    LEFT JOIN public.employees e1 ON se.assign_emp_id = e1.emp_id
+    LEFT JOIN public.employees e2 ON se.emp_id = e2.emp_id
     WHERE (se.emp_id = $1 OR se.assign_emp_id = $1)
-  `;
+`;
+
     const queryParams = [emp_id];
 
     if (filter_date) {
