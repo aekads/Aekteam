@@ -146,10 +146,20 @@ router.post("/inquiry-list", verifyToken, async (req, res) => {
 
 
     let query = `
-            SELECT id, name, mobile_number, email, budget, screen_count, screen_type, tag, final_screen_count, start_date, end_date, total_value, per_screen_cost, payment_mode, payment_url, remark, creative_video_url, quotation_url, last_update_time, status, total_days, emp_id, city, company_name, created_time, campaign_remark, assign_emp_id
-            FROM public.sales_enquiry
-            WHERE emp_id = $1
-        `;
+    SELECT 
+      se.id, se.name, se.mobile_number, se.email, se.budget, se.screen_count, 
+      se.screen_type, se.tag, se.final_screen_count, se.start_date, se.end_date, 
+      se.total_value, se.per_screen_cost, se.payment_mode, se.payment_url, 
+      se.remark, se.creative_video_url, se.quotation_url, se.last_update_time, 
+      se.status, se.total_days, se.emp_id, se.city, se.company_name, 
+      se.created_time, se.campaign_remark, se.assign_emp_id,
+  
+      e.name AS assigned_employee_name
+  
+    FROM public.sales_enquiry se
+    LEFT JOIN public.employees e ON se.assign_emp_id = e.emp_id
+    WHERE se.emp_id = $1
+  `;
 
     const queryParams = [emp_id];
 
