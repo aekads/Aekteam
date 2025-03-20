@@ -9,8 +9,8 @@ const transporter = require("../config/email");
 router.post("/send-message", async (req, res) => {
     const { firstName, lastName, email, phone, message } = req.body;
 
-    if (!firstName || !lastName || !email || !message) {
-        return res.status(400).json({ error: "All fields are required!" });
+    if (!firstName || !email) {
+        return res.status(400).json({ error: "firstName and email  required!" });
     }
 
     const mailOptions = {
