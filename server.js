@@ -7,6 +7,9 @@ const acquisitionRouter = require('./routes/acquisitionRouter');
 const inventoryRoutes = require("./routes/inventoryRoutes");
 //sociey router reporting
 const societyRouter = require('./routes/societyRouter');
+
+const ContactRoutes = require("./routes/contactRoutes");
+
 const fileUpload = require('express-fileupload');
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -27,6 +30,10 @@ app.use('/api', acquisitionRouter);
 app.use('/api', societyRouter)
 
 app.use("/api/inventory", inventoryRoutes);
+
+
+app.use("/api", ContactRoutes);
+
 app.use(fileUpload());
 // Render Dashboard
 app.get("/dashboard", (req, res) => {
