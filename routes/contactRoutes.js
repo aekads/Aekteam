@@ -15,7 +15,7 @@ router.post("/send-message", async (req, res) => {
 
     const mailOptions = {
         from: email,
-        to: ["hp9537213@gmail.com", "hardikpatan2324@gmail.com"],  // Multiple recipients
+        to: ["rohan@aekads.com"],  // Multiple recipients
         subject: "New Contact Form Submission",
         text: `You have a new message from:
         
