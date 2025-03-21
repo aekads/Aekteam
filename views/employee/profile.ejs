@@ -114,7 +114,7 @@
     <%- include('../partials/sidebar') %>                                               
 
     <div class="container">
-        <img class="profile-img" src="<%= employee.photo ? employee.photo : '/images/default-profile.png' %>" alt="Profile Picture">
+        <img class="profile-img" src="<%= employee.photo ? employee.photo : 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png' %>" alt="Profile Picture">
         <h2><%= employee.name %></h2>
     
         <div class="profile-info">
@@ -128,14 +128,26 @@
             <button class="edit-btn" onclick="openEditForm()">Edit Profile</button>
     
             <form id="editProfileForm" action="/dashboard/employee/profile/update" method="POST">
-                <input type="text" name="name" value="<%= employee.name %>" required>
-                <input type="email" name="email" value="<%= employee.email %>" required>
-                <input type="text" name="phone" value="<%= employee.emp_number %>" required>
-                <input type="date" name="dob" value="<%= employee.dob %>" required>
-                <input type="text" name="assign_city" value="<%= employee.assign_city %>" required>
-                <input type="text" name="designation" value="<%= employee.designation %>" required>
-                <input type="text" name="bank_number" value="<%= employee.bank_number %>" required>
-                <input type="text" name="ifsc" value="<%= employee.ifsc %>" required>
+                <div>
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" value="<%= employee.name %>" required>
+                </div>
+                
+                <div>
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" value="<%= employee.email %>" required>
+                </div>
+                
+                <div>
+                    <label for="phone">Phone Number</label>
+                    <input type="text" id="phone" name="phone" value="<%= employee.emp_number %>" required>
+                </div>
+                
+                <div>
+                    <label for="dob">Date of Birth</label>
+                    <input type="date" id="dob" name="dob" value="<%= employee.dob %>" required>
+                </div>
+            
                 <button class="save-btn" type="submit">Save Changes</button>
             </form>
         <% } %>
