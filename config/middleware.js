@@ -57,7 +57,7 @@ exports.requireHR = (req, res, next) => {
 
 
 
-const allowedEmpIds = ["emp_29", "emp_43", "emp_30"];
+const allowedEmpIds = ["emp_32", "emp_33", "emp_43"];
 
 // ✅ Special Middleware for Restricted Access (Only Specific Employees)
 exports.restrictToAllowedEmployees = (req, res, next) => {
