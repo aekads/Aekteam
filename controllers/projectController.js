@@ -1,6 +1,6 @@
 const projectModel = require("../models/projectModel");
 
-const allowedEmpIds = ["emp_29", "emp_43", "emp_30"]; // Only these employees can add projects
+const allowedEmpIds = ["emp_66", "emp_32", "emp_33"]; // Only these employees can add projects
 
 // ✅ Fetch All Projects & Show Add Project Form
 exports.getProjectsPage = async (req, res) => {
