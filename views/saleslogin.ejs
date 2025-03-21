@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Login</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <style>
+        /* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Body Styling */
+body {
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Login Container */
+.login-container {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 350px;
+    text-align: center;
+}
+
+.login-container h2 {
+    margin-bottom: 15px;
+    font-size: 22px;
+    color: #333;
+}
+
+/* Error Message */
+.error {
+    color: red;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+/* Form Styling */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Labels */
+label {
+    font-size: 14px;
+    text-align: left;
+    font-weight: bold;
+    color: #555;
+}
+
+/* Input Fields */
+input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+/* Input Focus Effect */
+input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0px 0px 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Login Button */
+button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background 0.3s ease-in-out;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+    .login-container {
+        width: 90%;
+        padding: 15px;
+    }
+
+    h2 {
+        font-size: 18px;
+    }
+
+    input {
+        font-size: 14px;
+    }
+
+    button {
+        font-size: 14px;
+        padding: 8px;
+    }
+}
+
+    </style>
+    <div class="login-container">
+        <h2>Employee Login</h2>
+        <p id="error-message" class="error" style="display: none;"></p>
+
+        <form id="loginForm">
+            <label for="emp_id">Employee ID:</label>
+            <input type="text" id="emp_id" name="emp_id" required>
+
+            <label for="pin">PIN:</label>
+            <input type="password" id="pin" name="pin" required>
+
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <script>
+         document.addEventListener("DOMContentLoaded", async function () {
+            const token = localStorage.getItem("token");
+            const emp_id = localStorage.getItem("emp_id");
+            const name = localStorage.getItem("name");
+            const role = localStorage.getItem("role");
+            const assign_city = localStorage.getItem("assign_city");
+    
+            if (token && emp_id && role) {
+                // Auto redirect based on role
+                const redirect_url = role === 'acquisition' ? '/api/acquisition'
+                                : role === 'sales' ? '/api/inquiry'
+                                : role === 'maintenance' ? '/api/society-work'
+                                : '/';
+    
+                window.location.href = `${redirect_url}?emp_id=${emp_id}&name=${name}&assign_city=${assign_city}`;
+                return;
+            }
+        });
+    
+        document.getElementById("loginForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+    
+            const emp_id = document.getElementById("emp_id").value;
+            const pin = document.getElementById("pin").value;
+    
+            try {
+                const response = await fetch("/api/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ emp_id, pin })
+                });
+    
+                const data = await response.json();
+    
+                if (data.status) {
+                    // Store user data in localStorage for auto-login
+                    localStorage.setItem("token", data.token);
+                    localStorage.setItem("emp_id", data.emp_id);
+                    localStorage.setItem("name", data.name);
+                    localStorage.setItem("role", data.role);
+                    localStorage.setItem("assign_city", data.assign_city);
+    
+                    // Redirect based on user role
+                    window.location.href = `${data.redirect_url}?emp_id=${data.emp_id}&name=${data.name}&assign_city=${data.assign_city}`;
+                } else {
+                    document.getElementById("error-message").innerText = data.message;
+                    document.getElementById("error-message").style.display = "block";
+                }
+            } catch (error) {
+                console.error("Login Error:", error);
+                document.getElementById("error-message").innerText = "Something went wrong. Try again.";
+                document.getElementById("error-message").style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>

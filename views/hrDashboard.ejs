@@ -1,0 +1,237 @@
+<%- include('./partials/hrsidebar') %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HR Dashboard</title>
+  
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  
+  <style>
+  /* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f4f4f4;
+    color: #333;
+}
+
+
+
+h2, h3 {
+    margin: 10px 0;
+}
+
+p {
+    margin: 5px 0;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.dashboard-box, .stat-box {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);                                 
+}
+                                               
+.punch-card {      
+    text-align: center;     
+    background:white;                                                         
+    color: #444;
+    padding: 30px;
+}
+                                                                                   
+.punch-card button {
+    padding: 10px 15px;
+    background: #007bff;                                                      
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+}
+
+.punch-card button:hover {
+    background: #e0e0e0;                                                      
+}
+
+/* Stats Grid */
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+}
+
+.stat-box {
+    text-align: center;
+    padding: 20px;
+    border-radius: 10px;
+    background: #333;
+}
+
+.total-employees { background: white; color: #333; }
+.leave { background: white; color: #333; }
+.present { background: white; color: #333; }
+.absent { background: white; color: #333; } 
+
+/* Chart Styling */
+canvas {
+    max-width: 100%;
+    /* background: white; */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+  </style>
+
+
+  <script>
+      function formatISTTime(utcTime) {
+    const date = new Date(utcTime);
+    return date.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+}
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            await checkPunchStatus();
+        })
+        async function checkPunchStatus() {
+            try {
+                const response = await fetch('/dashboard/employee/punch-status', { method: 'GET', credentials: 'include' });
+                const data = await response.json();
+
+                const punchButton = document.getElementById("punchButton");
+
+                if (data.punchedIn) {
+                    punchButton.textContent = "Punch Out"  ;
+                    punchButton.setAttribute("onclick", "punchOut()");
+                } else {
+                    punchButton.textContent = "Punch In" ;
+                    punchButton.setAttribute("onclick", "punchIn()");
+                }
+            } catch (error) {
+                console.error("Error checking punch status:", error);
+            }
+        }
+                                           
+        async function punchIn() {
+            const response = await fetch('/dashboard/employee/punch-in', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            alert(data.message);
+        }
+
+        async function punchOut() {
+            const response = await fetch('/dashboard/employee/punch-out', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            alert(data.message);
+        }
+
+
+
+
+        //time for puchin out btn card
+        function updateDateTime() {
+    const now = new Date();
+
+    // Format date: "4 March 2025"
+    const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+    const formattedDate = now.toLocaleDateString('en-GB', dateOptions);
+
+    // Format time: "Tuesday | 10:00 AM To 7:00 PM"
+    const timeOptions = { weekday: 'long', hour: '2-digit', minute: '2-digit', hour12: true };
+    const formattedTime = now.toLocaleDateString('en-GB', { weekday: 'long' }) + 
+                          " | 10:00 AM To 7:00 PM";
+
+    // Format seconds time: "11 : 59:10"
+    const formattedSeconds = now.getHours().toString().padStart(2, '0') + " : " + 
+                             now.getMinutes().toString().padStart(2, '0') + ":" + 
+                             now.getSeconds().toString().padStart(2, '0');
+
+    // Set values in HTML
+    document.getElementById("dateDisplay").textContent = formattedDate;
+    document.getElementById("timeDisplay").textContent = formattedTime + " | " + formattedSeconds;
+}
+
+// Update time every second
+setInterval(updateDateTime, 1000);
+updateDateTime();
+
+
+
+
+
+  </script>
+
+
+</head>
+<body>
+
+
+
+  <h2 class="text-center">Welcome, <%= user.name %></h2>
+  <p class="text-center">HR Dashboard - Manage Employees</p>
+
+  <!-- Grid Layout -->
+  <div class="dashboard-grid">
+    
+    <!-- Attendance -->
+    <div class="dashboard-box punch-card">
+      <h2>Attendance System</h2>
+      <p id="dateDisplay"></p>
+      <p id="timeDisplay"></p>
+      <button id="punchButton" onclick="handlePunch()">Punch In</button>
+    </div>
+
+    <!-- Employee List -->
+    
+  <div class="dashboard-stats">
+    <div class="stat-box total-employees">
+        <h3>Total Employees</h3>
+        <p><%= totalEmployees %></p>
+    </div>
+    <div class="stat-box leave">
+        <h3>Employees on Leave</h3>
+        <p><%= leaveData %></p>
+    </div>
+    <div class="stat-box present">
+      <h3>Present Today</h3>
+      <p><%= attendanceData.present || 0 %></p> <!-- ✅ Correctly displays the number -->
+  </div>
+  
+  <div class="stat-box absent">
+      <h3>Absent Today</h3>
+      <p><%= attendanceData.absent || 0 %></p> <!-- ✅ Correctly displays the number -->
+  </div>
+</div>
+
+ <!-- ✅ Leave & Attendance Chart -->
+ <!-- <canvas id="attendanceChart"></canvas>
+  </div> -->
+
+
+</body>
+</html>                                                                             

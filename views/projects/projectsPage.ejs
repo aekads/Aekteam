@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Projects</title>
+    <link rel="stylesheet" href="/css/projects.css"> <!-- Link to external CSS -->
+
+    <style>
+        /* General Page Styling */
+body {
+    font-family: Open Sans, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    font-style: normal;
+    font-stretch: normal;
+    line-height: normal;
+    letter-spacing: normal;
+    text-align: left;
+    color: #3b4452;
+    background-color: #f7f7f7;
+}
+
+
+/* Container Styling */
+.container {
+    margin-left: 300px;
+    padding: 20px;
+    width: 80%;
+}
+
+/* Page Title */
+.page-title {
+    font-size: 24px;
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Project List */
+.projects-list {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.projects-list h2 {
+    color: #444;
+    margin-bottom: 15px;
+}
+
+.projects-list ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.project-item {
+    background: #f9f9f9;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.project-item strong {
+    color: #333;
+}
+
+.added-by {
+    font-size: 14px;
+    color: #777;
+}
+
+/* Add Project Form */
+.add-project {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+.add-project h2 {
+    color: #444;
+}
+
+.add-project form {
+    display: flex;
+    flex-direction: column;
+}
+
+.add-project label {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.add-project input, .add-project textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.add-project button {
+    background: #27ae60;
+    color: white;
+    border: none;
+    padding: 10px;
+    margin-top: 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.add-project button:hover {
+    background: #219150;
+}
+
+    </style>
+</head>
+<body>
+
+    <%- include('../partials/sidebar') %>   
+
+    <div class="container">
+        <h1 class="page-title">📋 Project Management</h1>
+
+        <!-- ✅ Project List -->
+        <div class="projects-list">
+            <h2>All Projects</h2>
+            <ul>
+                <% projects.forEach(project => { %>
+                    <li class="project-item">
+                        <strong><%= project.name %></strong> - <%= project.description %>
+                        <span class="added-by">Added by: <%= project.emp_id %></span>
+                    </li>
+                <% }) %>
+            </ul>
+        </div>
+
+        <!-- ✅ Add New Project Form (Visible only for allowed employees) -->
+        <% if (canAddProjects) { %>
+            <div class="add-project">
+                <h2>➕ Add a New Project</h2>
+                <form action="/dashboard/employee/projects/add" method="POST">
+                    <label for="name">Project Name:</label>
+                    <input type="text" id="name" name="name" required>
+
+                    <label for="Client">Client:</label>
+                    <input type="text" id="Client" name="Client" required>
+                    
+                    <label for="description">Description:</label>
+                    <textarea id="description" name="description" required></textarea>
+                    
+                    <button type="submit">Add Project</button>
+                </form>
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>

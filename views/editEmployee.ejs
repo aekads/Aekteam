@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Employee</title>
+    <link rel="stylesheet" href="/styles.css"> <!-- Add your CSS file -->
+</head>
+<body>
+    <h2>Edit Employee</h2>
+    <form id="updateEmployeeForm" enctype="multipart/form-data">
+        <input type="hidden" id="empId" value="<%= employee.emp_id %>">
+
+
+    <label>Name:</label>
+    <input type="text" name="name" value="<%= employee.name %>" required>
+
+    <label>Employee Number:</label>
+    <input type="text" name="emp_number" value="<%= employee.emp_number %>" required>
+
+    <label>Email:</label>
+    <input type="email" name="email" value="<%= employee.email %>" >
+
+    <label>PIN:</label>
+    <input type="text" name="pin" value="<%= employee.pin %>">
+    
+    <label>City:</label>
+    <input type="text" name="assign_city" value="<%= employee.assign_city %>">
+
+    <label>Designation:</label>
+    <input type="text" name="designation" value="<%= employee.designation %>">
+
+    <label>Joining Date:</label>
+    <input type="date" name="joining_date" value="<%= employee.joining_date ? employee.joining_date.toISOString().split('T')[0] : '' %>">
+
+    <label>Resign Date:</label>
+    <input type="date" name="resign_date" value="<%= employee.resign_date ? employee.resign_date.toISOString().split('T')[0] : '' %>">
+
+
+    <label>Date of Birth:</label>
+    <input type="date" name="dob" value="<%= employee.dob ? employee.dob.toISOString().split('T')[0] : '' %>">
+
+    <label>Alternate Phone:</label>
+    <input type="text" name="alt_phone" value="<%= employee.alt_phone %>">
+
+    <label>CTC:</label>
+    <input type="text" name="ctc" value="<%= employee.ctc %>">
+
+    <label>Bank Number:</label>
+    <input type="text" name="bank_number" value="<%= employee.bank_number %>">
+
+    <label>IFSC Code:</label>
+    <input type="text" name="ifsc" value="<%= employee.ifsc %>">
+
+    <!-- File Uploads with Preview -->
+    <div>
+        <label>Passbook Image:</label>
+        <% if (employee.passbook_image) { %>
+            <% if (employee.passbook_image.startsWith('http')) { %>
+                <a href="<%= employee.passbook_image %>" target="_blank">View</a>
+            <% } else { %>
+                <a href="/uploads/<%= employee.passbook_image %>" target="_blank">View</a>
+            <% } %>
+        <% } %>
+        <input type="file" name="passbook_image">
+    </div>
+    
+    <div>
+        <label>PAN Card:</label>
+        <% if (employee.pan_card) { %>
+            <% if (employee.pan_card.startsWith('http')) { %>
+                <a href="<%= employee.pan_card %>" target="_blank">View</a>
+            <% } else { %>
+                <a href="/uploads/<%= employee.pan_card %>" target="_blank">View</a>
+            <% } %>
+        <% } %>
+        <input type="file" name="pan_card">
+    </div>
+    
+    <div>
+        <label>Aadhar Card:</label>
+        <% if (employee.aadhar_card) { %>
+            <% if (employee.aadhar_card.startsWith('http')) { %>
+                <a href="<%= employee.aadhar_card %>" target="_blank">View</a>
+            <% } else { %>
+                <a href="/uploads/<%= employee.aadhar_card %>" target="_blank">View</a>
+            <% } %>
+        <% } %>
+        <input type="file" name="aadhar_card">
+    </div>
+    
+    <div>
+        <label>Offer Letter:</label>
+        <% if (employee.offer_letter) { %>
+            <% if (employee.offer_letter.startsWith('http')) { %>
+                <a href="<%= employee.offer_letter %>" target="_blank">View</a>
+            <% } else { %>
+                <a href="/uploads/<%= employee.offer_letter %>" target="_blank">View</a>
+            <% } %>
+        <% } %>
+        <input type="file" name="offer_letter">
+    </div>
+    
+    <div>
+        <label>Photo:</label>
+        <% if (employee.photo) { %>
+            <% if (employee.photo.startsWith('http')) { %>
+                <a href="<%= employee.photo %>" target="_blank">View</a>
+            <% } else { %>
+                <a href="/uploads/<%= employee.photo %>" target="_blank">View</a>
+            <% } %>
+        <% } %>
+        <input type="file" name="photo">
+    </div>
+    
+    <div>
+        <label>Last Company Experience Letter:</label>
+        <% if (employee.last_company_experience_letter) { %>
+            <% if (employee.last_company_experience_letter.startsWith('http')) { %>
+                <a href="<%= employee.last_company_experience_letter %>" target="_blank">View</a>
+            <% } else { %>
+                <a href="/uploads/<%= employee.last_company_experience_letter %>" target="_blank">View</a>
+            <% } %>
+        <% } %>
+        <input type="file" name="last_company_experience_letter">
+    </div>
+
+   
+
+    <button type="submit">Update Employee</button>
+</form>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.getElementById("updateEmployeeForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const empId = document.getElementById("empId").value;
+        const formData = new FormData(this);
+
+        try {
+            const response = await fetch(`/dashboard/hr/employee/update/${empId}`, {
+                method: "POST",
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                Swal.fire({
+                    title: "Success!",
+                    text: "Employee updated successfully!",
+                    icon: "success",
+                    timer: 2000,  // Auto close after 2 seconds
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = "/dashboard/hr/employees/list"; // Redirect after success
+                });
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: result.error || "Failed to update employee!",
+                    icon: "error"
+                });
+            }
+        } catch (error) {
+            Swal.fire({
+                title: "Error!",
+                text: "Something went wrong!",
+                icon: "error"
+            });
+        }
+    });
+</script>
+
+
+<style>
+    /* General Page Styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+}
+
+/* Form Container */
+form {
+    max-width: 600px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    margin: auto;
+}
+
+/* Labels */
+label {
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+}
+
+/* Input Fields */
+input[type="text"],
+input[type="email"],
+input[type="date"],
+select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* File Upload Styling */
+input[type="file"] {
+    margin-top: 5px;
+    padding: 5px;
+}
+
+/* File View Links */
+a {
+    display: inline-block;
+    text-decoration: none;
+    background-color: #007bff;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin-top: 5px;
+    font-size: 14px;
+}
+
+a:hover {
+    background-color: #0056b3;
+}
+
+/* Submit Button */
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: #28a745;
+    border: none;
+    color: white;
+    font-size: 16px;
+    border-radius: 5px;
+    margin-top: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+</style>
+
+</body>
+</html>

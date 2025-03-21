@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <style>
+        body{
+            font-family: Open Sans, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    font-style: normal;
+    font-stretch: normal;
+    line-height: normal;
+    letter-spacing: normal;
+    text-align: left;
+    color: #3b4452;
+    background-color: #f7f7f7;
+        }
+
+    .container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .profile-img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #007bff;
+        margin-bottom: 15px;
+    }
+
+    h2 {
+        color: #333;
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+
+    .profile-info {
+        text-align: left;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+
+    .profile-info p {
+        font-size: 16px;
+        margin: 8px 0;
+    }
+
+    .profile-info strong {
+        color: #007bff;
+    }
+
+    .edit-btn {
+        background: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: 0.3s;
+        margin-top: 15px;
+    }
+
+    .edit-btn:hover {
+        background: #0056b3;
+    }
+
+    /* Edit Form Styling */
+    #editProfileForm {
+        margin-top: 20px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        display: none;
+    }
+
+    #editProfileForm input {
+        width: 100%;
+        padding: 10px;
+        margin: 8px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .save-btn {
+        background: #28a745;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: 0.3s;
+    }
+
+    .save-btn:hover {
+        background: #218838;
+    }
+</style>
+
+</head>
+<body>
+    <%- include('../partials/sidebar') %>                                               
+
+    <div class="container">
+        <img class="profile-img" src="<%= employee.photo ? employee.photo : '/images/default-profile.png' %>" alt="Profile Picture">
+        <h2><%= employee.name %></h2>
+    
+        <div class="profile-info">
+            <p><strong>Employee ID:</strong> <%= employee.emp_id %></p>
+            <p><strong>Designation:</strong> <%= employee.designation %></p>
+            <p><strong>Joining Date:</strong> <%= employee.joining_date %></p>
+            <p><strong>Assigned City:</strong> <%= employee.assign_city %></p>
+        </div>
+    
+        <% if (editable) { %>
+            <button class="edit-btn" onclick="openEditForm()">Edit Profile</button>
+    
+            <form id="editProfileForm" action="/dashboard/employee/profile/update" method="POST">
+                <input type="text" name="name" value="<%= employee.name %>" required>
+                <input type="email" name="email" value="<%= employee.email %>" required>
+                <input type="text" name="phone" value="<%= employee.emp_number %>" required>
+                <input type="date" name="dob" value="<%= employee.dob %>" required>
+                <input type="text" name="assign_city" value="<%= employee.assign_city %>" required>
+                <input type="text" name="designation" value="<%= employee.designation %>" required>
+                <input type="text" name="bank_number" value="<%= employee.bank_number %>" required>
+                <input type="text" name="ifsc" value="<%= employee.ifsc %>" required>
+                <button class="save-btn" type="submit">Save Changes</button>
+            </form>
+        <% } %>
+    </div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    function openEditForm() {
+        document.getElementById('editProfileForm').style.display = 'block';
+    }
+
+    // Show SweetAlert messages
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("success") === "true") {
+        Swal.fire({
+            title: "Success!",
+            text: "Profile updated successfully.",
+            icon: "success",
+            confirmButtonText: "OK"
+        }).then(() => {
+            window.location.href = "/dashboard/employee/profile";
+        });
+    } else if (urlParams.get("error")) {
+        Swal.fire({
+            title: "Error!",
+            text: urlParams.get("error"),
+            icon: "error",
+            confirmButtonText: "Try Again"
+        });
+    }
+</script>
+                                                              
+
+</body>                                                                             
+</html>                                                             

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Summary</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
+    
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+    
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+    
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+    
+        canvas {
+            margin-top: 20px;
+            background: #fff;
+            border-radius: 8px;
+            padding: 10px;
+        }
+    
+        h2 {
+            font-size: 22px;
+            color: #333;
+            margin-top: 30px;
+        }
+    
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+    
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+    
+        th {
+            background: #007bff;
+            color: white;
+            font-size: 16px;
+        }
+    
+        td {
+            font-size: 14px;
+            color: #333;
+        }
+    
+        tr:hover {
+            background: #f1f1f1;
+        }
+    
+        .hamburger {
+            font-size: 28px;
+            cursor: pointer;
+            padding: 10px;
+            position: absolute;
+            left: 20px;
+            top: 15px;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+    
+        .hamburger:hover {
+            background: #0056b3;
+        }
+    </style>
+    
+</head>
+<body>
+    
+    <%- include('../partials/sidebar') %>   
+    <div class="container">
+        <h1>📊 My Work Hours Summary</h1>
+    
+        <select id="project">
+            <option value="">All Projects</option>
+            <% if (projects && projects.length > 0) { %>
+                <% projects.forEach(proj => { %>
+                    <option value="<%= proj.project_id %>"><%= proj.project_name %></option>
+                <% }); %>
+            <% } else { %>
+                <option value="" disabled>No projects available</option>
+            <% } %>
+        </select>
+    
+        <canvas id="workSummaryChart"></canvas>
+    
+        <h2>📅 Date-wise Work Summary</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Project</th>
+                    <th>Work Description</th>
+                    <th>Work Hours</th>
+                </tr>
+            </thead>
+            <tbody id="reportTableBody">
+                <tr><td colspan="4">Loading data...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+
+    <script>
+        $(document).ready(function () {
+            const projSelect = $("#project");
+            let workChart = null;
+    
+            function getFullMonthDays() {
+                let today = new Date();
+                let daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                return Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString());
+            }
+    
+            function fetchSummary() {
+                const projectId = projSelect.val();
+    
+                $.ajax({
+                    url: "/dashboard/employee/projects/get-own-summary",
+                    method: "GET",
+                    data: { project_id: projectId },
+                    success: function (data) {
+                        console.log("Raw Data from API:", data);
+    
+                        const daysInMonth = getFullMonthDays();
+                        let hoursByDay = {};
+                        daysInMonth.forEach(day => (hoursByDay[day] = 0)); // Initialize all days with 0 hours
+    
+                        let groupedData = {};
+    
+                        data.forEach(entry => {
+                            let day = new Date(entry.date).getDate().toString();
+                            hoursByDay[day] += parseFloat(entry.hours) || 0; // Ensure it's a number
+    
+                            if (!groupedData[entry.date]) {
+                                groupedData[entry.date] = [];
+                            }
+                            groupedData[entry.date].push(entry);
+                        });
+    
+                        // Convert hoursByDay object to an array
+                        let hoursArray = daysInMonth.map(day => hoursByDay[day]);
+    
+                        renderChart(daysInMonth, hoursArray);
+                        renderTable(groupedData);
+                    },
+                    error: function () {
+                        $("#reportTableBody").html(`<tr><td colspan="4">Error loading data.</td></tr>`);
+                    }
+                });
+            }
+    
+            function renderChart(dates, hours) {
+                const ctx = document.getElementById("workSummaryChart").getContext("2d");
+                if (workChart) workChart.destroy();
+    
+                workChart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: dates,
+                        datasets: [{
+                            label: "Total Work Hours",
+                            data: hours,
+                            backgroundColor: "rgba(54, 162, 235, 0.5)",
+                            borderColor: "rgba(54, 162, 235, 1)",
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: { title: { display: true, text: "Day of the Month" } },
+                            y: { beginAtZero: true, title: { display: true, text: "Total Hours Worked" } }
+                        }
+                    }
+                });
+            }
+    
+            function renderTable(groupedData) {
+    let html = "";
+
+    if (Object.keys(groupedData).length === 0) {
+        html = `<tr><td colspan="4">No records found.</td></tr>`;
+    } else {
+        Object.keys(groupedData).forEach(date => {
+            groupedData[date].forEach(entry => {
+                let formattedDate = new Date(entry.date).toLocaleDateString("en-GB", {
+                    year: "numeric",
+                    month: "short",
+                    day: "2-digit"
+                });
+
+                html += `<tr>
+                    <td>${formattedDate}</td>
+                    <td>${entry.project}</td>
+                    <td>${entry.work_description || "N/A"}</td>
+                     <td>${parseFloat(entry.hours).toFixed(2)} hrs</td>
+                </tr>`;
+            });
+        });
+    }
+
+    $("#reportTableBody").html(html);
+}                                                        
+
+    
+            projSelect.change(fetchSummary);
+            fetchSummary();
+        });
+    </script>
+    
+</body>
+</html>

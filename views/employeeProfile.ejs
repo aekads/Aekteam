@@ -1,0 +1,113 @@
+<%- include('./partials/hrsidebar') %>
+
+<div class="profile-container">
+    <h2>Employee Profile</h2>
+
+    <div class="profile-card">
+        <div class="profile-header">
+            <% if (employee.photo) { %>
+                <img src="<%= employee.photo %>" alt="Profile Photo" class="profile-photo">
+            <% } else { %>
+                <div class="default-avatar">No Photo</div>
+            <% } %>
+        </div>
+
+        <div class="profile-details">
+            <p><strong>Employee ID:</strong> <%= employee.emp_id %></p>
+            <p><strong>Name:</strong> <%= employee.name %></p>
+            <p><strong>Email:</strong> <%= employee.email %></p>
+            <p><strong>Role:</strong> <%= employee.role %></p>
+            <p><strong>Designation:</strong> <%= employee.designation %></p>
+            <p><strong>Joining Date:</strong> <%= new Date(employee.joining_date).toLocaleDateString() %></p>
+            <p><strong>Resign Date:</strong> <%= employee.resign_date ? new Date(employee.resign_date).toLocaleDateString() : "N/A" %></p>
+            <p><strong>Date of Birth:</strong> <%= new Date(employee.dob).toLocaleDateString() %></p>
+            <p><strong>City:</strong> <%= employee.assign_city %></p>
+            <p><strong>Bank Number:</strong> <%= employee.bank_number %></p>
+            <p><strong>IFSC:</strong> <%= employee.ifsc %></p>
+            <p><strong>Leave Balance:</strong> <%= employee.leave_balance %></p>
+        </div>
+    </div>
+
+    <a href="/dashboard/hr/employees/list" class="back-button">⬅ Back to Employee List</a>
+</div>
+<style>
+    /* Employee Profile Styling */
+.profile-container {
+    max-width: 600px;
+    margin: 50px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    font-family: 'Arial', sans-serif;
+}
+
+h2 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.profile-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #f8f8f8;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.profile-header {
+    margin-bottom: 20px;
+}
+
+.profile-photo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 3px solid #4CAF50;
+    object-fit: cover;
+}
+
+.default-avatar {
+    width: 120px;
+    height: 120px;
+    line-height: 120px;
+    text-align: center;
+    background: #ddd;
+    color: #555;
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.profile-details {
+    width: 100%;
+    text-align: left;
+    font-size: 16px;
+    color: #444;
+}
+
+.profile-details p {
+    margin: 8px 0;
+    padding: 5px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.back-button {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 15px;
+    background: #4CAF50;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.back-button:hover {
+    background: #45a049;
+}
+
+</style>

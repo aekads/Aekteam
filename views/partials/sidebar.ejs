@@ -1,0 +1,190 @@
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <!-- Company Logo -->
+    <div class="logo">
+        <img src="https://cms.aekads.com/images/Logo.png" alt="Company Logo">
+    </div>
+
+    <div class="profile">
+        <a href="/dashboard/employee/profile">
+            <img src="<%= employee.photo ? employee.photo : 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png' %>" alt="Profile Picture">
+        </a>
+        <h3 class="EName"><%= employee.name %></h3>
+        <p>ID: <%= employee.emp_id %></p>
+    </div>
+
+    <ul class="nav-links">
+        <li><a href="/dashboard/employee/home"><i class="fas fa-home"></i> Home</a></li>
+        <li><a href="/dashboard/employee/leave"><i class="fas fa-calendar-alt"></i> Leave</a></li>
+        <li><a href="/dashboard/employee/attendance-page"><i class="fas fa-user-check"></i> Attendance</a></li>
+        <li><a href="/dashboard/employee/RegularizationPage"><i class="fas fa-tasks"></i> Regularization & Permission</a></li>
+
+        <% if (["emp_29", "emp_43", "emp_30"].includes(employee.emp_id)) { %>
+            <li><a href="/dashboard/employee/projects"><i class="fas fa-project-diagram"></i> Add Project</a></li>
+            <li><a href="/dashboard/employee/projects/summary-report"><i class="fas fa-chart-line"></i> Report</a></li>
+        <% } %>
+
+        <% if (employee.role === "IT_Team") { %>
+            <li><a href="/dashboard/employee/projects/addTask"><i class="fas fa-clock"></i> Time Tracker</a></li>
+            <li><a href="/dashboard/employee/projects/summary-reportOwn"><i class="fas fa-clipboard-list"></i> Work Report</a></li>
+        <% } %>
+
+        <li>
+            <a href="#" class="logout" onclick="logoutUser();">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </li>
+    </ul>
+</div>  
+
+<script>
+   function logoutUser() {
+        fetch('/logout', {
+            method: 'POST',
+            credentials: 'same-origin' // Ensures cookies are sent with the request
+        }).then(() => {
+            window.location.href = '/login'; // Redirect after logout
+        }).catch(err => console.error('Logout failed:', err));
+    }
+
+</script>
+
+<!-- Sidebar Toggle Button (Only for small screens) -->
+<div class="hamburger" onclick="toggleSidebar()">☰</div>
+
+<style>
+    /* Apple-style Sidebar */
+    body {
+        font-family: 'SF Pro Display', sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #f4f4f4;
+    }
+
+    .hamburger {
+        font-size: 28px;
+        cursor: pointer;
+        padding: 10px;
+        position: fixed;
+        left: 20px;
+        top: 15px;
+        background: #007aff;
+        color: white;
+        border-radius: 5px;
+        z-index: 100;
+        display: none; /* Hidden by default on desktop */
+    }
+
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 270px;
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(12px);
+        box-shadow: 5px 0px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        overflow-y: auto;
+        border-radius: 0 20px 20px 0;
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .logo img {
+        display: block;
+        margin: 0 auto;
+        width: 150px;
+        padding-bottom: 15px;
+    }
+
+    .profile {
+        text-align: center;
+        padding: 15px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .profile img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 3px solid #007aff;
+        object-fit: cover;
+    }
+
+    .EName {
+        font-size: 18px;
+        margin-top: 10px;
+        font-weight: 600;
+    }
+
+    .profile p {
+        color: gray;
+        font-size: 14px;
+    }
+
+    .nav-links {
+        list-style: none;
+        padding: 0;
+        margin: 20px 0 0 0;
+    }
+
+    .nav-links li {
+        padding: 15px;
+        transition: background 0.3s;
+        border-radius: 10px;
+        margin-bottom: 5px;
+    }
+
+    .nav-links li a {
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: color 0.3s;
+    }
+
+    .nav-links li:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-links li a:hover {
+        color: #007aff;
+    }
+
+    .nav-links li i {
+        font-size: 18px;
+    }
+
+    .logout {
+        color: red !important;
+        font-weight: bold;
+    }
+
+    .logout:hover {
+        color: darkred !important;
+    }
+
+    /* Mobile styles: Sidebar starts hidden */
+    @media screen and (max-width: 1024px) {
+        .sidebar {
+            transform: translateX(-100%);
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .hamburger {
+            display: block; /* Show hamburger button */
+        }
+    }
+</style>
+
+<script>
+    function toggleSidebar() {
+        document.querySelector('.sidebar').classList.toggle('active');
+    }
+</script>

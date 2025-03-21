@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+
+/* General Page Styles */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+/* Main Content */
+main {
+    margin-left: 280px; /* Sidebar width */
+        padding: 30px;
+        transition: margin-left 0.3s ease-in-out;
+}
+
+/* Header */
+h2 {
+    color: #2c3e50;
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+/* Buttons */
+button {
+    padding: 10px 15px;
+    border: none;
+    background-color: #3498db;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 5px;
+    border-radius: 5px;
+    transition: 0.3s;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+/* Form Container */
+form {
+    max-width: 500px;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Labels */
+form label {
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+/* Select & Input Fields */
+form select,
+form input,
+form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: 0.3s;
+}
+
+/* Input Focus */
+form input:focus,
+form select:focus,
+form textarea:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
+
+/* Textarea */
+form textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Submit Button */
+form button {
+    padding: 12px;
+    background-color: #3498db;
+    color: white;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+/* Button Hover */
+form button:hover {
+    background-color: #2980b9;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    form {
+        max-width: 100%;
+        padding: 15px;
+    }
+}
+
+
+/* Attendance Details */
+.attendance-details {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 35%;
+}
+
+.attendance-details p {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+/* Regularization Requests */
+section {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background: #2c3e50;
+    color: white;
+}
+
+/* Status Indicators */
+td[data-status="Approved"] {
+    color: green;
+    font-weight: bold;
+}
+
+td[data-status="Pending"] {
+    color: orange;
+    font-weight: bold;
+}
+
+td[data-status="Rejected"] {
+    color: red;
+    font-weight: bold;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+    
+    main {
+        margin-left: 0;
+    }
+    
+    .calendar-container {
+        flex-direction: column;
+    }
+    
+    .calendar, .attendance-details {
+        width: 100%;
+    }
+}
+
+
+    </style>
+</head>
+<body>
+    <%- include('../partials/sidebar') %>  
+    <main>
+         
+        <h2>Regularization Requests</h2>
+    
+        <!-- Buttons to switch between sections -->
+        <div>
+            <button onclick="showSection('applySection')">Apply</button>
+            <button onclick="showSection('pendingSection')">Pending</button>
+            <button onclick="showSection('historySection')">History</button>
+        </div>
+    
+        <!-- Apply Section (Default View) -->
+        <section id="applySection">
+            <h3>Apply for Regularization</h3>
+
+
+            <form id="applyPermissionForm" action="/dashboard/employee/apply-permission" method="POST">
+        <label for="type">Permission Type:</label>
+        <select name="type" required>
+            <option value="On Duty">On Duty</option>
+            <option value="WFH">Work From Home</option>
+            <option value="Short Break">Short Break</option>
+            <option value="Late in">Late in</option>
+            <option value="Early out">Early out</option>
+            <option value="Regularization">Regularization</option>              
+        </select>
+    
+        <label for="from_time">From Time:</label>
+        <input type="datetime-local" name="from_time" required>
+    
+        <label for="to_time">To Time:</label>
+        <input type="datetime-local" name="to_time" required>
+    
+        <label for="reason">Reason:</label>
+        <textarea name="reason" required></textarea>
+    
+        <button type="submit">Apply</button>
+    </form>
+</section>
+
+
+    <!-- Pending Requests Section -->
+    <section id="pendingSection" style="display: none;">
+        <h3>Pending Requests</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>From Time</th>
+                    <th>To Time</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Applied On</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (pendingRequests.length > 0) { %>
+                    <% pendingRequests.forEach(request => { %>
+                        <tr>
+                            <td><%= request.type %></td>
+                            <td><%= new Date(request.from_time).toLocaleString() %></td>
+                            <td><%= new Date(request.to_time).toLocaleString() %></td>
+                            <td><%= request.reason %></td>
+                            <td><%= request.status %></td>
+                            <td><%= new Date(request.created_at).toLocaleString() %></td>
+                        </tr>
+                    <% }); %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="6">No pending requests.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- History Requests Section -->
+    <section id="historySection" style="display: none;">
+        <h3>History</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>From Time</th>
+                    <th>To Time</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Approved On</th>
+                    <th>Applied On</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (historyRequests.length > 0) { %>
+                    <% historyRequests.forEach(request => { %>
+                        <tr>
+                            <td><%= request.type %></td>
+                            <td><%= new Date(request.from_time).toLocaleString() %></td>
+                            <td><%= new Date(request.to_time).toLocaleString() %></td>
+                            <td><%= request.reason %></td>
+                            <td><%= request.status %></td>
+                            <td><%= request.approved_at ? new Date(request.approved_at).toLocaleString() : 'N/A' %></td>
+                            <td><%= new Date(request.created_at).toLocaleString() %></td>
+                        </tr>
+                    <% }); %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="7">No history records found.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </section>
+</main>
+
+
+<!-- Include SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function showSection(sectionId) {
+        document.getElementById('applySection').style.display = 'none';
+        document.getElementById('pendingSection').style.display = 'none';
+        document.getElementById('historySection').style.display = 'none';
+
+        document.getElementById(sectionId).style.display = 'block';
+    }
+
+
+    document.getElementById("applyPermissionForm").addEventListener("submit", function(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        Swal.fire({
+            title: "Are you sure?",
+            text: "Do you want to apply for permission?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, Apply!",
+            cancelButtonText: "Cancel"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Submit the form after confirmation
+                this.submit();
+            }
+        });
+    });
+
+    // Show success or error alert based on query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("success") === "true") {
+        Swal.fire({
+            title: "Success!",
+            text: "Permission applied successfully.",
+            icon: "success",
+            confirmButtonText: "OK"
+        }).then(() => {
+            window.location.href = "/dashboard/employee/RegularizationPage"; // Redirect after success
+        });
+    } else if (urlParams.get("error")) {
+        Swal.fire({
+            title: "Error!",
+            text: urlParams.get("error"),
+            icon: "error",
+            confirmButtonText: "Try Again"
+        });
+    }
+</script>
+
+    
+
+
+</body>
+</html>
