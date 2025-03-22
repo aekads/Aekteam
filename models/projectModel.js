@@ -14,16 +14,39 @@ exports.addProject = async (name, Client,description, emp_id) => {
     }
 };
 
-// ✅ Get All Projects
-exports.getAllProjects = async () => {
+// ✅ Update an Existing Project
+exports.updateProject = async (id, name, Client, description) => {
     try {
-        const result = await pool.query(`SELECT * FROM work_projects ORDER BY created_at DESC`);
-        return result.rows;
+        const result = await pool.query(
+            `UPDATE work_projects SET name = $1, Client = $2, description = $3 WHERE id = $4 RETURNING *`,
+            [name, Client, description, id]
+        );
+        return result.rows[0];
     } catch (error) {
-        console.error("Error fetching projects:", error);
+        console.error("Error updating project:", error);
         throw error;
     }
 };
+
+
+// ✅ Get All Projects
+exports.getAllProjects = async () => {
+    const result = await pool.query("SELECT id, name, Client, description, emp_id FROM work_projects"); // ✅ Ensure `id` is selected
+    return result.rows;
+};
+
+ 
+exports.getProjectById = async (id) => {
+    const result = await pool.query("SELECT id, name, Client, description FROM work_projects WHERE id = $1", [id]);
+    return result.rows[0]; // ✅ Ensure it returns an object with `id`
+};
+
+
+// exports.getAllProjects = async () => {
+//     const query = `SELECT name FROM public.work_projects ORDER BY name ASC;`;
+//     const { rows } = await pool.query(query);
+//     return rows; // Returns an array of project names
+// };
 
 
 
@@ -50,11 +73,6 @@ exports.addTimeEntry = async (emp_id, work_description, project, start_time, end
     return await pool.query(query, values);
 };
 
-exports.getAllProjects = async () => {
-    const query = `SELECT name FROM public.work_projects ORDER BY name ASC;`;
-    const { rows } = await pool.query(query);
-    return rows; // Returns an array of project names
-};
 
 exports.updateTimeEntry = async (id, field, value) => {
     const query = `UPDATE time_entries_task SET ${field} = $1 WHERE id = $2`;
