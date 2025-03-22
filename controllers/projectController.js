@@ -1,24 +1,22 @@
 const projectModel = require("../models/projectModel");
-
-const allowedEmpIds = ["emp_43", "emp_32", "emp_33"]; // Only these employees can add projects
+const allowedEmpIds = ["emp_43", "emp_32", "emp_33"];  // Only these employees can add projects
 
 // ✅ Fetch All Projects & Show Add Project Form
 exports.getProjectsPage = async (req, res) => {
     try {
         const emp_id = req.user.emp_id;
         const projects = await projectModel.getAllProjects();
+        // console.log("Fetched Projects from DB:", projects); // Debugging
+
         const employee = await projectModel.findEmployee(emp_id);
-        
-        // Check if the user can add projects
         const canAddProjects = allowedEmpIds.includes(req.user.emp_id);
         
-        res.render("projects/projectsPage", { projects, canAddProjects ,employee});
+        res.render("projects/projectsPage", { projects, canAddProjects, employee });
     } catch (error) {
         console.error("Error fetching projects:", error);
         res.status(500).send("Internal Server Error");
     }
 };
-
 // ✅ Create a New Project
 exports.createProject = async (req, res) => {
     try {
@@ -35,6 +33,51 @@ exports.createProject = async (req, res) => {
         res.status(500).send("Internal Server Error");
     }
 };
+
+exports.getProjectById = async (req, res) => {
+    try {
+        const project = await projectModel.getProjectById(req.params.id);
+        console.log("Fetched Project from DB:", project); // Debugging
+
+        if (!project || !project.id) {
+            return res.status(404).json({ error: "Project not found" });
+        }
+
+        res.json(project);
+    } catch (error) {
+        console.error("Error fetching project:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
+// ✅ Edit an Existing Project
+// ✅ Edit Project
+exports.editProject = async (req, res) => {
+    try {
+        if (!allowedEmpIds.includes(req.user.emp_id)) {
+            return res.status(403).json({ error: "You are not authorized to edit projects." });
+        }
+
+        const id = req.params.id;
+
+        if (!id || isNaN(Number(id))) {
+            return res.status(400).json({ error: "Invalid project ID." });
+        }
+
+        const { name, client, description } = req.body; // Ensure consistency with frontend
+
+        if (!name || !client || !description) {
+            return res.status(400).json({ error: "All fields are required." });
+        }
+
+        const updatedProject = await projectModel.updateProject(id, name, client, description);
+        res.json({ message: "Project updated successfully!", project: updatedProject });
+    } catch (error) {
+        console.error("Error updating project:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
 
 
 
