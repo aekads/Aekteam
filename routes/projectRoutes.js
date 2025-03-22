@@ -8,13 +8,19 @@ const { verifyToken,restrictToAllowedEmployees  } = require('../config/middlewar
 router.get("/", verifyToken,restrictToAllowedEmployees, projectController.getProjectsPage);
 router.post("/add", verifyToken, projectController.createProject);
 
+// router.post("/edit/:id", verifyToken, projectController.editProject);
+// router.put("/edit/:id", verifyToken, projectController.editProject);
+// router.put("/edit/:id", verifyToken, projectController.editProject);
+router.put("/edit/:id", verifyToken, projectController.editProject);
+
+
 
 
 
 router.get("/addTask", verifyToken, projectController.getTimeEntriesByDay);
 router.post("/addTask", verifyToken, projectController.addTimeEntry);
 
-router.post("/update-time-entry", projectController.updateTimeEntry);
+router.post("/update-time-entry",verifyToken, projectController.updateTimeEntry);
 
 
 // Fetch Employees for Dropdown
