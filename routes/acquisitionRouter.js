@@ -23,6 +23,9 @@ const uploadFileToCloudinary = async (fileBuffer, fileName) => {
   return new Promise((resolve, reject) => {
     cloudinary.uploader.upload_stream(
       {
+        cloud_name: 'dqfnwh89v',
+        api_key: '451893856554714',
+        api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
         resource_type: 'raw', // For PDFs
         folder: 'acquisition_contracts',
         public_id: fileName, // Set filename
@@ -39,6 +42,7 @@ const uploadFileToCloudinary = async (fileBuffer, fileName) => {
     ).end(fileBuffer);
   });
 };
+
 
 
 // Set up Multer for file upload
@@ -416,7 +420,7 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
 });
 
 
-const fs = require('fs');
+
 router.post('/acquisition/upload', verifyToken, upload.single('pdf_file'), async (req, res) => {
   const { id, emp_id } = req.body;
 
