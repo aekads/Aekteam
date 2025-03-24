@@ -188,7 +188,7 @@ exports.getEmployees = async () => {
 exports.findEmployee = async (emp_id) => {
     try {
         const result = await pool.query(
-            `SELECT emp_id, name, emp_number, email, role, photo, designation, joining_date, assign_city,bank_number,ifsc FROM employees WHERE emp_id = $1`,
+            `SELECT emp_id, name, emp_number, email, role, photo, designation, joining_date, assign_city,bank_number,ifsc,leave_balance FROM employees WHERE emp_id = $1`,
             [emp_id]
         );
 
