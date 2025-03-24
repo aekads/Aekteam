@@ -11,9 +11,13 @@ const multer = require('multer');
 
 // Configure Cloudinary (Use environment variables)
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  // cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  // api_key: process.env.CLOUDINARY_API_KEY,
+  // api_secret: process.env.CLOUDINARY_API_SECRET,
+  
+   cloud_name: 'dqfnwh89v',
+  api_key: '451893856554714',
+  api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
 });
 
 // Set up Multer for file upload
@@ -142,9 +146,9 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
     contact_person_mobile_number // New field added
   } = req.body;
  
-  if (!property_name || !contact_person_mobile_number) {
-    return res.status(400).json({ message: 'Property name and contact person mobile number are required', status: false });
-  }
+  // if (!property_name || !contact_person_mobile_number) {
+  //   return res.status(400).json({ message: 'Property name and contact person mobile number are required', status: false });
+  // }
 
   try {
     // Get the current timestamp in Asia/Kolkata timezone
