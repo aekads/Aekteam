@@ -257,6 +257,7 @@ exports.attendanceReport = async (req, res) => {
 
 
 //excel data export attendece
+//excel data export attendece
 exports.exportAttendanceReport = async (req, res) => {
     try {
         const { emp_id, start_date, end_date } = req.query;
@@ -286,10 +287,10 @@ exports.exportAttendanceReport = async (req, res) => {
                 date: new Date(record.date).toLocaleDateString("en-US"),
                 punch_in_time: record.punch_in_time
                     ? new Date(record.punch_in_time).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-                    : "Absent",
+                    : "-",
                 punch_out_time: record.punch_out_time
                     ? new Date(record.punch_out_time).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-                    : "Absent",
+                    : "-",
                 status: record.status,
             });
         });
@@ -307,7 +308,6 @@ exports.exportAttendanceReport = async (req, res) => {
         res.status(500).send("Error generating Excel file");
     }
 };
-
 //for Hr can see Leave list
 exports.leaveHistory = async (req, res) => {
     try {
