@@ -520,7 +520,7 @@ ORDER BY e.emp_id;
 
    
 
-    async function fetchEmployeeReport() {
+  async function fetchEmployeeReport() {
         try {
             const query = `
             SELECT 
@@ -564,6 +564,11 @@ ORDER BY e.emp_id;
             return [];
         }
     }
+
+
+
+
+
     
     // Function to send email
     async function sendEmailReport() {
@@ -605,10 +610,21 @@ ORDER BY e.emp_id;
                  nameStyle = "font-weight: bold; color: red;";
              }
      
+             let punchInFormatted = emp.punch_in_time;
+             let punchOutFormatted = emp.punch_out_time;
+     
              // ✅ If employee has both punch-in and punch-out
              if (emp.punch_in_time && emp.punch_out_time && emp.punch_in_time !== "-" && emp.punch_out_time !== "-") {
-                 const punchIn = moment(emp.punch_in_time, "YYYY-MM-DD HH:mm:ss");
-                 const punchOut = moment(emp.punch_out_time, "YYYY-MM-DD HH:mm:ss");
+                //  const punchIn = moment(emp.punch_in_time, "YYYY-MM-DD HH:mm:ss");
+                //  const punchOut = moment(emp.punch_out_time, "YYYY-MM-DD HH:mm:ss");
+                const punchIn = moment.tz(emp.punch_in_time, "YYYY-MM-DD HH:mm:ss", TIMEZONE);
+            const punchOut = moment.tz(emp.punch_out_time, "YYYY-MM-DD HH:mm:ss", TIMEZONE);
+            
+        
+                
+            punchInFormatted = punchIn.format("YYYY-MM-DD HH:mm:ss");
+            punchOutFormatted = punchOut.format("YYYY-MM-DD HH:mm:ss");
+
                  const duration = moment.duration(punchOut.diff(punchIn));
                  workingHours = `${Math.floor(duration.asHours())}h ${duration.minutes()}m`;
      
@@ -631,19 +647,20 @@ ORDER BY e.emp_id;
                  textColor = "black";
              }
      
-             emailBody += `
-             <tr>
-                 <td>${index + 1}</td>
-                 <td>${emp.emp_id}</td>
-                 <td style="${nameStyle} background-color: ${bgColor}; color: ${textColor};">${emp.name}</td>
-                 <td>${emp.role}</td>
-                 <td>${emp.punch_in_time || "-"}</td>
-                 <td>${emp.punch_out_time || "-"}</td>
-                 <td>${workingHours}</td>
-                 <td>${leadCount}</td>
-                 <td>${screenCount}</td>
-             </tr>
-             `;
+          
+                        emailBody += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${emp.emp_id}</td>
+                <td style="${nameStyle} background-color: ${bgColor}; color: ${textColor};">${emp.name}</td>
+                <td>${emp.role}</td>
+               <td>${punchInFormatted}</td>
+            <td>${punchOutFormatted}</td>
+                <td>${workingHours}</td>
+                <td>${leadCount}</td>
+                <td>${screenCount}</td>
+            </tr>
+            `;
          });
      
          emailBody += `</table>`;
@@ -675,7 +692,8 @@ ORDER BY e.emp_id;
         const mailOptions = {
             from: "your-email@gmail.com", // Replace with your email
             to: "hp9537213@gmail.com, shaikhanish1992@gmail.com, sahaskumbhani221@gmail.com, aravind@aekads.com",
-        
+            // to: "hp9537213@gmail.com",
+
          
             
             
@@ -692,6 +710,7 @@ ORDER BY e.emp_id;
             }
         });
     }
+    
     
     // Schedule the cron job to run every day at 4:30 PM
     cron.schedule("10 21 * * 1-6", () => {
