@@ -11,17 +11,15 @@ const multer = require('multer');
 
 // Configure Cloudinary (Use environment variables)
 cloudinary.config({
-  // cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  // api_key: process.env.CLOUDINARY_API_KEY,
-  // api_secret: process.env.CLOUDINARY_API_SECRET,
-  
-   cloud_name: 'dqfnwh89v',
+  cloud_name: 'dqfnwh89v' ,
   api_key: '451893856554714',
   api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
 });
 
 // Set up Multer for file upload
-const upload = multer({ dest: 'uploads/' });
+// Set up Multer for memory storage (No local file saving)
+const storage = multer.memoryStorage(); // Store file in memory (RAM)
+const upload = multer({ storage: storage });  
 
 
 const getClientIP = (req) => {
@@ -394,12 +392,10 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
 
 
 const fs = require('fs');
-
-
 router.post(
   '/acquisition/upload',
   verifyToken,
-  upload.single('pdf_file'),
+  upload.single('pdf_file'), // Accept single file
   async (req, res) => {
     const { id, emp_id } = req.body;
 
@@ -413,6 +409,8 @@ router.post(
     }
 
     try {
+      console.log('Received File:', req.file.originalname); // Debugging log
+
       // Check if record exists
       const checkQuery = 'SELECT * FROM acquisition WHERE id = $1';
       const checkResult = await pool.query(checkQuery, [id]);
@@ -421,33 +419,37 @@ router.post(
         return res.status(404).json({ status: false, message: 'Record not found with the given ID.' });
       }
 
-      // Upload the PDF file to Cloudinary
-      const uploadResponse = await cloudinary.uploader.upload(req.file.path, {
-        resource_type: 'raw', // For PDFs
-        folder: 'acquisition_contracts', // Cloudinary folder
-      });
+      // Upload the PDF file to Cloudinary from memory
+      const uploadResponse = await cloudinary.uploader.upload_stream(
+        { resource_type: 'raw', folder: 'acquisition_contracts' },
+        async (error, result) => {
+          if (error) {
+            console.error('Cloudinary Upload Error:', error);
+            return res.status(500).json({ status: false, message: 'Cloudinary upload failed.' });
+          }
 
-      const pdfUrl = uploadResponse.secure_url;
+          console.log('Cloudinary Upload Response:', result); // Debugging log
+          const pdfUrl = result.secure_url;
 
-      // Delete local file after upload
-      fs.unlink(req.file.path, (err) => {
-        if (err) console.error('Error deleting file:', err);
-      });
+          // Update the database
+          const updatedDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
+          const updateQuery = `
+            UPDATE acquisition
+            SET emp_id = $1,
+                contract_pdf_file = $2,
+                updated_date = $3
+            WHERE id = $4
+            RETURNING *;
+          `;
 
-      // Update the database
-      const updatedDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
-      const updateQuery = `
-        UPDATE acquisition
-        SET emp_id = $1,
-            contract_pdf_file = $2,
-            updated_date = $3
-        WHERE id = $4
-        RETURNING *;
-      `;
+          await pool.query(updateQuery, [emp_id, pdfUrl, updatedDate, id]);
 
-      await pool.query(updateQuery, [emp_id, pdfUrl, updatedDate, id]);
+          res.status(200).json({ status: true, message: 'PDF uploaded successfully.' });
+        }
+      );
 
-      res.status(200).json({ status: true, message: 'PDF uploaded successfully.', pdfUrl });
+      // Pipe the file buffer to Cloudinary
+      uploadResponse.end(req.file.buffer);
     } catch (error) {
       console.error('Error updating record:', error);
       res.status(500).json({ status: false, message: 'Internal server error.' });
