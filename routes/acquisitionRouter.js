@@ -8,15 +8,16 @@ const moment = require('moment-timezone');
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 // const upload = multer({ dest: 'uploads/' }); 
-const upload = multer({ dest: 'uploads/' });  
-// Configure Cloudinary
+
+// Configure Cloudinary (Use environment variables)
 cloudinary.config({
- 
-   cloud_name: 'dqfnwh89v',
-  api_key: '451893856554714',
-  api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// Set up Multer for file upload
+const upload = multer({ dest: 'uploads/' });
 
 
 const getClientIP = (req) => {
@@ -388,6 +389,7 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
 });
 
 
+const fs = require('fs');
 
 
 router.post(
@@ -399,40 +401,37 @@ router.post(
 
     // Validate input
     if (!id || !emp_id) {
-      return res.status(400).json({
-        status: false,
-        message: 'ID and emp_id are required.',
-      });
+      return res.status(400).json({ status: false, message: 'ID and emp_id are required.' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ status: false, message: 'PDF file is required.' });
     }
 
     try {
-      // Check if the record exists
+      // Check if record exists
       const checkQuery = 'SELECT * FROM acquisition WHERE id = $1';
       const checkResult = await pool.query(checkQuery, [id]);
 
       if (checkResult.rowCount === 0) {
-        return res.status(404).json({
-          status: false,
-          message: 'Record not found with the given ID.',
-        });
+        return res.status(404).json({ status: false, message: 'Record not found with the given ID.' });
       }
 
-      // Upload the PDF to Cloudinary
-      let pdfUrl = null;
-      if (req.file) {
-        const uploadResponse = await cloudinary.uploader.upload(req.file.path, {
-          resource_type: 'raw',
-          folder: 'acquisition_contracts',
-        });
-        pdfUrl = uploadResponse.secure_url;
-      } else {
-        return res.status(400).json({
-          status: false,
-          message: 'PDF file is required.',
-        });
-      }
+      // Upload the PDF file to Cloudinary
+      const uploadResponse = await cloudinary.uploader.upload(req.file.path, {
+        resource_type: 'raw', // For PDFs
+        folder: 'acquisition_contracts', // Cloudinary folder
+      });
 
-      // Update the record in the database
+      const pdfUrl = uploadResponse.secure_url;
+
+      // Delete local file after upload
+      fs.unlink(req.file.path, (err) => {
+        if (err) console.error('Error deleting file:', err);
+      });
+
+      // Update the database
+      const updatedDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
       const updateQuery = `
         UPDATE acquisition
         SET emp_id = $1,
@@ -441,19 +440,13 @@ router.post(
         WHERE id = $4
         RETURNING *;
       `;
-      const updatedDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
-      const updateResult = await pool.query(updateQuery, [emp_id, pdfUrl, updatedDate, id]);
 
-      res.status(200).json({
-        status: true,
-        message: 'pdf upload successfully.'
-      });
+      await pool.query(updateQuery, [emp_id, pdfUrl, updatedDate, id]);
+
+      res.status(200).json({ status: true, message: 'PDF uploaded successfully.', pdfUrl });
     } catch (error) {
       console.error('Error updating record:', error);
-      res.status(500).json({
-        status: false,
-        message: 'Internal server error.',
-      });
+      res.status(500).json({ status: false, message: 'Internal server error.' });
     }
   }
 );
