@@ -11,10 +11,10 @@ const multer = require('multer');
 
 // Direct Cloudinary Configuration
 // Cloudinary Configuration
-cloudinary.config({ 
-  cloud_name: 'dnmdaadrr', 
-  api_key: '366566435625199', 
-  api_secret: 'JCfg4sL2x3c_EhfPiw6e6eqVIMQ'
+cloudinary.config({
+  cloud_name: 'dqfnwh89v',
+  api_key: '451893856554714',
+  api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
 });
 
 console.log('Cloudinary Config:', cloudinary.config()); // Debugging step
