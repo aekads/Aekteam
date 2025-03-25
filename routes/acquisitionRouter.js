@@ -16,6 +16,7 @@ cloudinary.config({
   api_key: '366566435625199', 
   api_secret: 'JCfg4sL2x3c_EhfPiw6e6eqVIMQ'
 });
+console.log('Cloudinary Config:', cloudinary.config()); // Debugging step
 
 
 
@@ -27,11 +28,13 @@ cloudinary.config({
 
 
 // Upload Function (Using Upload Stream for Buffers)
+// Upload function
+// Upload function
 const uploadFileToCloudinary = async (fileBuffer, fileName) => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        resource_type: 'auto', // Ensure correct file type handling
+        resource_type: 'auto', // Auto-detect file type
         folder: 'acquisition_contracts',
         public_id: fileName.replace(/\.[^/.]+$/, ""), // Remove extension
         type: 'upload',
@@ -51,8 +54,6 @@ const uploadFileToCloudinary = async (fileBuffer, fileName) => {
     uploadStream.end(fileBuffer);
   });
 };
-
-
 
 
 
