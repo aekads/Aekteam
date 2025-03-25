@@ -37,27 +37,32 @@ if (!cloudinary.config().api_key) {
 // Upload function
 const uploadFileToCloudinary = async (fileBuffer, fileName) => {
   return new Promise((resolve, reject) => {
-    cloudinary.uploader.upload_stream(
+    const uploadStream = cloudinary.uploader.upload_stream(
       {
-        resource_type: 'auto', // Auto-detect type (PDF, Image, etc.)
+        cloud_name: 'dqfnwh89v',
+        api_key: '451893856554714',
+        api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
+        resource_type: 'auto', 
         folder: 'acquisition_contracts',
-        public_id: fileName.replace(/\.[^/.]+$/, ""), // Remove extension
+        public_id: fileName.replace(/\.[^/.]+$/, ""),
         type: 'upload',
         access_mode: 'public',
-        overwrite: true,
+        overwrite: true
       },
       (error, result) => {
         if (error) {
           console.error('Cloudinary Upload Error:', error);
-          reject(error);
-        } else {
-          console.log('Cloudinary Upload Success:', result.secure_url);
-          resolve(result.secure_url);
-        }
+          return reject(error);
+        } 
+        console.log('Cloudinary Upload Success:', result.secure_url);
+        return resolve(result.secure_url);
       }
-    ).end(fileBuffer);
+    );
+    uploadStream.end(fileBuffer);
   });
 };
+
+
 
 
 
