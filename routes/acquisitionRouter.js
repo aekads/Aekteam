@@ -62,7 +62,7 @@ const logAction = async (req, action, message, salesEnquiryId = null) => {
   try {
     const ip = getClientIP(req);
 
-    // Fetch user details from database if needed
+    // Fetch user details from database if needed                               
     let userName = "Anonymous"; // Default name
     if (req.user && req.user.emp_id) {
       const userQuery = `SELECT name FROM employees WHERE emp_id = $1`;
