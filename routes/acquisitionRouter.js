@@ -29,6 +29,9 @@ const uploadPdfWithPreview = async (fileBuffer, fileName) => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
+        cloud_name: 'dqfnwh89v',
+        api_key: '451893856554714',
+        api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
         folder: 'acquisition_contracts',
         public_id: fileName.replace(/\.[^/.]+$/, ""), // Removes file extension
         resource_type: 'image', // ✅ Forces Cloudinary to treat the PDF as an image
