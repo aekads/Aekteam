@@ -839,5 +839,3 @@ router.post("/acquisition/EditPairingCode", verifyToken, async (req, res) => {
 
   module.exports = router;                                                      
   
-
-                                                                                    
