@@ -10,38 +10,39 @@ const multer = require('multer');
 // const upload = multer({ dest: 'uploads/' }); 
 
 // Direct Cloudinary Configuration
+// Cloudinary Configuration
 cloudinary.config({
   cloud_name: 'dqfnwh89v',
   api_key: '451893856554714',
   api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
 });
 
-console.log("Cloudinary Config:", cloudinary.config()); // Debugging log
-
-// Upload function
+// Upload Function (Using Upload Stream for Buffers)
 const uploadFileToCloudinary = async (fileBuffer, fileName) => {
   return new Promise((resolve, reject) => {
     cloudinary.uploader.upload_stream(
       {
-        cloud_name: 'dqfnwh89v',
-        api_key: '451893856554714',
-        api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
-        resource_type: 'raw', // For PDFs
+        resource_type: 'raw', // Ensure proper PDF handling
         folder: 'acquisition_contracts',
-        public_id: fileName, // Set filename
+        public_id: fileName.replace(/\.[^/.]+$/, ""), // Remove extension
+        access_mode: 'public',
+        overwrite: true,
       },
       (error, result) => {
         if (error) {
           console.error('Cloudinary Upload Error:', error);
-          reject(error);
-        } else {
-          console.log('Cloudinary Upload Response:', result);
-          resolve(result.secure_url);
+          return reject(error);
         }
+        console.log('Cloudinary Upload Response:', result);
+        resolve(result.secure_url);
       }
     ).end(fileBuffer);
   });
 };
+
+
+
+
 
 
 
@@ -419,8 +420,10 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
   }
 });
 
+const fs = require('fs');
 
 
+// Express route for handling PDF upload
 router.post('/acquisition/upload', verifyToken, upload.single('pdf_file'), async (req, res) => {
   const { id, emp_id } = req.body;
 
@@ -442,7 +445,7 @@ router.post('/acquisition/upload', verifyToken, upload.single('pdf_file'), async
       return res.status(404).json({ status: false, message: 'Record not found with the given ID.' });
     }
 
-    // Upload the file to Cloudinary
+    // Upload file to Cloudinary
     const pdfUrl = await uploadFileToCloudinary(req.file.buffer, req.file.originalname);
 
     // Update the database
@@ -466,9 +469,7 @@ router.post('/acquisition/upload', verifyToken, upload.single('pdf_file'), async
 });
 
 
-
-
-//fetches data  
+//fetches data   v 302,575 325,000
 
 //fetches data  
 router.post('/acquisition-list', verifyToken, async (req, res) => {
