@@ -12,22 +12,31 @@ const multer = require('multer');
 // Direct Cloudinary Configuration
 // Cloudinary Configuration
 cloudinary.config({
-  cloud_name: 'dqfnwh89v',
-  api_key: '451893856554714',
-  api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
+  cloud_name: 'dnmdaadrr',
+  api_key: '366566435625199',
+  api_secret: 'JCfg4sL2x3c_EhfPiw6e6eqVIMQ',
 });
+
+
+
+// CLOUDINARY_CLOUD_NAME=dnmdaadrr
+// CLOUDINARY_API_KEY=366566435625199
+// CLOUDINARY_API_SECRET=JCfg4sL2x3c_EhfPiw6e6eqVIMQ
+
+
 
 // Upload Function (Using Upload Stream for Buffers)
 const uploadFileToCloudinary = async (fileBuffer, fileName) => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        resource_type: 'raw', // Ensure direct PDF download
+        resource_type: 'image', // Force Cloudinary to treat the file as an image
         folder: 'acquisition_contracts',
-        public_id: fileName,
+        public_id: fileName.replace(/\.[^/.]+$/, ""), // Remove extension
         type: 'upload',
         access_mode: 'public',
         overwrite: true,
+        format: 'pdf' // Ensure it's still a PDF
       },
       (error, result) => {
         if (error) {
@@ -35,14 +44,15 @@ const uploadFileToCloudinary = async (fileBuffer, fileName) => {
           reject(error);
         } else {
           console.log('Cloudinary Upload Response:', result);
-          resolve(result.secure_url); // Store in DB
+          resolve(result.secure_url);
         }
       }
     );
-
     uploadStream.end(fileBuffer);
   });
 };
+
+
 
 
 
