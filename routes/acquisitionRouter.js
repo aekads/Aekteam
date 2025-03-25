@@ -11,57 +11,47 @@ const multer = require('multer');
 
 // Direct Cloudinary Configuration
 // Cloudinary Configuration
+
+// ✅ Cloudinary Configuration (Direct Access, No .env)
 cloudinary.config({
   cloud_name: 'dqfnwh89v',
   api_key: '451893856554714',
-  api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y'
-  // secure: true, // Ensure secure uploads
+  api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
 });
 
-console.log('Cloudinary Config:', cloudinary.config()); // Debugging step
-
-console.log('Using Cloudinary API Key:', cloudinary.config().api_key);
-if (!cloudinary.config().api_key) {
-  throw new Error('Cloudinary API key is missing!');
-}
-
-
-
-// CLOUDINARY_CLOUD_NAME=dnmdaadrr
-// CLOUDINARY_API_KEY=366566435625199
-// CLOUDINARY_API_SECRET=JCfg4sL2x3c_EhfPiw6e6eqVIMQ
-
-
-
-// Upload Function (Using Upload Stream for Buffers)
-// Upload function
-// Upload function
-const uploadFileToCloudinary = async (fileBuffer, fileName) => {
+/**
+ * Uploads a PDF and generates an image preview URL.
+ * @param {Buffer} fileBuffer - The file buffer
+ * @param {string} fileName - The file name
+ * @returns {Promise<{ pdfUrl: string, previewUrl: string }>} - The PDF & preview URLs
+ */
+const uploadPdfWithPreview = async (fileBuffer, fileName) => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        cloud_name: 'dqfnwh89v',
-        api_key: '451893856554714',
-        api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
-        resource_type: 'auto', 
         folder: 'acquisition_contracts',
-        public_id: fileName.replace(/\.[^/.]+$/, ""),
-        type: 'upload',
-        access_mode: 'public',
-        overwrite: true
+        public_id: fileName.replace(/\.[^/.]+$/, ""), // Removes file extension
+        resource_type: 'image', // ✅ Forces Cloudinary to treat the PDF as an image
+        format: 'jpg', // ✅ Generates an image preview
+        pages: 1, // ✅ Takes only the first page as an image preview
+        overwrite: true,
       },
       (error, result) => {
         if (error) {
           console.error('Cloudinary Upload Error:', error);
           return reject(error);
-        } 
+        }
         console.log('Cloudinary Upload Success:', result.secure_url);
-        return resolve(result.secure_url);
+
+        // Generate the actual PDF URL
+        const pdfUrl = result.secure_url.replace('.jpg', '.pdf');
+        resolve({ pdfUrl, previewUrl: result.secure_url });
       }
     );
     uploadStream.end(fileBuffer);
   });
 };
+
 
 
 
@@ -447,7 +437,7 @@ const fs = require('fs');
 
 // Express route for handling PDF upload
 // ✅ Express API Route for Uploading PDF
-router.post('/acquisition/upload', verifyToken, upload.single('pdf_file'), async (req, res) => {
+router.post('/acquisition/upload', upload.single('pdf_file'), async (req, res) => {
   const { id, emp_id } = req.body;
 
   if (!id || !emp_id) {
@@ -460,7 +450,7 @@ router.post('/acquisition/upload', verifyToken, upload.single('pdf_file'), async
   try {
     console.log('Received File:', req.file.originalname);
 
-    // ✅ 1. Check if Record Exists in Database
+    // ✅ 1. Check if the record exists
     const checkQuery = 'SELECT * FROM acquisition WHERE id = $1';
     const checkResult = await pool.query(checkQuery, [id]);
 
@@ -468,32 +458,36 @@ router.post('/acquisition/upload', verifyToken, upload.single('pdf_file'), async
       return res.status(404).json({ status: false, message: 'Record not found with the given ID.' });
     }
 
-    // ✅ 2. Upload the File to Cloudinary
-    const pdfUrl = await uploadFileToCloudinary(req.file.buffer, req.file.originalname);
-    console.log('Cloudinary URL:', pdfUrl);
+    // ✅ 2. Upload to Cloudinary (PDF + Preview Image)
+    const { pdfUrl, previewUrl } = await uploadPdfWithPreview(req.file.buffer, req.file.originalname);
+    console.log('Cloudinary PDF URL:', pdfUrl);
+    console.log('Cloudinary Preview Image URL:', previewUrl);
 
-    // ✅ 3. Update Database (Fixing Wrong API Usage)
+    // ✅ 3. Update Database
     const updatedDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
     const updateQuery = `
-  UPDATE acquisition
-  SET emp_id = $1,
-      contract_pdf_file = $2,
-      updated_date = $3
-  WHERE id = $4
-  RETURNING *;
-`;
+    UPDATE acquisition
+    SET emp_id = $1,
+        contract_pdf_file = $2,
+        updated_date = $3
+    WHERE id = $4
+    RETURNING *;
+  `;
 
-console.log('Executing Query:', updateQuery);
-console.log('With Values:', [emp_id, pdfUrl, updatedDate, id]);
 
-const updateResult = await pool.query(updateQuery, [emp_id, pdfUrl, updatedDate, id]);
-console.log('Database Update Result:', updateResult);
+    const updateResult = await pool.query(updateQuery, [emp_id, pdfUrl, updatedDate, id]);
+    console.log('Database Update Result:', updateResult.rows[0]);
 
     if (updateResult.rowCount === 0) {
       return res.status(500).json({ status: false, message: 'Database update failed.' });
     }
 
-    res.status(200).json({ status: true, message: 'PDF uploaded successfully.', pdfUrl });
+    res.status(200).json({
+      status: true,
+      message: 'PDF uploaded successfully.',
+      pdfUrl
+      
+    });
   } catch (error) {
     console.error('Error updating record:', error);
     res.status(500).json({ status: false, message: 'Internal server error.' });
