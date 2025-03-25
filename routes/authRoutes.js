@@ -571,7 +571,7 @@ ORDER BY e.emp_id;
 
     
     // Function to send email
-    async function sendEmailReport() {
+       async function sendEmailReport() {
         const employees = await fetchEmployeeReport();
         if (employees.length === 0) {
             console.log("No employee data to send.");
@@ -618,12 +618,16 @@ ORDER BY e.emp_id;
                 //  const punchIn = moment(emp.punch_in_time, "YYYY-MM-DD HH:mm:ss");
                 //  const punchOut = moment(emp.punch_out_time, "YYYY-MM-DD HH:mm:ss");
                 const punchIn = moment.tz(emp.punch_in_time, "YYYY-MM-DD HH:mm:ss", TIMEZONE);
-            const punchOut = moment.tz(emp.punch_out_time, "YYYY-MM-DD HH:mm:ss", TIMEZONE);
+                const punchOut = moment.tz(emp.punch_out_time, "YYYY-MM-DD HH:mm:ss", TIMEZONE);
+    
+                punchInFormatted = punchIn.format("hh:mm A");  // 12-hour format
+                punchOutFormatted = punchOut.format("hh:mm A"); // 12-hour format
+    
             
         
                 
-            punchInFormatted = punchIn.format("YYYY-MM-DD HH:mm:ss");
-            punchOutFormatted = punchOut.format("YYYY-MM-DD HH:mm:ss");
+            // punchInFormatted = punchIn.format("YYYY-MM-DD HH:mm:ss");
+            // punchOutFormatted = punchOut.format("YYYY-MM-DD HH:mm:ss");
 
                  const duration = moment.duration(punchOut.diff(punchIn));
                  workingHours = `${Math.floor(duration.asHours())}h ${duration.minutes()}m`;
@@ -691,8 +695,8 @@ ORDER BY e.emp_id;
         // Email options
         const mailOptions = {
             from: "your-email@gmail.com", // Replace with your email
-            to: "hp9537213@gmail.com, shaikhanish1992@gmail.com, sahaskumbhani221@gmail.com, aravind@aekads.com",
-            // to: "hp9537213@gmail.com",
+             to: "hp9537213@gmail.com, shaikhanish1992@gmail.com, sahaskumbhani221@gmail.com, aravind@aekads.com",
+           // to: "hp9537213@gmail.com",
 
          
             
