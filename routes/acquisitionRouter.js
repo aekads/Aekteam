@@ -11,10 +11,15 @@ const multer = require('multer');
 
 // Direct Cloudinary Configuration
 // Cloudinary Configuration
+// cloudinary.config({ 
+//   cloud_name: 'dnmdaadrr', 
+//   api_key: '366566435625199', 
+//   api_secret: 'JCfg4sL2x3c_EhfPiw6e6eqVIMQ'
+// });
 cloudinary.config({ 
-  cloud_name: 'dnmdaadrr', 
-  api_key: '366566435625199', 
-  api_secret: 'JCfg4sL2x3c_EhfPiw6e6eqVIMQ'
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+  api_key: process.env.CLOUDINARY_API_KEY, 
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 console.log('Cloudinary Config:', cloudinary.config()); // Debugging step
