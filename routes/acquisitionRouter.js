@@ -11,11 +11,12 @@ const multer = require('multer');
 
 // Direct Cloudinary Configuration
 // Cloudinary Configuration
-cloudinary.config({
-  cloud_name: 'dnmdaadrr',
-  api_key: '366566435625199',
-  api_secret: 'JCfg4sL2x3c_EhfPiw6e6eqVIMQ',
+cloudinary.config({ 
+  cloud_name: 'dnmdaadrr', 
+  api_key: '366566435625199', 
+  api_secret: 'JCfg4sL2x3c_EhfPiw6e6eqVIMQ'
 });
+
 
 
 
@@ -30,13 +31,12 @@ const uploadFileToCloudinary = async (fileBuffer, fileName) => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        resource_type: 'image', // Force Cloudinary to treat the file as an image
+        resource_type: 'auto', // Ensure correct file type handling
         folder: 'acquisition_contracts',
         public_id: fileName.replace(/\.[^/.]+$/, ""), // Remove extension
         type: 'upload',
         access_mode: 'public',
-        overwrite: true,
-        format: 'pdf' // Ensure it's still a PDF
+        overwrite: true
       },
       (error, result) => {
         if (error) {
