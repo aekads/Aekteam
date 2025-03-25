@@ -16,8 +16,13 @@ cloudinary.config({
   api_key: '366566435625199', 
   api_secret: 'JCfg4sL2x3c_EhfPiw6e6eqVIMQ'
 });
+
 console.log('Cloudinary Config:', cloudinary.config()); // Debugging step
 
+console.log('Using Cloudinary API Key:', cloudinary.config().api_key);
+if (!cloudinary.config().api_key) {
+  throw new Error('Cloudinary API key is missing!');
+}
 
 
 
@@ -32,7 +37,7 @@ console.log('Cloudinary Config:', cloudinary.config()); // Debugging step
 // Upload function
 const uploadFileToCloudinary = async (fileBuffer, fileName) => {
   return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
+    cloudinary.uploader.upload_stream(
       {
         resource_type: 'auto', // Auto-detect file type
         folder: 'acquisition_contracts',
@@ -50,11 +55,9 @@ const uploadFileToCloudinary = async (fileBuffer, fileName) => {
           resolve(result.secure_url);
         }
       }
-    );
-    uploadStream.end(fileBuffer);
+    ).end(fileBuffer);
   });
 };
-
 
 
 
@@ -449,7 +452,7 @@ router.post('/acquisition/upload', verifyToken, upload.single('pdf_file'), async
   try {
     console.log('Received File:', req.file.originalname);
 
-    // Check if record exists
+    // ✅ 1. Check if Record Exists in Database
     const checkQuery = 'SELECT * FROM acquisition WHERE id = $1';
     const checkResult = await pool.query(checkQuery, [id]);
 
@@ -457,10 +460,11 @@ router.post('/acquisition/upload', verifyToken, upload.single('pdf_file'), async
       return res.status(404).json({ status: false, message: 'Record not found with the given ID.' });
     }
 
-    // Upload the file to Cloudinary using its buffer
+    // ✅ 2. Upload the File to Cloudinary
     const pdfUrl = await uploadFileToCloudinary(req.file.buffer, req.file.originalname);
+    console.log('Cloudinary URL:', pdfUrl);
 
-    // Update the database
+    // ✅ 3. Update Database (Fixing Wrong API Usage)
     const updatedDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
     const updateQuery = `
       UPDATE acquisition
@@ -471,7 +475,11 @@ router.post('/acquisition/upload', verifyToken, upload.single('pdf_file'), async
       RETURNING *;
     `;
 
-    await pool.query(updateQuery, [emp_id, pdfUrl, updatedDate, id]);
+    const updateResult = await pool.query(updateQuery, [emp_id, pdfUrl, updatedDate, id]);
+
+    if (updateResult.rowCount === 0) {
+      return res.status(500).json({ status: false, message: 'Database update failed.' });
+    }
 
     res.status(200).json({ status: true, message: 'PDF uploaded successfully.', pdfUrl });
   } catch (error) {
