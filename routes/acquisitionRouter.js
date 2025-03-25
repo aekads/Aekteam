@@ -11,15 +11,10 @@ const multer = require('multer');
 
 // Direct Cloudinary Configuration
 // Cloudinary Configuration
-// cloudinary.config({ 
-//   cloud_name: 'dnmdaadrr', 
-//   api_key: '366566435625199', 
-//   api_secret: 'JCfg4sL2x3c_EhfPiw6e6eqVIMQ'
-// });
 cloudinary.config({ 
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-  api_key: process.env.CLOUDINARY_API_KEY, 
-  api_secret: process.env.CLOUDINARY_API_SECRET
+  cloud_name: 'dnmdaadrr', 
+  api_key: '366566435625199', 
+  api_secret: 'JCfg4sL2x3c_EhfPiw6e6eqVIMQ'
 });
 
 console.log('Cloudinary Config:', cloudinary.config()); // Debugging step
@@ -473,15 +468,19 @@ router.post('/acquisition/upload', verifyToken, upload.single('pdf_file'), async
     // ✅ 3. Update Database (Fixing Wrong API Usage)
     const updatedDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
     const updateQuery = `
-      UPDATE acquisition
-      SET emp_id = $1,
-          contract_pdf_file = $2,
-          updated_date = $3
-      WHERE id = $4
-      RETURNING *;
-    `;
+  UPDATE acquisition
+  SET emp_id = $1,
+      contract_pdf_file = $2,
+      updated_date = $3
+  WHERE id = $4
+  RETURNING *;
+`;
 
-    const updateResult = await pool.query(updateQuery, [emp_id, pdfUrl, updatedDate, id]);
+console.log('Executing Query:', updateQuery);
+console.log('With Values:', [emp_id, pdfUrl, updatedDate, id]);
+
+const updateResult = await pool.query(updateQuery, [emp_id, pdfUrl, updatedDate, id]);
+console.log('Database Update Result:', updateResult);
 
     if (updateResult.rowCount === 0) {
       return res.status(500).json({ status: false, message: 'Database update failed.' });
