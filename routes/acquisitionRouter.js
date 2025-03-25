@@ -22,11 +22,11 @@ const uploadFileToCloudinary = async (fileBuffer, fileName) => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        resource_type: 'auto', // Detect file type automatically (PDF, Image, etc.)
+        resource_type: 'raw', // Ensure direct PDF download
         folder: 'acquisition_contracts',
         public_id: fileName,
-        type: 'upload', // Ensure it's uploaded properly
-        access_mode: 'public', // Make it publicly accessible
+        type: 'upload',
+        access_mode: 'public',
         overwrite: true,
       },
       (error, result) => {
@@ -35,12 +35,12 @@ const uploadFileToCloudinary = async (fileBuffer, fileName) => {
           reject(error);
         } else {
           console.log('Cloudinary Upload Response:', result);
-          resolve(result.secure_url);
+          resolve(result.secure_url); // Store in DB
         }
       }
     );
 
-    uploadStream.end(fileBuffer); // Send file buffer to Cloudinary
+    uploadStream.end(fileBuffer);
   });
 };
 
