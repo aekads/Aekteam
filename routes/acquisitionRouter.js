@@ -39,19 +39,19 @@ const uploadFileToCloudinary = async (fileBuffer, fileName) => {
   return new Promise((resolve, reject) => {
     cloudinary.uploader.upload_stream(
       {
-        resource_type: 'auto', // Auto-detect file type
+        resource_type: 'auto', // Auto-detect type (PDF, Image, etc.)
         folder: 'acquisition_contracts',
         public_id: fileName.replace(/\.[^/.]+$/, ""), // Remove extension
         type: 'upload',
         access_mode: 'public',
-        overwrite: true
+        overwrite: true,
       },
       (error, result) => {
         if (error) {
           console.error('Cloudinary Upload Error:', error);
           reject(error);
         } else {
-          console.log('Cloudinary Upload Response:', result);
+          console.log('Cloudinary Upload Success:', result.secure_url);
           resolve(result.secure_url);
         }
       }
@@ -439,6 +439,7 @@ const fs = require('fs');
 
 
 // Express route for handling PDF upload
+// ✅ Express API Route for Uploading PDF
 router.post('/acquisition/upload', verifyToken, upload.single('pdf_file'), async (req, res) => {
   const { id, emp_id } = req.body;
 
