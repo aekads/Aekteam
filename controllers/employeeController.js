@@ -14,13 +14,13 @@ exports.getEmployeeHome = async (req, res) => {
         const currentHour = new Date().getHours();
         let greeting = "Good Morning";
 
-        if (currentHour >= 12 && currentHour < 14) {
+        if (currentHour >= 12 && currentHour < 13) {
             greeting = "Good Noon";
-        } else if (currentHour >= 14 && currentHour < 17) {
+        } else if (currentHour >= 13 && currentHour < 17) {
             greeting = "Good Afternoon";
         } else if (currentHour >= 17 && currentHour < 20) {
             greeting = "Good Evening";
-        } else if (currentHour >= 20 || currentHour < 5) {
+        } else {
             greeting = "Good Night";
         }
 
