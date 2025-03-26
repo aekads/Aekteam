@@ -51,6 +51,7 @@ exports.getHrDashboard = async (req, res) => {
 
 //employee add render page for HR
 
+
 exports.getAddEmployeePage = async (req, res) => {
     const emp_id = req.user.emp_id;
     const employee = await employeeModel.findEmployee(emp_id);
@@ -125,44 +126,31 @@ exports.postUpdateEmployee = async (req, res) => {
         console.log("Received Files:", req.files);
 
         const emp_id = req.params.emp_id;
-
-        if (!emp_id) {
-            return res.status(400).json({ success: false, error: "Employee ID is required." });
-        }
+      
 
         const updatedData = {};
+        const fields = [
+            "name", "emp_number", "email", "pin", "role", "token", "status", 
+            "assign_city", "isdeleted", "designation", "joining_date", "resign_date", 
+            "dob", "alt_phone", "ctc", "bank_number", "ifsc", "last_company_name", 
+            "leave_balance", "total_accrued_leave", "leave_taken"
+        ];
 
-        // Only add fields that have values (ignore undefined)
-        if (req.body.name) updatedData.name = req.body.name;
-        if (req.body.emp_number) updatedData.emp_number = req.body.emp_number;
-        if (req.body.email) updatedData.email = req.body.email;
-        if (req.body.pin) updatedData.pin = req.body.pin;
-        if (req.body.role) updatedData.role = req.body.role;
-        if (req.body.token) updatedData.token = req.body.token;
-        if (req.body.status) updatedData.status = req.body.status;
-        if (req.body.assign_city) updatedData.assign_city = req.body.assign_city;
-        if (req.body.isdeleted) updatedData.isdeleted = req.body.isdeleted;
-        if (req.body.designation) updatedData.designation = req.body.designation;
-        if (req.body.joining_date) updatedData.joining_date = req.body.joining_date || null;
-        if (req.body.resign_date) updatedData.resign_date = req.body.resign_date || null;
-        if (req.body.dob) updatedData.dob = req.body.dob || null;
-        if (req.body.alt_phone) updatedData.alt_phone = req.body.alt_phone;
-        if (req.body.ctc) updatedData.ctc = req.body.ctc;
-        if (req.body.bank_number) updatedData.bank_number = req.body.bank_number;
-        if (req.body.ifsc) updatedData.ifsc = req.body.ifsc;
+        fields.forEach(field => {
+            if (req.body[field] !== undefined) updatedData[field] = req.body[field] || null;
+        });
 
-        // Only update files if new files are uploaded
-        if (req.files?.passbook_image) updatedData.passbook_image = req.files.passbook_image[0].path;
-        if (req.files?.pan_card) updatedData.pan_card = req.files.pan_card[0].path;
-        if (req.files?.aadhar_card) updatedData.aadhar_card = req.files.aadhar_card[0].path;
-        if (req.files?.offer_letter) updatedData.offer_letter = req.files.offer_letter[0].path;
-        if (req.files?.photo) updatedData.photo = req.files.photo[0].path;
-        if (req.files?.last_company_experience_letter) updatedData.last_company_experience_letter = req.files.last_company_experience_letter[0].path;
+        // Handle file uploads
+        const fileFields = [
+            "passbook_image", "pan_card", "aadhar_card", "offer_letter", 
+            "photo", "last_company_experience_letter"
+        ];
 
-        if (req.body.last_company_name) updatedData.last_company_name = req.body.last_company_name;
-        if (req.body.leave_balance) updatedData.leave_balance = req.body.leave_balance || 0;
-        if (req.body.total_accrued_leave) updatedData.total_accrued_leave = req.body.total_accrued_leave || 0;
-        if (req.body.leave_taken) updatedData.leave_taken = req.body.leave_taken || 0;
+        fileFields.forEach(field => {
+            if (req.files?.[field]?.[0]?.path) {
+                updatedData[field] = req.files[field][0].path;
+            }
+        });
 
         // Ensure there is at least one field to update
         if (Object.keys(updatedData).length === 0) {
@@ -171,7 +159,6 @@ exports.postUpdateEmployee = async (req, res) => {
 
         // Update Employee in DB
         const updatedEmployee = await employeeModel.updateEmployee(emp_id, updatedData);
-
         if (!updatedEmployee) {
             return res.status(404).json({ success: false, message: "Employee not found or update failed." });
         }
@@ -180,11 +167,9 @@ exports.postUpdateEmployee = async (req, res) => {
 
     } catch (error) {
         console.error("Error updating employee:", error);
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, error: "Internal Server Error" });
     }
 };
-
-
 
 
 //emp List For Hr
@@ -257,7 +242,6 @@ exports.attendanceReport = async (req, res) => {
 
 
 //excel data export attendece
-//excel data export attendece
 exports.exportAttendanceReport = async (req, res) => {
     try {
         const { emp_id, start_date, end_date } = req.query;
@@ -308,6 +292,7 @@ exports.exportAttendanceReport = async (req, res) => {
         res.status(500).send("Error generating Excel file");
     }
 };
+
 //for Hr can see Leave list
 exports.leaveHistory = async (req, res) => {
     try {
