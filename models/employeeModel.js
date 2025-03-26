@@ -350,18 +350,29 @@ exports.punchOut = async (emp_id, date) => {
 };
 
 
+// exports.getAttendance = async (emp_id, date) => {
+//     const result = await pool.query(
+//         `SELECT 
+//             to_char(punch_in_time, 'YYYY-MM-DD HH24:MI:SS') AS punch_in_time, 
+//             to_char(punch_out_time, 'YYYY-MM-DD HH24:MI:SS') AS punch_out_time 
+//          FROM attendance 
+//          WHERE emp_id = $1 AND date = $2`,
+//         [emp_id, date]
+//     );
+//     return result.rows[0] || null;
+// };
 exports.getAttendance = async (emp_id, date) => {
     const result = await pool.query(
         `SELECT 
             to_char(punch_in_time, 'YYYY-MM-DD HH24:MI:SS') AS punch_in_time, 
             to_char(punch_out_time, 'YYYY-MM-DD HH24:MI:SS') AS punch_out_time 
          FROM attendance 
-         WHERE emp_id = $1 AND date = $2`,
+         WHERE emp_id = $1 AND date = $2
+         ORDER BY punch_in_time ASC`,
         [emp_id, date]
     );
-    return result.rows[0] || null;
+    return result.rows || []; // Return all records instead of just one
 };
-
 
 
 
