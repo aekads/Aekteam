@@ -5,31 +5,48 @@ const hrController = require('../controllers/hrController');
 const { verifyToken,requireHR  } = require('../config/middleware');
 const { upload } = require('../config/cloudinary');
 const leaveController = require("../controllers/leaveController");
+require("dotenv").config();
 
+
+// const upload = require("multer")({
+//     storage,
+//     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+// });
+// const uploadFields = upload.fields([
+//     { name: 'passbook_image', maxCount: 1 },
+//     { name: 'pan_card', maxCount: 1 },
+//     { name: 'aadhar_card', maxCount: 1 },
+//     { name: 'offer_letter', maxCount: 1 },
+//     { name: 'photo', maxCount: 1 },
+//     { name: 'last_company_experience_letter', maxCount: 1 }
+// ]);
+
+// ✅ Define File Upload Fields
 const uploadFields = upload.fields([
-    { name: 'passbook_image', maxCount: 1 },
-    { name: 'pan_card', maxCount: 1 },
-    { name: 'aadhar_card', maxCount: 1 },
-    { name: 'offer_letter', maxCount: 1 },
-    { name: 'photo', maxCount: 1 },
-    { name: 'last_company_experience_letter', maxCount: 1 }
+    { name: "passbook_image", maxCount: 1 },
+    { name: "pan_card", maxCount: 1 },
+    { name: "aadhar_card", maxCount: 1 },
+    { name: "offer_letter", maxCount: 1 },
+    { name: "photo", maxCount: 1 },
+    { name: "last_company_experience_letter", maxCount: 1 }
 ]);
 
 
 router.get('/', verifyToken, requireHR, hrController.getHrDashboard);
 router.get('/addEmployee', verifyToken, requireHR, hrController.getAddEmployeePage);
-// router.post('/addEmployee', verifyToken, requireHR, hrController.postAddEmployee);
-router.post('/addEmployee', verifyToken, requireHR, uploadFields, hrController.postAddEmployee);
+
+router.post('/addEmployee', uploadFields, verifyToken, requireHR, hrController.postAddEmployee);
 
 
-//the edit page and handle updates.
-router.get('/employee/edit/:emp_id', verifyToken, requireHR, hrController.getEditEmployeePage);
-router.post('/employee/update/:emp_id', verifyToken, requireHR, uploadFields, hrController.postUpdateEmployee);
+// 🚀 Employee Routes
+router.get('/employee/edit/:emp_id', verifyToken, hrController.getEditEmployeePage);
+router.post('/update/:emp_id',uploadFields, hrController.postUpdateEmployee);
+
 
 
 router.get('/employees/list', verifyToken, requireHR, hrController.renderEmployeeList);
-
-
+  
+ 
 // Route to show an individual employee profile
 router.get("/employee/:emp_id",  verifyToken, requireHR, hrController.renderEmployeeProfile)
 
