@@ -75,15 +75,15 @@
       </div>
       <div class="form-group">
         <label for="phone">Phone:</label>
-        <input type="text" name="phone" class="form-control" required>
+        <input type="text" name="phone" class="form-control" >
       </div>
       <div class="form-group">
         <label for="designation">Designation:</label>
-        <input type="text" name="designation" class="form-control" required>
+        <input type="text" name="designation" class="form-control" >
       </div>
       <div class="form-group">
         <label for="role">Role:</label>
-        <select id="role" name="role" required>
+        <select id="role" name="role" >
             <option value="" disabled selected>Select Role</option>
             <option value="sales">Sales</option>
             <option value="acquisition">Acquisition</option>
@@ -99,7 +99,7 @@
     </div>
       <div class="form-group">
         <label for="joining_date">Joining Date:</label>
-        <input type="date" name="joining_date" class="form-control" required>
+        <input type="date" name="joining_date" class="form-control" >
       </div>
       <div class="form-group">
         <label for="resign_date">Resign Date:</label>
@@ -107,7 +107,7 @@
       </div>
       <div class="form-group">
         <label for="dob">Date of Birth:</label>
-        <input type="date" name="dob" class="form-control" required>
+        <input type="date" name="dob" class="form-control" >
       </div>
       <div class="form-group">
         <label for="alt_phone">Alternate Phone:</label>
@@ -115,31 +115,31 @@
       </div>
       <div class="form-group">
         <label for="city">City:</label>
-        <input type="text" name="city" class="form-control" required>
+        <input type="text" name="city" class="form-control" >
       </div>
       <div class="form-group">
         <label for="ctc">CTC:</label>
-        <input type="number" name="ctc" class="form-control" required>
+        <input type="number" name="ctc" class="form-control" >
       </div>
       <div class="form-group">
         <label for="bank_number">Bank Account Number:</label>
-        <input type="text" name="bank_number" class="form-control" required>
+        <input type="text" name="bank_number" class="form-control" >
       </div>
       <div class="form-group">
         <label for="ifsc">IFSC Code:</label>
-        <input type="text" name="ifsc" class="form-control" required>
+        <input type="text" name="ifsc" class="form-control" >
       </div>
       <div class="form-group">
         <label for="passbook_image">Passbook Image:</label>
-        <input type="file" name="passbook_image" class="form-control-file" required>
+        <input type="file" name="passbook_image" class="form-control-file" >
       </div>
       <div class="form-group">
         <label for="pan_card">PAN Card:</label>
-        <input type="file" name="pan_card" class="form-control-file" required>
+        <input type="file" name="pan_card" class="form-control-file" >
       </div>
       <div class="form-group">
         <label for="aadhar_card">Aadhar Card:</label>
-        <input type="file" name="aadhar_card" class="form-control-file" required>
+        <input type="file" name="aadhar_card" class="form-control-file" >
       </div>
       <div class="form-group">
         <label for="last_company_name">Last Company Name:</label>
@@ -151,7 +151,7 @@
       </div>
       <div class="form-group">
         <label for="photo">Photo:</label>
-        <input type="file" name="photo" class="form-control-file" required>
+        <input type="file" name="photo" class="form-control-file" >
       </div>
       <div class="form-group">
         <label for="last_company_experience_letter">Last Company Experience Letter:</label>
@@ -165,55 +165,60 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    document.getElementById("addEmployeeForm").addEventListener("submit", async function(event) {
-        event.preventDefault(); // Prevent default form submission
+ document.getElementById("addEmployeeForm").addEventListener("submit", async function(event) {
+    event.preventDefault(); // Prevent default form submission
 
-        const formData = new FormData(this);
+    const formData = new FormData(this);
 
-        Swal.fire({
-            title: "Are you sure?",
-            text: "Do you want to add this employee?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Yes, Add",
-            cancelButtonText: "Cancel"
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                try {
-                    const response = await fetch("/dashboard/hr/addEmployee", {
-                        method: "POST",
-                        body: formData
+    // ✅ Log FormData to check if files are being captured
+    for (const [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+    }
+
+    Swal.fire({
+        title: "Are you sure?",
+        text: "Do you want to add this employee?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, Add",
+        cancelButtonText: "Cancel"
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch("/dashboard/hr/addEmployee", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire({
+                        title: "Success!",
+                        text: "Employee added successfully!",
+                        icon: "success",
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = "/dashboard/hr/employees/list";
                     });
-
-                    const result = await response.json();
-
-                    if (result.success) {
-                        Swal.fire({
-                            title: "Success!",
-                            text: "Employee added successfully!",
-                            icon: "success",
-                            timer: 2000,
-                            showConfirmButton: false
-                        }).then(() => {
-                            window.location.href = "/dashboard/hr/employees/list"; // Redirect after success
-                        });
-                    } else {
-                        Swal.fire({
-                            title: "Error!",
-                            text: result.error || "Failed to add employee!",
-                            icon: "error"
-                        });
-                    }
-                } catch (error) {
+                } else {
                     Swal.fire({
                         title: "Error!",
-                        text: "Something went wrong!",
+                        text: result.error || "Failed to add employee!",
                         icon: "error"
                     });
                 }
+            } catch (error) {
+                Swal.fire({
+                    title: "Error!",
+                    text: "Something went wrong!",
+                    icon: "error"
+                });
             }
-        });
+        }
     });
+});
 </script>
 
 </body>
