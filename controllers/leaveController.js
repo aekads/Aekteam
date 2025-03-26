@@ -108,7 +108,7 @@ exports.renderApprovalPage = async (req, res) => {
 
             
         const leaveApplications = await leaveModel.getPendingLeaves();
-        res.render('leave-approval', { leaveApplications ,employee});
+        res.render('leave-approval', { leaveApplications ,employee, messages: req.flash()});
     } catch (error) {
         console.error('Error fetching leave applications:', error);
         res.status(500).send('Server Error');
