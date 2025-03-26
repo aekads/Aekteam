@@ -237,7 +237,6 @@ exports.renderAttendancePage = async (req, res) => {
         res.status(500).send("Server Error");
     }
 };
-
 exports.getAttendanceByDate = async (req, res) => {
     try {
         const emp_id = req.user?.emp_id;
@@ -247,27 +246,40 @@ exports.getAttendanceByDate = async (req, res) => {
             return res.status(400).json({ message: "Employee ID missing" });
         }
 
-        const attendance = await employeeModel.getAttendance(emp_id, date);
-        if (!attendance) {
+        const attendanceEntries = await employeeModel.getAttendance(emp_id, date);
+
+        if (!attendanceEntries || attendanceEntries.length === 0) {
             return res.json({ punch_in: "Not Available", punch_out: "Not Available", working_hours: "Not Available" });
         }
 
-        // ✅ Format time correctly (without milliseconds)
-        const punch_in = attendance.punch_in_time ? moment(attendance.punch_in_time).format('YYYY-MM-DD HH:mm:ss') : "Not Available";
-        const punch_out = attendance.punch_out_time ? moment(attendance.punch_out_time).format('YYYY-MM-DD HH:mm:ss') : "Not Available";
+        let totalWorkingMinutes = 0;
+        let firstPunchIn = null;
+        let lastPunchOut = null;
 
-        // ✅ Calculate working hours
-        let workingHours = "Not Available";
-        if (attendance.punch_in_time && attendance.punch_out_time) {
-            const punchInTime = moment(attendance.punch_in_time);
-            const punchOutTime = moment(attendance.punch_out_time);
-            const duration = moment.duration(punchOutTime.diff(punchInTime));
-            workingHours = `${Math.floor(duration.asHours())}h ${duration.minutes()}m`;
+        for (let i = 0; i < attendanceEntries.length; i++) {
+            const entry = attendanceEntries[i];
+
+            if (!firstPunchIn) firstPunchIn = entry.punch_in_time;
+            lastPunchOut = entry.punch_out_time || lastPunchOut;
+
+            if (entry.punch_in_time && entry.punch_out_time) {
+                const punchInTime = moment(entry.punch_in_time);
+                const punchOutTime = moment(entry.punch_out_time);
+                totalWorkingMinutes += punchOutTime.diff(punchInTime, 'minutes');
+            }
         }
 
-        res.json({ punch_in, punch_out, working_hours: workingHours });
+        const workingHours = totalWorkingMinutes > 0 ? `${Math.floor(totalWorkingMinutes / 60)}h ${totalWorkingMinutes % 60}m` : "Not Available";
+
+        res.json({
+            punch_in: firstPunchIn ? moment(firstPunchIn).format('YYYY-MM-DD HH:mm:ss') : "Not Available",
+            punch_out: lastPunchOut ? moment(lastPunchOut).format('YYYY-MM-DD HH:mm:ss') : "Not Available",
+            working_hours: workingHours
+        });
+
     } catch (error) {
         console.error("Error fetching attendance:", error);
         res.status(500).json({ message: "Server error" });
     }
 };
+
