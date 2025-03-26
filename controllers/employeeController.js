@@ -1,6 +1,8 @@
 const employeeModel = require('../models/employeeModel');
 
+
 const moment = require('moment-timezone'); 
+
 exports.getEmployeeHome = async (req, res) => {
     try {
         const emp_id = req.user.emp_id; // Extracted from JWT
@@ -11,7 +13,11 @@ exports.getEmployeeHome = async (req, res) => {
         }
 
         // ✅ Get Current Hour
-        const currentHour = new Date().getHours();
+        
+      
+        // ✅ Ensure Correct Timezone
+        const currentHour = new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata", hour: "2-digit", hour12: false });
+
         let greeting = "Good Morning";
 
         if (currentHour >= 12 && currentHour < 13) {
