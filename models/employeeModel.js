@@ -61,16 +61,17 @@ exports.addEmployee = async (employeeData) => {
     const cleanValue = (value) => (value === "" ? null : value);
 
     const query = `
-        INSERT INTO employees 
-        (emp_id, name, emp_number, designation, role, joining_date, resign_date, dob, 
-        alt_phone, assign_city, ctc, bank_number, ifsc, passbook_image, pan_card, 
-        aadhar_card, last_company_name, offer_letter, photo, last_company_experience_letter, 
-        pin, created_at, updated_at) 
-        VALUES 
-        ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
-         $17, $18, $19, $20, $21, NOW(), NOW()) 
-        RETURNING *;
-    `;
+    INSERT INTO employees 
+    (emp_id, name, emp_number, designation, role, joining_date, resign_date, dob, 
+    alt_phone, assign_city, ctc, bank_number, ifsc, passbook_image, pan_card, 
+    aadhar_card, last_company_name, offer_letter, photo, last_company_experience_letter, 
+    pin, leave_balance, created_at, updated_at) 
+    VALUES 
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
+     $17, $18, $19, $20, $21, $22, NOW(), NOW()) 
+    RETURNING *;
+`;
+
     try {
         const result = await pool.query(query, [
             emp_id, 
@@ -93,7 +94,8 @@ exports.addEmployee = async (employeeData) => {
             offer_letter, 
             photo, 
             last_company_experience_letter, 
-            pin
+            pin,
+            1.5  // Default leave balance
         ]);
 
         console.log("Inserted Employee Data:", result.rows[0]); // Debugging
