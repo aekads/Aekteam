@@ -560,8 +560,8 @@ ORDER BY e.emp_id;
             const result = await pool.query(query);
             return result.rows.map(row => ({
                 ...row,
-            punch_in_time: row.punch_in_time || "-",
-            punch_out_time: row.punch_out_time || "-"
+                punch_in_time: row.punch_in_time ? new Date(row.punch_in_time).toLocaleTimeString({ hour: '2-digit', minute: '2-digit' }) : "-",
+                punch_out_time: row.punch_out_time ? new Date(row.punch_out_time).toLocaleTimeString( { hour: '2-digit', minute: '2-digit' }) : "-"
             }));
         } catch (error) {
             console.error("Error fetching employee report:", error);
