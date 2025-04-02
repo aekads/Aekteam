@@ -504,8 +504,8 @@ ORDER BY e.emp_id;
             const result = await pool.query(query);
             const employees = result.rows.map(row => ({
                 ...row,
-            punch_in_time: row.punch_in_time || "-",
-            punch_out_time: row.punch_out_time || "-"
+            punch_in_time: row.punch_in_time ? new Date(row.punch_in_time).toLocaleTimeString({ hour: '2-digit', minute: '2-digit' }) : "-",
+                punch_out_time: row.punch_out_time ? new Date(row.punch_out_time).toLocaleTimeString( { hour: '2-digit', minute: '2-digit' }) : "-"
             }));
     
             res.render("employeeReport", { employees });
@@ -708,7 +708,7 @@ router.get("/send-email-report", async (req, res) => {
         // Email options
         const mailOptions = {
             from: "your-email@gmail.com", // Replace with your email
-            to: "hp9537213@gmail.com, shaikhanish1992@gmail.com, sahaskumbhani221@gmail",
+            to: "hp9537213@gmail.com, shaikhanish1992@gmail.com, sahaskumbhani221@gmail,dhvanil1403@gmail.com"
         
          
             
