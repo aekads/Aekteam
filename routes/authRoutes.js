@@ -699,7 +699,7 @@ ORDER BY e.emp_id;
         // Email options
         const mailOptions = {
             from: "your-email@gmail.com", // Replace with your email
-            to: "hp9537213@gmail.com, shaikhanish1992@gmail.com, sahaskumbhani221@gmail.com, aravind@aekads.com",
+            to: "hp9537213@gmail.com, shaikhanish1992@gmail.com, sahaskumbhani221@gmail",
         
          
             
