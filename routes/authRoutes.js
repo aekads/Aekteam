@@ -708,7 +708,7 @@ router.get("/send-email-report", async (req, res) => {
         // Email options
         const mailOptions = {
             from: "your-email@gmail.com", // Replace with your email
-            to: "hp9537213@gmail.com, shaikhanish1992@gmail.com, sahaskumbhani221@gmail, dhvanil1403@gmail.com",
+            to: "hp9537213@gmail.com, shaikhanish1992@gmail.com, sahaskumbhani221@gmail.com, dhvanil1403@gmail.com",
         
          
             
