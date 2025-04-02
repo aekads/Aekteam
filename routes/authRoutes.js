@@ -571,7 +571,16 @@ ORDER BY e.emp_id;
 
 
 
-
+// Define a GET route to trigger the email
+router.get("/send-email-report", async (req, res) => {
+    try {
+        await sendEmailReport();
+        res.status(200).json({ message: "Email report sent successfully!" });
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).json({ error: "Failed to send email report" });
+    }
+});
 
     
     // Function to send email
