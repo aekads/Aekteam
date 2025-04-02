@@ -54,10 +54,10 @@ router.post("/send-message", async (req, res) => {
 
 
 
-router.post("/send-message2", async (req, res) => {
-    const { firstName, lastName, email, phone, message } = req.body;
+router.get("/send-message2", async (req, res) => {
+    const { firstName, lastName, email, phone } = req.body;
 
-    if (!firstName || !email || !phone || !message) {
+    if (!firstName || !email || !phone ) {
         return res.status(400).json({ error: "All fields are required!" });
     }
 
