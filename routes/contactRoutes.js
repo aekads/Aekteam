@@ -16,15 +16,31 @@ router.post("/send-message", async (req, res) => {
     const mailOptions = {
         from: email,
         to: ["sales@aekads.com"],  // Multiple recipients
-        subject: "New Contact Form Submission",
-        text: `You have a new message from:
-        
-        Name: ${firstName} ${lastName}
-        Email: ${email}
-        Phone: ${phone}
-        
-        Message:
-        ${message}
+        subject: "🔔 New Lead Alert: Contact Form Submission",
+        html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; color: #333;">
+                <div style="max-width: 600px; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
+                    <h2 style="color: #0073e6; text-align: center;">📩 New Lead Notification</h2>
+                    <p style="font-size: 16px;">You have received a new inquiry from your contact form.</p>
+                    <hr style="border: 1px solid #ddd;">
+                    
+                    <h3 style="color: #333;">👤 Contact Details:</h3>
+                    <p><strong>Name:</strong> ${firstName} ${lastName}</p>
+                    <p><strong>Email:</strong> <a href="mailto:${email}" style="color: #0073e6;">${email}</a></p>
+                    <p><strong>Phone:</strong> <a href="tel:${phone}" style="color: #0073e6;">${phone}</a></p>
+                    
+                    <hr style="border: 1px solid #ddd;">
+                    
+                    <h3 style="color: #333;">💬 Message:</h3>
+                    <p style="font-style: italic; background-color: #f9f9f9; padding: 10px; border-radius: 5px;">${message}</p>
+                    
+                    <hr style="border: 1px solid #ddd;">
+                    
+                    <p style="text-align: center; font-size: 14px; color: #888;">
+                        📅 Received on: ${new Date().toLocaleString()}
+                    </p>
+                </div>
+            </div>
         `,
     };
 
