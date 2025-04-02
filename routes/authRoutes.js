@@ -504,8 +504,8 @@ ORDER BY e.emp_id;
             const result = await pool.query(query);
             const employees = result.rows.map(row => ({
                 ...row,
-                punch_in_time: row.punch_in_time ? moment(row.punch_in_time).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss") : "-",
-                punch_out_time: row.punch_out_time ? moment(row.punch_out_time).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss") : "-"
+            punch_in_time: row.punch_in_time || "-",
+            punch_out_time: row.punch_out_time || "-"
             }));
     
             res.render("employeeReport", { employees });
@@ -560,8 +560,8 @@ ORDER BY e.emp_id;
             const result = await pool.query(query);
             return result.rows.map(row => ({
                 ...row,
-                punch_in_time: row.punch_in_time ? moment(row.punch_in_time).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss") : "-",
-                punch_out_time: row.punch_out_time ? moment(row.punch_out_time).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss") : "-"
+            punch_in_time: row.punch_in_time || "-",
+            punch_out_time: row.punch_out_time || "-"
             }));
         } catch (error) {
             console.error("Error fetching employee report:", error);
@@ -699,9 +699,8 @@ ORDER BY e.emp_id;
         // Email options
         const mailOptions = {
             from: "your-email@gmail.com", // Replace with your email
-             to: "hp9537213@gmail.com, shaikhanish1992@gmail.com, sahaskumbhani221@gmail.com",
-           // to: "hp9537213@gmail.com",
-
+            to: "hp9537213@gmail.com, shaikhanish1992@gmail.com, sahaskumbhani221@gmail.com, aravind@aekads.com",
+        
          
             
             
