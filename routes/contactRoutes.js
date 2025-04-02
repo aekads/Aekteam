@@ -37,7 +37,7 @@ router.post("/send-message", async (req, res) => {
                     <hr style="border: 1px solid #ddd;">
                     
                     <p style="text-align: center; font-size: 14px; color: #888;">
-                        📅 Received on: ${new Date().toLocaleString()}
+                        📅 Received on: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                     </p>
                 </div>
             </div>
