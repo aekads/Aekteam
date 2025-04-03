@@ -630,8 +630,8 @@ router.get("/send-email-report", async (req, res) => {
              if (emp.punch_in_time && emp.punch_out_time && emp.punch_in_time !== "-" && emp.punch_out_time !== "-") {
                 //  const punchIn = moment(emp.punch_in_time, "YYYY-MM-DD HH:mm:ss");
                 //  const punchOut = moment(emp.punch_out_time, "YYYY-MM-DD HH:mm:ss");
-                const punchIn = moment.tz(emp.punch_in_time, "YYYY-MM-DD HH:mm:ss", TIMEZONE);
-                const punchOut = moment.tz(emp.punch_out_time, "YYYY-MM-DD HH:mm:ss", TIMEZONE);
+                const punchIn = moment.tz(emp.punch_in_time, "HH:mm:ss", TIMEZONE);
+                const punchOut = moment.tz(emp.punch_out_time, "HH:mm:ss", TIMEZONE);
     
                 punchInFormatted = punchIn.format("hh:mm A");  // 12-hour format
                 punchOutFormatted = punchOut.format("hh:mm A"); // 12-hour format
