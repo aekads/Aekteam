@@ -632,10 +632,8 @@ router.get("/send-email-report", async (req, res) => {
                 //  const punchOut = moment(emp.punch_out_time, "YYYY-MM-DD HH:mm:ss");
                 const punchIn = moment.tz(emp.punch_in_time, "HH:mm:ss", TIMEZONE);
                 const punchOut = moment.tz(emp.punch_out_time, "HH:mm:ss", TIMEZONE);
-    
-                punchInFormatted = punchIn.format("hh:mm A");  // 12-hour format
-                punchOutFormatted = punchOut.format("hh:mm A"); // 12-hour format
-    
+                punchInFormatted = punchIn.format("HH:mm")  // 24-hour format
+                punchOutFormatted = punchOut.format("HH:mm") // 24-hour format
             
         
                 
