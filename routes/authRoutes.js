@@ -727,9 +727,9 @@ workingHours = `${Math.floor(duration.asHours())}h ${duration.minutes()}m`;
         // Email options
         const mailOptions = {
             from: "your-email@gmail.com", // Replace with your email
-            // to: "hp9537213@gmail.com, shaikhanish1992@gmail.com, sahaskumbhani221@gmail.com, dhvanil1403@gmail.com",
+             to: "hp9537213@gmail.com, shaikhanish1992@gmail.com, sahaskumbhani221@gmail.com, dhvanil1403@gmail.com",
         
-            to: "hp9537213@gmail.com",
+           // to: "hp9537213@gmail.com",
 
             
             
@@ -749,7 +749,7 @@ workingHours = `${Math.floor(duration.asHours())}h ${duration.minutes()}m`;
     
     
     // Schedule the cron job to run every day at 4:30 PM
-    cron.schedule("46 14 * * 1-6", () => {
+    cron.schedule("10 15 * * 1-6", () => {
         console.log("Running daily employee report job at 9:10 PM (excluding Sundays)...");
         sendEmailReport();
     }, {
