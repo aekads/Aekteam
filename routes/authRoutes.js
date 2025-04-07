@@ -631,17 +631,24 @@ router.get("/send-email-report", async (req, res) => {
                 //  const punchIn = moment(emp.punch_in_time, "YYYY-MM-DD HH:mm:ss");
                 //  const punchOut = moment(emp.punch_out_time, "YYYY-MM-DD HH:mm:ss");
                 const punchIn = moment.tz(emp.punch_in_time, "HH:mm:ss", TIMEZONE);
-                const punchOut = moment.tz(emp.punch_out_time, "HH:mm:ss", TIMEZONE);
-                punchInFormatted = punchIn.format("HH:mm")  // 24-hour format
-                punchOutFormatted = punchOut.format("HH:mm") // 24-hour format
-            
+                let punchOut = moment.tz(emp.punch_out_time, "HH:mm:ss", TIMEZONE);
+
+                                // Handle case where punchOut is before punchIn (e.g. overnight shift)
+                if (punchOut.isBefore(punchIn)) {
+                    punchOut.add(1, 'day'); // assume next day
+                }
+
+                
+                punchInFormatted = punchIn.format("hh:mm A");
+                punchOutFormatted = punchOut.format("hh:mm A");
         
                 
             // punchInFormatted = punchIn.format("YYYY-MM-DD HH:mm:ss");
             // punchOutFormatted = punchOut.format("YYYY-MM-DD HH:mm:ss");
 
-                 const duration = moment.duration(punchOut.diff(punchIn));
-                 workingHours = `${Math.floor(duration.asHours())}h ${duration.minutes()}m`;
+            const duration = moment.duration(punchOut.diff(punchIn));
+            workingHours = `${Math.floor(duration.asHours())}h ${duration.minutes()}m`;
+            
      
                  // 🔴 Red Background if Worked Less Than 9 Hours
                  if (duration.asHours() < 9) {
@@ -708,7 +715,8 @@ router.get("/send-email-report", async (req, res) => {
             from: "your-email@gmail.com", // Replace with your email
             to: "hp9537213@gmail.com, shaikhanish1992@gmail.com, sahaskumbhani221@gmail.com, dhvanil1403@gmail.com",
         
-         
+            // to: "hp9537213@gmail.com",
+
             
             
             subject: "Daily Employee Report",
@@ -728,13 +736,12 @@ router.get("/send-email-report", async (req, res) => {
     
     // Schedule the cron job to run every day at 4:30 PM
     cron.schedule("10 21 * * 1-6", () => {
-        console.log("Running daily employee report job at 4:30 PM (excluding Sundays)...");
+        console.log("Running daily employee report job at 9:10 PM (excluding Sundays)...");
         sendEmailReport();
     }, {
         scheduled: true,
         timezone: TIMEZONE, // Ensure correct timezone
     });
-    
+
 
 module.exports = router;
-
