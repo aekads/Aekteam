@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel</title>
+  <style>
+    body { font-family: Arial; padding: 30px; background: #f4f4f4; }
+    h1 { margin-bottom: 20px; }
+    table, form { margin-bottom: 30px; }
+    table { border-collapse: collapse; width: 100%; }
+    td, th { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    input[type="number"] { width: 60px; }
+    .image-list img { width: 150px; margin: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Admin Panel</h1>
+
+  <h2>Update Team Points</h2>
+  <table>
+    <tr>
+      <th>Team</th><th>Played</th><th>Won</th><th>Lost</th><th>net_rr</th><th>Points</th><th>Action</th>
+    </tr>
+    <% teams.forEach(team => { %>
+    <form action="/IPL/admin/update" method="POST">
+      <input type="hidden" name="id" value="<%= team.id %>">
+      <tr>
+        <td><%= team.name %></td>
+        <td><input type="number" name="played" value="<%= team.played %>"></td>
+        <td><input type="number" name="won" value="<%= team.won %>"></td>
+        <td><input type="number" name="lost" value="<%= team.lost %>"></td>
+        <td><input type="text" name="net_rr" value="<%= team.net_rr %>"></td>
+        <td><input type="text" name="points" value="<%= team.points %>"></td>
+        <td><button type="submit">Update</button></td>
+      </tr>
+    </form>
+    <% }); %>
+  </table>
+
+  <h2>Upload New Image</h2>
+  <form action="/IPL/admin/upload" method="POST" enctype="multipart/form-data">
+    <input type="file" name="image" required>
+    <button type="submit">Upload</button>
+  </form>
+
+  <h2>Current Images</h2>
+  <div class="image-list">
+    <% images.forEach(img => { %>
+      <form action="/IPL/admin/delete-image" method="POST" style="display:inline;">
+        <input type="hidden" name="id" value="<%= img.id %>">
+        <img src="<%= img.url %>" alt="Image">
+        <button type="submit">Delete</button>
+      </form>
+    <% }); %>
+  </div>
+</body>
+</html>

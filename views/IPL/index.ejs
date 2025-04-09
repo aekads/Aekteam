@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL 2025 | POINT TABLE</title>
+    <style>
+        body {
+            background: url('/bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Poppins', sans-serif;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+            padding: 20px;
+            /* margin-top: 50px; */
+            transition: opacity 1s ease-in-out;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .points-table {
+            width: 100%;
+            max-width: 1000px;
+            margin: 20px auto;
+            border-collapse: separate;
+            border-spacing: 0 10px; /* Adds space between rows */
+        }
+
+        .table-header {
+            color: #ff9800;
+            font-weight: bold;
+            font-size: 1.3em;
+        }
+
+        .table-header th {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 2px solid #ff9800;
+        }
+
+        .team-card {
+            border-radius: 30px; /* Rounded corners for rows */
+            overflow: hidden; /* Ensures content respects the border radius */
+        }
+
+        .team-card td {
+            padding: 10px;
+            text-align: center;
+            background-color: inherit;
+        }
+
+        .team-card td:first-child {
+            border-top-left-radius: 30px;
+            border-bottom-left-radius: 30px;
+        }
+
+        .team-card td:last-child {
+            border-top-right-radius: 30px;
+            border-bottom-right-radius: 30px;
+        }
+
+        .team-name {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: left;
+            padding-left: 20px;
+        }
+
+        .team-logo {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+            margin-right: 10px;
+        }
+
+        .image-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-color: black;
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            pointer-events: none;
+        }
+
+        #pointsSection {
+            transition: opacity 1s ease-in-out;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Points Table Section -->
+    <div class="container" id="pointsSection">
+        <h1>IPL 2025 | POINT TABLE</h1>
+        <table class="points-table">
+            <thead class="table-header">
+                <tr>
+                    <th>Rank</th>
+                    <th>Team</th>
+                    <th>PLD</th>
+                    <th>WON</th>
+                    <th>LOST</th>
+                    <th>NRR</th>
+                    <th>PTS</th>
+                </tr>
+            </thead>
+            <tbody id="pointsTable"></tbody>
+        </table>
+    </div>
+
+    <!-- Full-Screen Image Slider -->
+    <div class="image-container" id="imageContainer"></div>
+
+    <script>
+        let teams = JSON.parse('<%- JSON.stringify(teams) %>');
+ let images = JSON.parse('<%- JSON.stringify(images.map(img => img.url)) %>');
+ 
+         let currentIndex = 0;
+         let isShowingImages = false;
+         
+         const pointsSection = document.getElementById("pointsSection");
+         const imageContainer = document.getElementById("imageContainer");
+         
+         // 1️⃣ Generate Points Table
+         function generateTable(data) {
+            const tableBody = document.getElementById("pointsTable");
+            tableBody.innerHTML = "";
+
+            data.sort((a, b) => {
+                if (b.points !== a.points) return b.points - a.points;
+                return b.net_rr - a.net_rr;
+            });
+
+            data.forEach((team, index) => {
+                const row = document.createElement("tr");
+                row.classList.add("team-card");
+                row.style.backgroundColor = team.color;
+                row.style.color = "white";
+
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td class="team-name">
+                        <img src="${team.logo}" alt="${team.name} logo" class="team-logo">
+                        ${team.name}
+                    </td>
+                    <td>${team.played}</td>
+                    <td>${team.won}</td>
+                    <td>${team.lost}</td>
+                    <td>${team.net_rr}</td>
+                    <td style="background-color: white; color: black;">${team.points}</td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+        }
+         
+         // 2️⃣ Load Points from Server
+         async function loadPoints() {
+             try {
+                 const res = await fetch('/IPL/api/points');
+                 const data = await res.json();
+                 teams = data;
+                 generateTable(teams);
+             } catch (err) {
+                 console.error("Failed to load points:", err);
+             }
+         }
+         
+         // 3️⃣ Load Images from Server
+         async function loadImages() {
+             try {
+                 const res = await fetch('/IPL/api/images');
+                 images = await res.json();
+             } catch (err) {
+                 console.error("Failed to load images:", err);
+             }
+         }
+         
+         // 4️⃣ Show/Hide
+         function showPointsTable() {
+             imageContainer.style.opacity = 0;
+             setTimeout(() => {
+                 pointsSection.style.opacity = 1;
+             }, 1000);
+         }
+         
+         function showImage(index) {
+             pointsSection.style.opacity = 0;
+             setTimeout(() => {
+                 imageContainer.style.backgroundImage = `url('${images[index]}')`;
+                 imageContainer.style.opacity = 1;
+             }, 1000);
+         }
+         
+         // 5️⃣ Start Slider
+         function startImageSlider() {
+             if (images.length === 0) return;
+         
+             let imageInterval = setInterval(() => {
+                 if (currentIndex < images.length) {
+                     showImage(currentIndex);
+                     currentIndex++;
+                 } else {
+                     clearInterval(imageInterval);
+                     currentIndex = 0;
+                     setTimeout(() => {
+                         showPointsTable();
+                         setTimeout(() => {
+                             startImageSlider();
+                         }, 10000); // 10s table again
+                     }, 10000);
+                 }
+             }, 10000);
+         }
+         
+         // 6️⃣ Init
+         generateTable(teams);
+         pointsSection.style.opacity = 1;
+         imageContainer.style.opacity = 0;
+         
+         setTimeout(() => {
+             startImageSlider();
+         }, 10000);
+         
+         // 7️⃣ Auto Update Every 30 Seconds                                          
+         setInterval(() => {
+             loadPoints();
+             loadImages();
+         }, 30000);
+ 
+ 
+ 
+ 
+         setInterval(function() {
+   location.reload();
+ }, 3600000); // 3600000 milliseconds = 1 hour                                                                                                    
+ 
+
+         </script>                          
+</body>
+</html>
