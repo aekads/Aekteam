@@ -54,6 +54,23 @@ router.get("/admin", async (req, res) => {
   res.render("IPL/admin", { teams: teams.rows, images: images.rows });
 });
 
+
+// Update team data
+router.post("/admin/update", async (req, res) => {
+    const { id, played, won, lost, net_rr, points } = req.body;
+  
+    try {
+      await pool.query(
+        "UPDATE point_table SET played = $1, won = $2, lost = $3, net_rr = $4, points = $5 WHERE id = $6",
+        [played, won, lost, net_rr, points, id]
+      );
+      res.redirect("/IPL/admin");
+    } catch (err) {
+      console.error("Error updating team data:", err);
+      res.status(500).send("Update failed");
+    }
+  });
+
 // Upload image to Cloudinary
 router.post("/admin/upload", upload.single("image"), async (req, res) => {
   try {
