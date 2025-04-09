@@ -7,7 +7,7 @@ const cookieParser = require("cookie-parser");
 const flash = require("connect-flash");
 const cron = require("node-cron");
 const dotenv = require("dotenv");
-
+const path = require("path");
 dotenv.config(); // Load environment variables
 
 const app = express();
@@ -57,7 +57,7 @@ const authHRRoutes = require("./routes/authHRRoutes");
 const hrRoutes = require("./routes/hrRoutes");
 const empRoutes = require("./routes/employeeRoutes");
 const leaveRoutes = require("./routes/leaveRoutes");
-
+const adminRoutes = require("./routes/pointtableRouter");
 // ✅ Apply Routes
 app.use("/api", authRoutes);
 app.use("/api", inquiryRoutes);
@@ -70,6 +70,11 @@ app.use("/dashboard/employee", empRoutes);
 app.use("/dashboard/employee", leaveRoutes);
 app.use("/dashboard/employee/projects", projectRoutes);
 app.use("/", authHRRoutes);              
+// Routes
+app.use("/IPL", adminRoutes);
+
+// app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ✅ File Uploads (Using Multer)                    
 const upload = multer({ dest: "uploads/" });
