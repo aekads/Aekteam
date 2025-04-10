@@ -15,7 +15,8 @@ router.post("/send-message", async (req, res) => {
 
     const mailOptions = {
         from: email,
-        to: ["sales@aekads.com"],  // Multiple recipients
+       // to: ["sales@aekads.com"],  // Multiple recipients
+            to: ["hp9537213@gmail.com"], 
         subject: "🔔 New Lead Alert: Contact Form Submission",
         html: `
             <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; color: #333;">
