@@ -435,15 +435,16 @@ router.post('/inquiry/edit', verifyToken, async (req, res) => {
 
 router.get("/inquiry/salesteamlist", verifyToken, async (req, res) => {
   try {
-    // Fetch only emp_id and name for sales employees
+    const loggedInEmpId = req.user.emp_id; // Make sure verifyToken sets this properly
+
     const query = `
       SELECT emp_id, name 
       FROM public.employees 
-      WHERE role = $1 AND isdeleted = 0
+      WHERE role = $1 AND isdeleted = 0 AND emp_id != $2
       ORDER BY created_at DESC;
     `;
 
-    const result = await pool.query(query, ["sales"]);
+    const result = await pool.query(query, ["sales", loggedInEmpId]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({
@@ -455,7 +456,7 @@ router.get("/inquiry/salesteamlist", verifyToken, async (req, res) => {
     res.status(200).json({
       status: true,
       message: "Sales employees retrieved successfully",
-      data: result.rows, // Returns only emp_id and name
+      data: result.rows,
     });
   } catch (error) {
     console.error("Error fetching sales employees:", error);
@@ -465,6 +466,7 @@ router.get("/inquiry/salesteamlist", verifyToken, async (req, res) => {
     });
   }
 });
+
 
 
 
