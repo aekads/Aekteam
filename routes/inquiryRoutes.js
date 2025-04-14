@@ -90,6 +90,141 @@ router.get("/inquiry/list", verifyToken, async (req, res) => {
 
 
 
+// router.post("/inquiry-list", verifyToken, async (req, res) => {
+//   const { emp_id, filter_date } = req.body;
+
+//   if (!emp_id) {
+//     return res.status(400).json({
+//       status: false,
+//       message: "Employee ID is required",
+//     });
+//   }
+
+//   try {
+
+//     // 🔹 Fetch latest punch-in/out record (always execute this)
+//     const attendanceQuery = `
+//       SELECT id, emp_id, date, punch_in_time, punch_out_time
+//       FROM public.attendance
+//       WHERE emp_id = $1
+//       ORDER BY punch_in_time DESC
+//       LIMIT 1
+//     `;
+//     const attendanceResult = await pool.query(attendanceQuery, [emp_id]);
+
+//     let latestAttendance = {
+//       id: null,
+//       emp_id: emp_id,
+//       date: "null",
+//       punch_in_time: null,
+//       punch_out_time: null
+//     };
+
+
+//     if (attendanceResult.rows.length > 0) {
+//       const attendance = attendanceResult.rows[0];
+
+//       latestAttendance = {
+//         id: attendance.id,
+//         emp_id: attendance.emp_id,
+//         date: moment
+//           .utc(attendance.date)
+//           .tz("Asia/Kolkata")
+//           .format("YYYY-MM-DD HH:mm:ss"),
+//         punch_in_time: moment
+//           .utc(attendance.punch_in_time)
+//           .tz("Asia/Kolkata")
+//           .format("YYYY-MM-DD HH:mm:ss"),
+//         punch_out_time: attendance.punch_out_time
+//           ? moment
+//             .utc(attendance.punch_out_time)
+//             .tz("Asia/Kolkata")
+//             .format("YYYY-MM-DD HH:mm:ss")
+//           : null,
+//       };
+//     }
+//     let query = `
+//     SELECT 
+//       se.id, se.name, se.mobile_number, se.email, se.budget, se.screen_count, 
+//       se.screen_type, se.tag, se.final_screen_count, se.start_date, se.end_date, 
+//       se.total_value, se.per_screen_cost, se.payment_mode, se.payment_url, 
+//       se.remark, se.creative_video_url, se.quotation_url, se.last_update_time, 
+//       se.status, se.total_days, se.emp_id, se.city, se.company_name, 
+//       se.created_time, se.campaign_remark, se.assign_emp_id,
+
+//       e1.name AS assigned_employee_name,
+//       e2.name AS From_employee_name,
+//       e2.emp_id AS created_employee_id
+
+//     FROM public.sales_enquiry se
+//     LEFT JOIN public.employees e1 ON se.assign_emp_id = e1.emp_id
+//     LEFT JOIN public.employees e2 ON se.emp_id = e2.emp_id
+//     WHERE (se.emp_id = $1 OR se.assign_emp_id = $1)
+// `;
+
+//     const queryParams = [emp_id];
+
+//     if (filter_date) {
+//       query += ` AND DATE(created_time) = $2`;
+//       queryParams.push(filter_date);
+//     }
+
+//     query += ` ORDER BY created_time DESC;`;
+
+//     const result = await pool.query(query, queryParams);
+
+
+// // Count inquiries where `emp_id = $1` and `assign_emp_id IS NOT NULL`
+// const countQuery = `
+// SELECT COUNT(*) AS total_count
+// FROM public.sales_enquiry AS se
+// WHERE se.emp_id = $1 AND se.assign_emp_id IS NOT NULL
+// `;
+
+// const countResult = await pool.query(countQuery, [emp_id]);
+// const totalCount = countResult.rows[0].total_count;
+
+
+
+
+//     // ✅ Safely parse `screen_type`
+//     const inquiries = result.rows.map((inquiry) => {
+//       let parsedScreenType = null;
+
+//       if (inquiry.screen_type) {
+//         try {
+//           parsedScreenType = JSON.parse(inquiry.screen_type);
+//         } catch (error) {
+//           // console.error(`Invalid JSON in screen_type for ID ${inquiry.id}:`, inquiry.screen_type);
+//           parsedScreenType = inquiry.screen_type; // Keep it as is to debug
+//         }
+//       }
+
+//       return {
+//         ...inquiry,
+//         screen_type: parsedScreenType,
+//       };
+//     });
+
+//     res.status(200).json({
+//       status: true,
+//       message: "Inquiries Data fetched successfully",
+//       data: inquiries,
+//       latest_attendance: latestAttendance,
+//       totalCount :totalCount
+
+//     });
+//   } catch (error) {
+//     console.error("Error fetching inquiries data:", error);
+
+//     res.status(500).json({
+//       status: false,
+//       message: "Failed to fetch inquiries Data",
+//     });
+//   }
+// });
+
+
 router.post("/inquiry-list", verifyToken, async (req, res) => {
   const { emp_id, filter_date } = req.body;
 
@@ -165,9 +300,10 @@ router.post("/inquiry-list", verifyToken, async (req, res) => {
     const queryParams = [emp_id];
 
     if (filter_date) {
-      query += ` AND DATE(created_time) = $2`;
+      query += ` AND TO_CHAR(created_time, 'YYYY-MM') = $2`;                    
       queryParams.push(filter_date);
     }
+    
 
     query += ` ORDER BY created_time DESC;`;
 
@@ -223,6 +359,7 @@ const totalCount = countResult.rows[0].total_count;
     });
   }
 });
+
 
 
 
