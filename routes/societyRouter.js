@@ -201,7 +201,7 @@ router.post("/society-work/add", upload.single("work_photo"), verifyToken, async
 //   }
 // });
 
-      
+            
 router.post("/society-work/list", verifyToken, async (req, res) => {
   let { emp_id, filter_date } = req.body;
 
@@ -214,8 +214,9 @@ router.post("/society-work/list", verifyToken, async (req, res) => {
     let values = [emp_id];
 
     if (filter_date) {
-      query += ` AND DATE(created_date) = $2`;
-      values.push(filter_date);
+      const [year, month] = filter_date.split("-"); // expecting "YYYY-MM"
+      query += ` AND EXTRACT(MONTH FROM created_date) = $2 AND EXTRACT(YEAR FROM created_date) = $3`;
+      values.push(month, year);
     }
 
     query += ` ORDER BY created_date DESC`;
