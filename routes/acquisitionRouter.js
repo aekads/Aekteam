@@ -4,15 +4,14 @@ const { verifyToken } = require('../middleware/authMiddleware'); // Assuming you
 const pool = require('../config/database');
 const moment = require('moment-timezone');
 // const { logAction } = require('../utils/logger');
-
+const streamifier = require('streamifier');
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 // const upload = multer({ dest: 'uploads/' }); 
 
 // Direct Cloudinary Configuration
 // Cloudinary Configuration
-
-// ✅ Cloudinary Configuration (Direct Access, No .env)
+// ✅ Cloudinary Configuration
 cloudinary.config({
   cloud_name: 'dqfnwh89v',
   api_key: '451893856554714',
@@ -21,50 +20,96 @@ cloudinary.config({
 
 /**
  * Uploads a PDF and generates an image preview URL.
- * @param {Buffer} fileBuffer - The file buffer
- * @param {string} fileName - The file name
+ * @param {Buffer} fileBuffer - The PDF file buffer
+ * @param {string} fileName - The PDF file name
  * @returns {Promise<{ pdfUrl: string, previewUrl: string }>} - The PDF & preview URLs
  */
 const uploadPdfWithPreview = async (fileBuffer, fileName) => {
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        cloud_name: 'dqfnwh89v',
+  try {
+    // ✅ Step 1: Upload PDF properly (store as actual PDF)
+    const pdfUpload = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          cloud_name: 'dqfnwh89v',
         api_key: '451893856554714',
         api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
-        folder: 'acquisition_contracts',
-        public_id: fileName.replace(/\.[^/.]+$/, ""), // Removes file extension
-        resource_type: 'image', // ✅ Forces Cloudinary to treat the PDF as an image
-        format: 'jpg', // ✅ Generates an image preview
-        pages: 1, // ✅ Takes only the first page as an image preview
-        overwrite: true,
-      },
-      (error, result) => {
-        if (error) {
-          console.error('Cloudinary Upload Error:', error);
-          return reject(error);
+          folder: 'acquisition_contracts',
+          public_id: fileName.replace(/\.[^/.]+$/, ""),
+          resource_type: 'auto', // ✅ Auto-detects PDF format
+          format: 'pdf', // ✅ Ensures it is saved as a PDF
+          overwrite: true,
+        },
+        (error, result) => {
+          if (error) {
+            console.error('Cloudinary PDF Upload Error:', error);
+            return reject(error);
+          }
+          console.log('Cloudinary PDF Upload Success:', result.secure_url);
+          resolve(result);
         }
-        console.log('Cloudinary Upload Success:', result.secure_url);
+      );
+      streamifier.createReadStream(fileBuffer).pipe(uploadStream);
+    });
 
-        // Generate the actual PDF URL
-        const pdfUrl = result.secure_url.replace('.jpg', '.pdf');
-        resolve({ pdfUrl, previewUrl: result.secure_url });
-      }
-    );
-    uploadStream.end(fileBuffer);
-  });
+    // ✅ Step 2: Generate an image preview from the first page
+    const previewUpload = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          cloud_name: 'dqfnwh89v',
+        api_key: '451893856554714',
+        api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
+          folder: 'acquisition_contracts',
+          public_id: fileName.replace(/\.[^/.]+$/, "") + "_preview",
+          resource_type: 'image',
+          format: 'jpg',
+          pages: 1, // ✅ Extract only the first page as an image
+          overwrite: true,
+        },
+        (error, result) => {
+          if (error) {
+            console.error('Cloudinary Preview Upload Error:', error);
+            return reject(error);
+          }
+          console.log('Cloudinary Preview Upload Success:', result.secure_url);
+          resolve(result);
+        }
+      );
+      streamifier.createReadStream(fileBuffer).pipe(uploadStream);
+    });
+
+    return { pdfUrl: pdfUpload.secure_url, previewUrl: previewUpload.secure_url };
+  } catch (error) {
+    console.error('Upload Failed:', error);
+    throw error;
+  }
 };
 
+const { google } = require("googleapis");
+const { v4: uuidv4 } = require("uuid");
+const upload = multer({ storage: multer.memoryStorage() });
+require('dotenv').config();
 
 
+// 🧠 Google Drive Auth setup
+const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
 
 
+// Fix the private key newline escape
+credentials.private_key = credentials.private_key.replace(/\\n/g, '\n');
+
+            
+// Initialize Google Drive API authentication
+const auth = new google.auth.GoogleAuth({
+  credentials,
+  scopes: ['https://www.googleapis.com/auth/drive.file'],
+});
+const drive = google.drive({ version: 'v3', auth });
 
 
 // Set up Multer for file upload
 // Set up Multer for memory storage (No local file saving)
-const storage = multer.memoryStorage(); // Store file in memory (RAM)
-const upload = multer({ storage: storage });  
+// const storage = multer.memoryStorage(); // Store file in memory (RAM)
+// const upload = multer({ storage: storage });  
 
 
 const getClientIP = (req) => {
@@ -440,6 +485,7 @@ const fs = require('fs');
 
 // Express route for handling PDF upload
 // ✅ Express API Route for Uploading PDF
+// 📁 Upload endpoint using Google Drive
 router.post('/acquisition/upload', upload.single('pdf_file'), async (req, res) => {
   const { id, emp_id } = req.body;
 
@@ -453,33 +499,51 @@ router.post('/acquisition/upload', upload.single('pdf_file'), async (req, res) =
   try {
     console.log('Received File:', req.file.originalname);
 
-    // ✅ 1. Check if the record exists
     const checkQuery = 'SELECT * FROM acquisition WHERE id = $1';
     const checkResult = await pool.query(checkQuery, [id]);
-
     if (checkResult.rowCount === 0) {
       return res.status(404).json({ status: false, message: 'Record not found with the given ID.' });
     }
 
-    // ✅ 2. Upload to Cloudinary (PDF + Preview Image)
-    const { pdfUrl, previewUrl } = await uploadPdfWithPreview(req.file.buffer, req.file.originalname);
-    console.log('Cloudinary PDF URL:', pdfUrl);
-    console.log('Cloudinary Preview Image URL:', previewUrl);
+    // ✅ Upload to Google Drive
+    const fileName = `acquisition-${uuidv4()}-${req.file.originalname}`;
+    const response = await drive.files.create({
+      requestBody: {
+        name: fileName,
+        mimeType: req.file.mimetype,
+      },
+      media: {
+        mimeType: req.file.mimetype,
+        body: require("streamifier").createReadStream(req.file.buffer),
+      },
+      fields: "id",
+    });
 
-    // ✅ 3. Update Database
+    const fileId = response.data.id;
+
+    // ✅ Make file public
+    await drive.permissions.create({
+      fileId,
+      requestBody: {
+        role: "reader",
+        type: "anyone",
+      },
+    });
+
+    const publicUrl = `https://drive.google.com/uc?id=${fileId}&export=download`;
+    console.log('Google Drive PDF URL:', publicUrl);
+
     const updatedDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
     const updateQuery = `
-    UPDATE acquisition
-    SET emp_id = $1,
-        contract_pdf_file = $2,
-        updated_date = $3
-    WHERE id = $4
-    RETURNING *;
-  `;
+      UPDATE acquisition
+      SET emp_id = $1,
+          contract_pdf_file = $2,
+          updated_date = $3
+      WHERE id = $4
+      RETURNING *;
+    `;
 
-
-    const updateResult = await pool.query(updateQuery, [emp_id, pdfUrl, updatedDate, id]);
-    console.log('Database Update Result:', updateResult.rows[0]);
+    const updateResult = await pool.query(updateQuery, [emp_id, publicUrl, updatedDate, id]);
 
     if (updateResult.rowCount === 0) {
       return res.status(500).json({ status: false, message: 'Database update failed.' });
@@ -487,12 +551,12 @@ router.post('/acquisition/upload', upload.single('pdf_file'), async (req, res) =
 
     res.status(200).json({
       status: true,
-      message: 'PDF uploaded successfully.',
-      pdfUrl
-      
+      message: 'PDF uploaded successfully to Google Drive.',
+      pdfUrl: publicUrl,
     });
+
   } catch (error) {
-    console.error('Error updating record:', error);
+    console.error('Error uploading PDF to Google Drive:', error);
     res.status(500).json({ status: false, message: 'Internal server error.' });
   }
 });
