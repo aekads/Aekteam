@@ -112,7 +112,7 @@
             <option value="">All Projects</option>
             <% if (projects && projects.length > 0) { %>
                 <% projects.forEach(proj => { %>
-                    <option value="<%= proj.project_id %>"><%= proj.project_name %></option>
+                    <option value="<%= proj.project_name %>"><%= proj.project_name %></option>
                 <% }); %>
             <% } else { %>
                 <option value="" disabled>No projects available</option>
@@ -150,12 +150,15 @@
             }
     
             function fetchSummary() {
-                const projectId = projSelect.val();
-    
+    const projectId = projSelect.val();
+    $("#reportTableBody").html(`<tr><td colspan="4">Loading...</td></tr>`); // Show loading
+
+
                 $.ajax({
                     url: "/dashboard/employee/projects/get-own-summary",
                     method: "GET",
-                    data: { project_id: projectId },
+                    data: { project_id: projSelect.val() },
+
                     success: function (data) {
                         console.log("Raw Data from API:", data);
     
@@ -187,31 +190,34 @@
                 });
             }
     
-            function renderChart(dates, hours) {
-                const ctx = document.getElementById("workSummaryChart").getContext("2d");
-                if (workChart) workChart.destroy();
+        function renderChart(dates, hours) {
+    const ctx = document.getElementById("workSummaryChart").getContext("2d");
+    if (workChart) workChart.destroy();
+
+    const selectedText = projSelect.find("option:selected").text();
     
-                workChart = new Chart(ctx, {
-                    type: "bar",
-                    data: {
-                        labels: dates,
-                        datasets: [{
-                            label: "Total Work Hours",
-                            data: hours,
-                            backgroundColor: "rgba(54, 162, 235, 0.5)",
-                            borderColor: "rgba(54, 162, 235, 1)",
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            x: { title: { display: true, text: "Day of the Month" } },
-                            y: { beginAtZero: true, title: { display: true, text: "Total Hours Worked" } }
-                        }
-                    }
-                });
+    workChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: dates,
+            datasets: [{
+                label: `Work Hours - ${selectedText}`,
+                data: hours,
+                backgroundColor: "rgba(54, 162, 235, 0.5)",
+                borderColor: "rgba(54, 162, 235, 1)",
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { title: { display: true, text: "Day of the Month" } },
+                y: { beginAtZero: true, title: { display: true, text: "Total Hours Worked" } }
             }
+        }
+    });
+}
+
     
             function renderTable(groupedData) {
     let html = "";
