@@ -19,7 +19,7 @@ exports.postLogin = async (req, res) => {
         const token = jwt.sign(
             { emp_id: employee.emp_id, role: employee.role },
             'your-secret-key-here', // Directly added JWT secret
-            { expiresIn: '10h' }
+            { expiresIn: '10d' }
         );
         
 
