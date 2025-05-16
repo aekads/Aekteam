@@ -134,7 +134,8 @@ router.post('/gmcComplainForm', async(req, res) => {
          res.status(200).json({ status: true, message: 'Data has been created successfully.', data: result.rows });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Failed to create Data' });
+        // res.status(500).json({ error: 'Failed to create Data' });
+           res.status(500).json({ status: false, message: 'Internal server error' });
     }
 });
 
