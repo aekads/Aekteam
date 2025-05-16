@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const transporter = require("../config/email");
-
+const pool = require('../config/database'); 
 
 
 
@@ -122,6 +122,21 @@ router.get("/send-message2", async (req, res) => {
     }
 });
 
+
+
+
+router.post('/gmcComplainForm', async(req, res) => {
+    try {
+        const { name, Email, issue, description, screenid } = req.body;
+        const query = 'INSERT INTO gmcComplainForm (name, Email, issue, description, screenid)  VALUES ($1, $2, $3, $4, $5) RETURNING *';
+        const values = [name, Email, issue, description, screenid];
+        const result = await pool.query(query, values);
+         res.status(200).json({ status: true, message: 'Data has been created successfully.', data: result.rows });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to create Data' });
+    }
+});
 
 // ✅ Export the router correctly
 module.exports = router;
