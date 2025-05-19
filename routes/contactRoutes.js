@@ -131,7 +131,7 @@ router.post('/gmcComplainForm', async(req, res) => {
         const query = 'INSERT INTO gmcComplainForm (name, Email, issue, description, screenid)  VALUES ($1, $2, $3, $4, $5) RETURNING *';
         const values = [name, Email, issue, description, screenid];
         const result = await pool.query(query, values);
-         res.status(200).json({ status: true, message: 'Data has been created successfully.', data: result.rows });
+         res.status(200).json({ status: true, message: 'Data has been created successfully.'});
     } catch (error) {
         console.error(error);
         // res.status(500).json({ error: 'Failed to create Data' });
