@@ -1,373 +1,530 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Employee Attendance</title>
+    <link rel="icon" href="https://res.cloudinary.com/dqfnwh89v/image/upload/v1724408615/qxvvfcf7ftgklhl2k03v.png"
+        type="image/png">
     <style>
+        /* Modern CSS Variables */
+        /* Modern CSS Variables */
+        :root {
+            --primary-color: #4f46e5;
+            --primary-light: #eef2ff;
+            --secondary-color: #6366f1;
+            --success-color: #22c55e;
+            --warning-color: #facc15;
+            --danger-color: #ef4444;
+            --light-color: #f9fafb;
+            --dark-color: #1f2937;
+            --gray-color: #6b7280;
+            --border-radius: 1rem;
+            --box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease-in-out;
+        }
 
-/* General Page Styles */
-body {
-    font-family: 'Poppins', sans-serif;
-    background-color: #f0f2f5;
-    color: #333;
-    margin: 0;
-    padding: 0;
-}
+        /* Base Styles */
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-size: 15px;
+            color: var(--dark-color);
+            background: var(--light-color);
+            margin: 0;
+            padding: 0;
+        }
 
-/* Main Content */
-main {
-    margin-left: 280px; /* Sidebar width */
-        padding: 30px;
-        transition: margin-left 0.3s ease-in-out;
-}
+        h2 {
+            margin-top: 0px;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
 
-/* Header */
-h2 {
-    color: #2c3e50;
-    font-size: 24px;
-    margin-bottom: 15px;
-}
+        /* Container */
+        .calendar-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            /* margin-left: 270px; */
+            gap: 30px;
+            /* padding: 20px; */
+        }
 
-/* Buttons */
-button {
-    padding: 10px 15px;
-    border: none;
-    background-color: #3498db;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    margin: 5px;
-    border-radius: 5px;
-    transition: 0.3s;
-}
+        .main-content {
+            margin-left: 270px;
+            height: 100vh;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
 
-button:hover {
-    background-color: #2980b9;
-}
-/* Form Container */
-form {
-    max-width: 500px;
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
+        @media (max-width: 1000px) {
+            .main-content {
+                margin-left: 0;
+            }
+        }
 
-/* Labels */
-form label {
-    font-weight: bold;
-    color: #2c3e50;
-    margin-bottom: 5px;
-}
+        /* Calendar Section */
+        .calendar {
+            flex: 2;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            transition: var(--transition);
+        }
 
-/* Select & Input Fields */
-form select,
-form input,
-form textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #bdc3c7;
-    border-radius: 5px;
-    font-size: 16px;
-    transition: 0.3s;
-}
+        .calendar:hover {
+            transform: translateY(-5px);
+        }
 
-/* Input Focus */
-form input:focus,
-form select:focus,
-form textarea:focus {
-    outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
-}
+        /* Calendar Header */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
 
-/* Textarea */
-form textarea {
-    resize: vertical;
-    min-height: 80px;
-}
+        .calendar-header button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 8px 14px;
+            font-size: 16px;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
 
-/* Submit Button */
-form button {
-    padding: 12px;
-    background-color: #3498db;
-    color: white;
-    font-size: 16px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: 0.3s;
-}
+        .calendar-header button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
 
-/* Button Hover */
-form button:hover {
-    background-color: #2980b9;
-}
+        /* Weekdays */
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background-color: var(--primary-light);
+            padding: 12px 0;
+            font-weight: 600;
+            color: var(--primary-color);
+            text-align: center;
+        }
 
-/* Responsive */
-@media (max-width: 600px) {
-    form {
-        max-width: 100%;
-        padding: 15px;
-    }
-}
+        /* Calendar Days */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: #e5e7eb;
+            gap: 1px;
+        }
+
+        .calendar-day {
+            background: white;
+            padding: 18px 5px;
+            min-height: 70px;
+            font-size: 15px;
+            font-weight: 500;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .calendar-day:hover {
+            background-color: #f3f4f6;
+            transform: scale(1.02);
+            z-index: 1;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .today {
+            background-color: var(--primary-light);
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        /* Selected Day Animation */
+        .selected-day {
+            animation: pulse 0.5s ease;
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Attendance Details */
+        .attendance-details {
+            flex: 1;
+            min-width: 280px;
+            background: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+        }
+
+        .attendance-details:hover {
+            transform: translateY(-5px);
+        }
+
+        .attendance-details h3 {
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .attendance-details h3::after {
+            content: "";
+            display: block;
+            width: 40px;
+            height: 3px;
+            background: var(--primary-color);
+            margin: 10px auto 0;
+            border-radius: 3px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 15px;
+        }
+
+        .detail-label {
+            color: var(--gray-color);
+            font-weight: 500;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .calendar-container {
+                margin-left: 0;
+                padding: 20px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            h2 {
+                margin-left: 20px;
+            }
+
+            .calendar,
+            .attendance-details {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .calendar-header {
+                font-size: 16px;
+                padding: 16px;
+            }
+
+            .calendar-header button {
+                font-size: 14px;
+                padding: 6px 10px;
+            }
+
+            .calendar-day {
+                padding: 12px 3px;
+                min-height: 60px;
+                font-size: 14px;
+            }
+
+            .detail-item {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .calendar-day {
+                font-size: 13px;
+                min-height: 50px;
+            }
+
+            .weekdays {
+                font-size: 12px;
+            }
+
+            .attendance-details h3 {
+                font-size: 18px;
+            }
+
+            .calendar-header h3 {
+                font-size: 15px;
+            }
+        }
 
 
-/* Attendance Details */
-.attendance-details {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 35%;
-}
+        /* Animation for selected day */
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
 
-.attendance-details p {
-    margin: 10px 0;
-    font-size: 16px;
-}
+            50% {
+                transform: scale(1.05);
+            }
 
-/* Regularization Requests */
-section {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin-top: 20px;
-}
+            100% {
+                transform: scale(1);
+            }
+        }
 
-/* Tables */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
-
-th, td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-th {
-    background: #2c3e50;
-    color: white;
-}
-
-/* Status Indicators */
-td[data-status="Approved"] {
-    color: green;
-    font-weight: bold;
-}
-
-td[data-status="Pending"] {
-    color: orange;
-    font-weight: bold;
-}
-
-td[data-status="Rejected"] {
-    color: red;
-    font-weight: bold;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-    }
-    
-    main {
-        margin-left: 0;
-    }
-    
-    .calendar-container {
-        flex-direction: column;
-    }
-    
-    .calendar, .attendance-details {
-        width: 100%;
-    }
-}
-
-
+        .selected-day {
+            animation: pulse 0.5s ease;
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
     </style>
 </head>
+
 <body>
-    <%- include('../partials/sidebar') %>  
-    <main>
-         
-        <h2>Regularization Requests</h2>
-    
-        <!-- Buttons to switch between sections -->
-        <div>
-            <button onclick="showSection('applySection')">Apply</button>
-            <button onclick="showSection('pendingSection')">Pending</button>
-            <button onclick="showSection('historySection')">History</button>
+    <%- include('../partials/sidebar') %>
+
+        <div class="main-content">
+            <h2>Employee Attendance</h2>
+
+            <div class="calendar-container">
+                <!-- Calendar Section -->
+                <div class="calendar">
+                    <div class="calendar-header">
+                        <button onclick="prevMonth()">◀</button>
+                        <h3 id="calendarMonthYear"></h3>
+                        <button onclick="nextMonth()">▶</button>
+                    </div>
+                    <div class="weekdays">
+                        <div>Sun</div>
+                        <div>Mon</div>
+                        <div>Tue</div>
+                        <div>Wed</div>
+                        <div>Thu</div>
+                        <div>Fri</div>
+                        <div>Sat</div>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                </div>
+
+                <!-- Attendance Details Section -->
+                <div class="attendance-details">
+                    <h3>Attendance Details</h3>
+                    <div class="detail-item">
+                        <span class="detail-label">Date:</span>
+                        <span class="detail-value" id="selectedDate">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Punch In:</span>
+                        <span class="detail-value" id="punchInTime">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Punch Out:</span>
+                        <span class="detail-value" id="punchOutTime">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Working Hours:</span>
+                        <span class="detail-value" id="workingHours">-</span>
+                    </div>
+                </div>
+            </div>
+
         </div>
-    
-        <!-- Apply Section (Default View) -->
-        <section id="applySection">
-            <h3>Apply for Regularization</h3>
 
+        <script>
+            let currentDate = new Date();
+            let selectedDay = null;
 
-            <form id="applyPermissionForm" action="/dashboard/employee/apply-permission" method="POST">
-        <label for="type">Permission Type:</label>
-        <select name="type" required>
-            <option value="On Duty">On Duty</option>
-            <option value="WFH">Work From Home</option>
-            <option value="Short Break">Short Break</option>
-            <option value="Late in">Late in</option>
-            <option value="Early out">Early out</option>
-            <option value="Regularization">Regularization</option>              
-        </select>
-    
-        <label for="from_time">From Time:</label>
-        <input type="datetime-local" name="from_time" required>
-    
-        <label for="to_time">To Time:</label>
-        <input type="datetime-local" name="to_time" required>
-    
-        <label for="reason">Reason:</label>
-        <textarea name="reason" required></textarea>
-    
-        <button type="submit">Apply</button>
-    </form>
-</section>
+            // ✅ Render the calendar
+            function renderCalendar() {
+                const calendarGrid = document.getElementById("calendarGrid");
+                const calendarMonthYear = document.getElementById("calendarMonthYear");
 
+                // ✅ Get current month and year
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
 
-    <!-- Pending Requests Section -->
-    <section id="pendingSection" style="display: none;">
-        <h3>Pending Requests</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Type</th>
-                    <th>From Time</th>
-                    <th>To Time</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                    <th>Applied On</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (pendingRequests.length > 0) { %>
-                    <% pendingRequests.forEach(request => { %>
-                        <tr>
-                            <td><%= request.type %></td>
-                            <td><%= new Date(request.from_time).toLocaleString() %></td>
-                            <td><%= new Date(request.to_time).toLocaleString() %></td>
-                            <td><%= request.reason %></td>
-                            <td><%= request.status %></td>
-                            <td><%= new Date(request.created_at).toLocaleString() %></td>
-                        </tr>
-                    <% }); %>
-                <% } else { %>
-                    <tr>
-                        <td colspan="6">No pending requests.</td>
-                    </tr>
-                <% } %>
-            </tbody>
-        </table>
-    </section>
+                // ✅ Set calendar title
+                calendarMonthYear.textContent = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(currentDate);
 
-    <!-- History Requests Section -->
-    <section id="historySection" style="display: none;">
-        <h3>History</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Type</th>
-                    <th>From Time</th>
-                    <th>To Time</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                    <th>Approved On</th>
-                    <th>Applied On</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (historyRequests.length > 0) { %>
-                    <% historyRequests.forEach(request => { %>
-                        <tr>
-                            <td><%= request.type %></td>
-                            <td><%= new Date(request.from_time).toLocaleString() %></td>
-                            <td><%= new Date(request.to_time).toLocaleString() %></td>
-                            <td><%= request.reason %></td>
-                            <td><%= request.status %></td>
-                            <td><%= request.approved_at ? new Date(request.approved_at).toLocaleString() : 'N/A' %></td>
-                            <td><%= new Date(request.created_at).toLocaleString() %></td>
-                        </tr>
-                    <% }); %>
-                <% } else { %>
-                    <tr>
-                        <td colspan="7">No history records found.</td>
-                    </tr>
-                <% } %>
-            </tbody>
-        </table>
-    </section>
-</main>
+                // ✅ Get first and last day of the month
+                const firstDay = new Date(year, month, 1).getDay();
+                const lastDate = new Date(year, month + 1, 0).getDate();
 
+                // ✅ Clear previous calendar
+                calendarGrid.innerHTML = "";
 
-<!-- Include SweetAlert -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    function showSection(sectionId) {
-        document.getElementById('applySection').style.display = 'none';
-        document.getElementById('pendingSection').style.display = 'none';
-        document.getElementById('historySection').style.display = 'none';
+                // ✅ Fill blank spaces before the first day
+                for (let i = 0; i < firstDay; i++) {
+                    const emptyDiv = document.createElement("div");
+                    calendarGrid.appendChild(emptyDiv);
+                }
 
-        document.getElementById(sectionId).style.display = 'block';
-    }
+                // ✅ Create days in the calendar
+                for (let day = 1; day <= lastDate; day++) {
+                    const dayDiv = document.createElement("div");
+                    dayDiv.textContent = day;
+                    dayDiv.classList.add("calendar-day");
 
+                    // ✅ Highlight today's date
+                    const today = new Date();
+                    if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
+                        dayDiv.classList.add("today");
+                    }
 
-    document.getElementById("applyPermissionForm").addEventListener("submit", function(event) {
-        event.preventDefault(); // Prevent default form submission
+                    // ✅ Add click event to fetch attendance
+                    dayDiv.onclick = () => {
+                        // Remove selected class from previously selected day
+                        if (selectedDay) {
+                            selectedDay.classList.remove("selected-day");
+                        }
+                        // Add selected class to clicked day
+                        dayDiv.classList.add("selected-day");
+                        selectedDay = dayDiv;
 
-        Swal.fire({
-            title: "Are you sure?",
-            text: "Do you want to apply for permission?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Yes, Apply!",
-            cancelButtonText: "Cancel"
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Submit the form after confirmation
-                this.submit();
+                        fetchAttendance(year, month + 1, day);
+                    };
+
+                    calendarGrid.appendChild(dayDiv);
+                }
             }
-        });
-    });
 
-    // Show success or error alert based on query parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("success") === "true") {
-        Swal.fire({
-            title: "Success!",
-            text: "Permission applied successfully.",
-            icon: "success",
-            confirmButtonText: "OK"
-        }).then(() => {
-            window.location.href = "/dashboard/employee/RegularizationPage"; // Redirect after success
-        });
-    } else if (urlParams.get("error")) {
-        Swal.fire({
-            title: "Error!",
-            text: urlParams.get("error"),
-            icon: "error",
-            confirmButtonText: "Try Again"
-        });
-    }
-</script>
+            // ✅ Navigate to the previous month
+            function prevMonth() {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                renderCalendar();
+                // Clear selected day when changing months
+                if (selectedDay) {
+                    selectedDay.classList.remove("selected-day");
+                    selectedDay = null;
+                }
+                document.getElementById("selectedDate").textContent = "-";
+                document.getElementById("punchInTime").textContent = "-";
+                document.getElementById("punchOutTime").textContent = "-";
+                document.getElementById("workingHours").textContent = "-";
+            }
 
-    
+            // ✅ Navigate to the next month
+            function nextMonth() {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                renderCalendar();
+                // Clear selected day when changing months
+                if (selectedDay) {
+                    selectedDay.classList.remove("selected-day");
+                    selectedDay = null;
+                }
+                document.getElementById("selectedDate").textContent = "-";
+                document.getElementById("punchInTime").textContent = "-";
+                document.getElementById("punchOutTime").textContent = "-";
+                document.getElementById("workingHours").textContent = "-";
+            }
 
+            // ✅ Fetch attendance data (Dummy function, replace with actual API)
+            async function fetchAttendance(year, month, day) {
+                const date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                console.log("Fetching attendance for:", date);
+
+                // Format date for display
+                const displayDate = new Date(year, month - 1, day).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                document.getElementById("selectedDate").textContent = displayDate;
+
+                // Show loading state
+                document.getElementById("punchInTime").textContent = "Loading...";
+                document.getElementById("punchOutTime").textContent = "Loading...";
+                document.getElementById("workingHours").textContent = "Loading...";
+
+                // ✅ Fetch from backend API
+                try {
+                    const response = await fetch(`/dashboard/employee/attendance?date=${date}`, {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const data = await response.json();
+
+                    document.getElementById("punchInTime").textContent = data.punch_in || "Not Available";
+                    document.getElementById("punchOutTime").textContent = data.punch_out || "Not Available";
+
+                    if (data.working_hours) {
+                        document.getElementById("workingHours").textContent = data.working_hours;
+                        // Add status class based on working hours if needed
+                        // document.getElementById("workingHours").classList.add("status-present");
+                    } else {
+                        document.getElementById("workingHours").textContent = "Not Available";
+                    }
+                } catch (error) {
+                    console.error("Error fetching attendance:", error);
+                    document.getElementById("punchInTime").textContent = "Error";
+                    document.getElementById("punchOutTime").textContent = "Error";
+                    document.getElementById("workingHours").textContent = "Error";
+                }
+            }
+
+            // ✅ Initial render
+            document.addEventListener('DOMContentLoaded', () => {
+                renderCalendar();
+
+                // Optionally fetch today's attendance on load
+                const today = new Date();
+                fetchAttendance(today.getFullYear(), today.getMonth() + 1, today.getDate());
+
+                // Find today's element and add selected class
+                setTimeout(() => {
+                    const days = document.querySelectorAll('.calendar-day');
+                    days.forEach(day => {
+                        if (day.classList.contains('today')) {
+                            day.classList.add('selected-day');
+                            selectedDay = day;
+                        }
+                    });
+                }, 100);
+            });
+        </script>
 
 </body>
+
 </html>
