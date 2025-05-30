@@ -3,466 +3,296 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Work Summary</title>
-    
+    <title>Work Summary</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-      /* General Page Styles */
-/* General Page Styles */
-/* General Page Styles */
-/* General Page Styles */
-/* General Page Styles */
-body {
-    font-family: 'Poppins', sans-serif;
-    background-color: #f4f6f9;
-    margin: 0;
-    padding: 0;
-}
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+    
+        .container {
+            /* max-width: 1200px; */
+            /* margin: 40px auto; */
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
 
-/* Main Container */
-.container {
-    max-width: 1200px; /* Best width for desktops & laptops */
-    width: 100%;
-    margin: 30px auto;
-    background: #ffffff;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
-}
+        .main-content {
+            margin-left: 270px;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
 
-/* Page Title */
-h1 {
-    text-align: center;
-    font-size: 28px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 25px;
-}
+        @media (max-width: 1000px) {
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 20px;
+            margin-top: 0;
+        }
 
-/* Filters Section */
-.filters {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #007bff;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            background-color: #f1f8ff;
+            transition: border 0.3s ease;
+        }
 
-.filters div {
-    flex: 1;
-}
+        select:hover {
+            border-color: #0056b3;
+        }
+    
+        canvas {
+            margin-top: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+    
+        h2 {
+            font-size: 24px;
+            color: #333;
+            margin-top: 40px;
+            margin-bottom: 15px;
+        }
+    
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+        }
+    
+        th, td {
+            padding: 14px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+    
+        th {
+            background: #007bff;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    
+        td {
+            font-size: 15px;
+            color: #333;
+        }
+    
+        tr:hover {
+            background: #f1f1f1;
+        }
 
-.filters label {
-    font-weight: 600;
-    color: #555;
-    display: block;
-    margin-bottom: 5px;
-}
+        tr:first-child {
+            background: #e9f7fe;
+        }
 
-.filters select,
-.filters input {
-    width: 100%;
-    padding: 10px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background: #fff;
-}
-.charts {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-}
+        .hamburger {
+            font-size: 28px;
+            cursor: pointer;
+            padding: 12px;
+            position: absolute;
+            left: 20px;
+            top: 15px;
+            background: #007bff;
+            color: white;
+            border-radius: 8px;
+        }
+    
+        .hamburger:hover {
+            background: #0056b3;
+        }
+    
+        .container h1, .container h2 {
+            font-weight: 600;
+        }
 
-canvas {
-    width: 100% !important;
-    height: 400px !important; /* Adjust height for better visibility */
-    background: #fff;
-    border-radius: 8px;
-    padding: 10px;
-    box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
-}
+        /* Scrollbar customization */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
 
-/* Section Title */                                                             
-h2 {
-    font-size: 24px;
-    font-weight: 600;
-    margin-top: 30px;
-    color: #444;
-}
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
 
-/* Table Container */
-.table-container {
-    overflow-x: auto;
-    border-radius: 8px;
-    background: #fff;
-    padding: 15px;
-    box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
-}
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
 
-/* Table Styles */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-    margin-top: 15px;
-}
-
-thead {
-    background: #007bff;
-    color: #fff;
-}
-
-thead tr th {
-    padding: 14px;
-    font-size: 16px;
-    font-weight: 500;
-}
-
-tbody tr {
-    border-bottom: 1px solid #ddd;
-}
-
-tbody tr td {
-    padding: 12px;
-    font-size: 15px;
-    color: #333;
-}
-
-tbody tr:nth-child(even) {
-    background: #f8f9fa;
-}
-
-tbody tr:hover {
-    background: #e9ecef;
-}
-
-/* Responsive Adjustments */
-@media (max-width: 1200px) {
-    .container {
-        max-width: 100%;
-        padding: 20px;
-    }
-
-    .filters {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .charts {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    canvas {
-        width: 100%;
-        height: 280px;
-    }
-}
-
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
     </style>
 </head>
 <body>
-                                
-    <%- include('../partials/sidebar') %>    
+    
+    <%- include('../partials/sidebar') %>   
 
-    <div class="container">
-        <h1 class="page-title">📊 Work Hours Summary</h1>
-    
-        <div class="filters">
-            <div class="filter-group">
-                <label for="employee">👨‍💼 Employee:</label>
-                <select id="employee">
-                    <option value="">All Employees</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="project">📁 Project:</label>
-                <select id="project">
-                    <option value="">All Projects</option>
-                    <% if (projects && projects.length > 0) { %>
-                        <% projects.forEach(proj => { %>
-                            <option value="<%= proj.project_id %>"><%= proj.project_name %></option>
-                        <% }); %>
-                    <% } else { %>
-                        <option value="" disabled>No projects available</option>
-                    <% } %>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="month">📅 Month:</label>
-                <input type="month" id="month" value="<%= new Date().toISOString().slice(0,7) %>">
-                <div class="filter-group"  style="display: none;"> 
-                    <label for="pastMonth">📅 Include Past Month:</label>
-                    <input type="checkbox" id="pastMonth">
-                </div>
-                
-            </div>
-        </div>
-    
-        <div class="charts">
+    <div class="main-content">
+        <div class="container">
+            <h1>📊 My Work Hours Summary</h1>
+        
+            <select id="project">
+                <option value="">All Projects</option>
+                <% if (projects && projects.length > 0) { %>
+                    <% projects.forEach(proj => { %>
+                        <option value="<%= proj.project_id %>"><%= proj.project_name %></option>
+                    <% }); %>
+                <% } else { %>
+                    <option value="" disabled>No projects available</option>
+                <% } %>
+            </select>
+        
             <canvas id="workSummaryChart"></canvas>
-            <canvas id="projectChart"></canvas>
-        </div>
-    
-        <h2 class="section-title">📅 Date-wise Work Summary</h2>
-        <div class="table-container">
+        
+            <h2>📅 Date-wise Work Summary</h2>
             <table>
                 <thead>
                     <tr>
                         <th>Date</th>
-                        <th>Employee</th>
                         <th>Project</th>
                         <th>Work Description</th>
                         <th>Work Hours</th>
                     </tr>
                 </thead>
                 <tbody id="reportTableBody">
-                    <tr><td colspan="5">Loading data...</td></tr>
+                    <tr><td colspan="4">Loading data...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <script>
- document.addEventListener("DOMContentLoaded", function () {
-    const empSelect = document.getElementById("employee");
-    const projSelect = document.getElementById("project");
-    const monthSelect = document.getElementById("month");
-    const pastMonthCheckbox = document.getElementById("pastMonth");
-    const monthSelectGroup = document.getElementById("monthSelectGroup");
-    const reportTableBody = document.getElementById("reportTableBody");
-    let workChart = null;
-
-    // Function to populate past months in dropdown
-    function populatePastMonths() {
-        const today = new Date();
-        monthSelect.innerHTML = '<option value="">-- Select Month --</option>'; // Reset options
-
-        for (let i = 1; i <= 6; i++) {  // Last 6 months
-            let pastDate = new Date(today.getFullYear(), today.getMonth() - i, 1);
-            let monthValue = pastDate.toISOString().slice(0, 7); // Format YYYY-MM
-            let monthName = pastDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-
-            let option = new Option(monthName, monthValue);
-            monthSelect.appendChild(option);
-        }
-    }
-
-    // Show/hide month selection dropdown based on checkbox
-    pastMonthCheckbox.addEventListener("change", function () {
-        if (this.checked) {
-            monthSelectGroup.style.display = "block";
-            populatePastMonths();
-        } else {
-            monthSelectGroup.style.display = "none";
-            monthSelect.value = ""; // Reset selection
-        }
-        fetchSummary();
-    });
-
-    // Function to fetch employee list
-    fetch("/dashboard/employee/projects/get-employees")
-        .then(res => res.json())
-        .then(data => {
-            data.forEach(emp => {
-                let option = document.createElement("option");
-                option.value = emp.emp_id;
-                option.textContent = emp.name;
-                empSelect.appendChild(option);
-            });
-        });
-
-    // Function to fetch project list
-    // fetch("/dashboard/employee/projects/get-projects")
-    //     .then(res => res.json())
-    //     .then(data => {
-    //         data.forEach(proj => {
-    //             let option = document.createElement("option");
-    //             option.value = proj.project_id;
-    //             option.textContent = proj.project_name;
-    //             projSelect.appendChild(option);
-    //         });
-    //     });
-
-    // Function to fetch summary data
-    function fetchSummary() {
-        const empId = empSelect.value;
-        const projectId = projSelect.value;
-        const selectedMonth = monthSelect.value;
-        const includePastMonth = pastMonthCheckbox.checked;
-
-        let start_date = "", end_date = "", prevMonthFlag = "";
-
-        if (selectedMonth) {
-            let [year, month] = selectedMonth.split("-");
-            start_date = `${year}-${month}-01`;
-            end_date = new Date(year, month, 0).toISOString().slice(0, 10);
-        }
-
-        if (includePastMonth) {
-            prevMonthFlag = "&prev_month=true";
-        }
-
-        fetch(`/dashboard/employee/projects/get-summary?emp_id=${empId}&project_id=${projectId}&start_date=${start_date}&end_date=${end_date}${prevMonthFlag}`)
-            .then(res => res.json())
-            .then(data => {
-                let daysInMonth = getFullMonthDays(start_date.split("-")[0], start_date.split("-")[1]);
-                let hoursByDay = {}, projectHours = {};
-
-                daysInMonth.forEach(day => hoursByDay[day] = 0);
-
-                data.daily.forEach(entry => {
-                    let day = new Date(entry.date).getDate().toString();
-                    hoursByDay[day] += entry.hours || 0;
-                });
-
-                projectHours = data.projectWise;
-
-                renderChart(daysInMonth, Object.values(hoursByDay), data.daily);
-                renderProjectChart(projectHours);
-                renderTable(data.daily);
-            })
-            .catch(error => {
-                console.error("Error fetching data:", error);
-                reportTableBody.innerHTML = `<tr><td colspan="5">Error loading data.</td></tr>`;
-            });
-    }
-
-    // Function to get all days in a month
-    function getFullMonthDays(year, month) {
-        let daysInMonth = new Date(year, month, 0).getDate();
-        return Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString());
-    }
-
-    // Function to render bar chart for work summary
-    function renderChart(dates, hours, rawData) {
-        const canvas = document.getElementById("workSummaryChart");
-        if (!canvas) {
-            console.error("Canvas element not found: workSummaryChart");
-            return;
-        }
-
-        const ctx = canvas.getContext("2d");
-        if (workChart) workChart.destroy();
-
-        workChart = new Chart(ctx, {
-            type: "bar",
-            data: {
-                labels: dates,
-                datasets: [{
-                    label: "Total Work Hours",
-                    data: hours,
-                    backgroundColor: "rgba(54, 162, 235, 0.5)",
-                    borderColor: "rgba(54, 162, 235, 1)",
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function (tooltipItem) {
-                                let index = tooltipItem.dataIndex;
-                                let date = dates[index];
-
-                                let entry = rawData.find(e => new Date(e.date).getDate() == date);
-                                if (!entry) return `Date: ${date} - No Data`;
-
-                                return `📅 Date: ${date}\n📌 Project: ${entry.project}\n⏳ Hours: ${entry.hours.toFixed(2)} hrs`;
+        $(document).ready(function () {
+            const projSelect = $("#project");
+            let workChart = null;
+    
+            function getFullMonthDays() {
+                let today = new Date();
+                let daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                return Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString());
+            }
+    
+            function fetchSummary() {
+                const projectId = projSelect.val();
+    
+                $.ajax({
+                    url: "/dashboard/employee/projects/get-own-summary",
+                    method: "GET",
+                    data: { project_id: projectId },
+                    success: function (data) {
+                        console.log("Raw Data from API:", data);
+    
+                        const daysInMonth = getFullMonthDays();
+                        let hoursByDay = {};
+                        daysInMonth.forEach(day => (hoursByDay[day] = 0)); // Initialize all days with 0 hours
+    
+                        let groupedData = {};
+    
+                        data.forEach(entry => {
+                            let day = new Date(entry.date).getDate().toString();
+                            hoursByDay[day] += parseFloat(entry.hours) || 0; // Ensure it's a number
+    
+                            if (!groupedData[entry.date]) {
+                                groupedData[entry.date] = [];
                             }
+                            groupedData[entry.date].push(entry);
+                        });
+    
+                        // Convert hoursByDay object to an array
+                        let hoursArray = daysInMonth.map(day => hoursByDay[day]);
+    
+                        renderChart(daysInMonth, hoursArray);
+                        renderTable(groupedData);
+                    },
+                    error: function () {
+                        $("#reportTableBody").html(`<tr><td colspan="4">Error loading data.</td></tr>`);
+                    }
+                });
+            }
+    
+            function renderChart(dates, hours) {
+                const ctx = document.getElementById("workSummaryChart").getContext("2d");
+                if (workChart) workChart.destroy();
+    
+                workChart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: dates,
+                        datasets: [{
+                            label: "Total Work Hours",
+                            data: hours,
+                            backgroundColor: "rgba(54, 162, 235, 0.6)",
+                            borderColor: "rgba(54, 162, 235, 1)",
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: { title: { display: true, text: "Day of the Month" } },
+                            y: { beginAtZero: true, title: { display: true, text: "Total Hours Worked" } }
                         }
                     }
-                },
-                scales: {
-                    x: { title: { display: true, text: "Day of the Month" } },
-                    y: { beginAtZero: true, title: { display: true, text: "Total Hours Worked" } }
+                });
+            }
+    
+            function renderTable(groupedData) {
+                let html = "";
+
+                if (Object.keys(groupedData).length === 0) {
+                    html = `<tr><td colspan="4">No records found.</td></tr>`;
+                } else {
+                    Object.keys(groupedData).forEach(date => {
+                        groupedData[date].forEach(entry => {
+                            let formattedDate = new Date(entry.date).toLocaleDateString("en-GB", {
+                                year: "numeric",
+                                month: "short",
+                                day: "2-digit"
+                            });
+
+                            html += `<tr>
+                                <td>${formattedDate}</td>
+                                <td>${entry.project}</td>
+                                <td>${entry.work_description || "N/A"}</td>
+                                 <td>${parseFloat(entry.hours).toFixed(2)} hrs</td>
+                            </tr>`;
+                        });
+                    });
                 }
-            }
+
+                $("#reportTableBody").html(html);
+            }                                                        
+
+            projSelect.change(fetchSummary);
+            fetchSummary();
         });
-    }
-
-    // Function to render project-wise pie chart
-    function renderProjectChart(projectHours) {
-        const ctx = document.getElementById("projectChart").getContext("2d");
-
-        if (window.projectChart instanceof Chart) {
-            window.projectChart.destroy();
-        }
-
-        window.projectChart = new Chart(ctx, {
-            type: "pie",
-            data: {
-                labels: Object.keys(projectHours),
-                datasets: [{
-                    data: Object.values(projectHours),
-                    backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4CAF50", "#FF9800"]
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    }
-                }
-            }
-        });
-    }
-
-    // Function to render data table
-    function renderTable(data) {
-        reportTableBody.innerHTML = "";
-
-        if (!Array.isArray(data) || data.length === 0) {
-            reportTableBody.innerHTML = `<tr><td colspan="5">No records found.</td></tr>`;
-            return;
-        }
-
-        let lastDate = "";
-
-        data.forEach(entry => {
-            let entryDate = formatDate(entry.date);
-            if (entryDate !== lastDate) {
-                let dateRow = document.createElement("tr");
-                dateRow.innerHTML = `
-                    <td colspan="5" style="background-color: #f1f1f1; font-weight: bold; text-align: center;">
-                        ${entryDate}
-                    </td>
-                `;
-                reportTableBody.appendChild(dateRow);
-                lastDate = entryDate;
-            }
-
-            let row = document.createElement("tr");
-            row.innerHTML = `
-                <td></td>
-                <td>${entry.emp_id || "N/A"}</td>
-                <td>${entry.project || "Unknown Project"}</td>
-                <td>${entry.work_description || "N/A"}</td>
-                <td>${entry.hours ? `${entry.hours.toFixed(2)} hrs` : "0 hrs"}</td>
-            `;
-            reportTableBody.appendChild(row);
-        });
-    }
-
-    function formatDate(dateStr) {
-        let date = new Date(dateStr);
-        return date.toDateString().slice(0, 10);
-    }
-
-    empSelect.addEventListener("change", fetchSummary);
-    projSelect.addEventListener("change", fetchSummary);
-    monthSelect.addEventListener("change", fetchSummary);
-    fetchSummary();
-});
-
     </script>
-
+    
 </body>
 </html>
