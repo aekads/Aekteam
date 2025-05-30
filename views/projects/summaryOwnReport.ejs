@@ -12,59 +12,80 @@
             background-color: #f4f7fc;
             margin: 0;
             padding: 0;
+            color: #333;
         }
     
         .container {
-            max-width: 900px;
-            margin: 40px auto;
+            /* max-width: 1200px; */
+            /* margin: 40px auto; */
             padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
             text-align: center;
+        }
+
+        .main-content {
+            margin-left: 270px;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
+
+        @media (max-width: 1000px) {
+            .main-content {
+                margin-left: 0;
+            }
         }
     
         h1 {
-            font-size: 24px;
+            font-size: 28px;
             color: #333;
             margin-bottom: 20px;
+            margin-top: 0;
         }
-    
+
         select {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 2px solid #007bff;
-            border-radius: 5px;
+            border-radius: 6px;
             font-size: 16px;
             margin-bottom: 20px;
             cursor: pointer;
+            background-color: #f1f8ff;
+            transition: border 0.3s ease;
+        }
+
+        select:hover {
+            border-color: #0056b3;
         }
     
         canvas {
             margin-top: 20px;
             background: #fff;
-            border-radius: 8px;
-            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
         }
     
         h2 {
-            font-size: 22px;
+            font-size: 24px;
             color: #333;
-            margin-top: 30px;
+            margin-top: 40px;
+            margin-bottom: 15px;
         }
     
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
-            background: white;
-            border-radius: 8px;
+            margin-top: 20px;
+            background: #fff;
+            border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
         }
     
         th, td {
-            padding: 12px;
+            padding: 14px;
             border-bottom: 1px solid #ddd;
             text-align: center;
         }
@@ -73,70 +94,98 @@
             background: #007bff;
             color: white;
             font-size: 16px;
+            font-weight: bold;
         }
     
         td {
-            font-size: 14px;
+            font-size: 15px;
             color: #333;
         }
     
         tr:hover {
             background: #f1f1f1;
         }
-    
+
+        tr:first-child {
+            background: #e9f7fe;
+        }
+
         .hamburger {
             font-size: 28px;
             cursor: pointer;
-            padding: 10px;
+            padding: 12px;
             position: absolute;
             left: 20px;
             top: 15px;
             background: #007bff;
             color: white;
-            border-radius: 5px;
+            border-radius: 8px;
         }
     
         .hamburger:hover {
             background: #0056b3;
         }
-    </style>
     
+        .container h1, .container h2 {
+            font-weight: 600;
+        }
+
+        /* Scrollbar customization */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
 </head>
 <body>
     
     <%- include('../partials/sidebar') %>   
-    <div class="container">
-        <h1>📊 My Work Hours Summary</h1>
-    
-        <select id="project">
-            <option value="">All Projects</option>
-            <% if (projects && projects.length > 0) { %>
-                <% projects.forEach(proj => { %>
-                    <option value="<%= proj.project_name %>"><%= proj.project_name %></option>
-                <% }); %>
-            <% } else { %>
-                <option value="" disabled>No projects available</option>
-            <% } %>
-        </select>
-    
-        <canvas id="workSummaryChart"></canvas>
-    
-        <h2>📅 Date-wise Work Summary</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Project</th>
-                    <th>Work Description</th>
-                    <th>Work Hours</th>
-                </tr>
-            </thead>
-            <tbody id="reportTableBody">
-                <tr><td colspan="4">Loading data...</td></tr>
-            </tbody>
-        </table>
+
+    <div class="main-content">
+        <div class="container">
+            <h1>📊 My Work Hours Summary</h1>
+        
+            <select id="project">
+                <option value="">All Projects</option>
+                <% if (projects && projects.length > 0) { %>
+                    <% projects.forEach(proj => { %>
+                        <option value="<%= proj.project_id %>"><%= proj.project_name %></option>
+                    <% }); %>
+                <% } else { %>
+                    <option value="" disabled>No projects available</option>
+                <% } %>
+            </select>
+        
+            <canvas id="workSummaryChart"></canvas>
+        
+            <h2>📅 Date-wise Work Summary</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Project</th>
+                        <th>Work Description</th>
+                        <th>Work Hours</th>
+                    </tr>
+                </thead>
+                <tbody id="reportTableBody">
+                    <tr><td colspan="4">Loading data...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
-    
 
     <script>
         $(document).ready(function () {
@@ -150,15 +199,12 @@
             }
     
             function fetchSummary() {
-    const projectId = projSelect.val();
-    $("#reportTableBody").html(`<tr><td colspan="4">Loading...</td></tr>`); // Show loading
-
-
+                const projectId = projSelect.val();
+    
                 $.ajax({
                     url: "/dashboard/employee/projects/get-own-summary",
                     method: "GET",
-                    data: { project_id: projSelect.val() },
-
+                    data: { project_id: projectId },
                     success: function (data) {
                         console.log("Raw Data from API:", data);
     
@@ -190,63 +236,59 @@
                 });
             }
     
-        function renderChart(dates, hours) {
-    const ctx = document.getElementById("workSummaryChart").getContext("2d");
-    if (workChart) workChart.destroy();
-
-    const selectedText = projSelect.find("option:selected").text();
+            function renderChart(dates, hours) {
+                const ctx = document.getElementById("workSummaryChart").getContext("2d");
+                if (workChart) workChart.destroy();
     
-    workChart = new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: dates,
-            datasets: [{
-                label: `Work Hours - ${selectedText}`,
-                data: hours,
-                backgroundColor: "rgba(54, 162, 235, 0.5)",
-                borderColor: "rgba(54, 162, 235, 1)",
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: { title: { display: true, text: "Day of the Month" } },
-                y: { beginAtZero: true, title: { display: true, text: "Total Hours Worked" } }
+                workChart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: dates,
+                        datasets: [{
+                            label: "Total Work Hours",
+                            data: hours,
+                            backgroundColor: "rgba(54, 162, 235, 0.6)",
+                            borderColor: "rgba(54, 162, 235, 1)",
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: { title: { display: true, text: "Day of the Month" } },
+                            y: { beginAtZero: true, title: { display: true, text: "Total Hours Worked" } }
+                        }
+                    }
+                });
             }
-        }
-    });
-}
-
     
             function renderTable(groupedData) {
-    let html = "";
+                let html = "";
 
-    if (Object.keys(groupedData).length === 0) {
-        html = `<tr><td colspan="4">No records found.</td></tr>`;
-    } else {
-        Object.keys(groupedData).forEach(date => {
-            groupedData[date].forEach(entry => {
-                let formattedDate = new Date(entry.date).toLocaleDateString("en-GB", {
-                    year: "numeric",
-                    month: "short",
-                    day: "2-digit"
-                });
+                if (Object.keys(groupedData).length === 0) {
+                    html = `<tr><td colspan="4">No records found.</td></tr>`;
+                } else {
+                    Object.keys(groupedData).forEach(date => {
+                        groupedData[date].forEach(entry => {
+                            let formattedDate = new Date(entry.date).toLocaleDateString("en-GB", {
+                                year: "numeric",
+                                month: "short",
+                                day: "2-digit"
+                            });
 
-                html += `<tr>
-                    <td>${formattedDate}</td>
-                    <td>${entry.project}</td>
-                    <td>${entry.work_description || "N/A"}</td>
-                     <td>${parseFloat(entry.hours).toFixed(2)} hrs</td>
-                </tr>`;
-            });
-        });
-    }
+                            html += `<tr>
+                                <td>${formattedDate}</td>
+                                <td>${entry.project}</td>
+                                <td>${entry.work_description || "N/A"}</td>
+                                 <td>${parseFloat(entry.hours).toFixed(2)} hrs</td>
+                            </tr>`;
+                        });
+                    });
+                }
 
-    $("#reportTableBody").html(html);
-}                                                        
+                $("#reportTableBody").html(html);
+            }                                                        
 
-    
             projSelect.change(fetchSummary);
             fetchSummary();
         });
