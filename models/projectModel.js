@@ -251,11 +251,11 @@ exports.getUserProjects = async (emp_id) => {
     return rows;
 };
 
-
 exports.getAllProjectsForReport = async () => {
     const query = `
         SELECT id AS project_id, name AS project_name, description, client 
         FROM public.work_projects
+        ORDER BY id DESC
     `;
     const { rows } = await pool.query(query);
     return rows;
