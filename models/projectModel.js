@@ -217,7 +217,7 @@ exports.getTimeSummary = async (emp_id, project_id, start_date, end_date) => {
         query += " WHERE " + conditions.join(" AND ");
     }
 
-    query += " ORDER BY date ASC;";  // Ensure sorting by date
+    query += " ORDER BY date DESC;";  // Ensure sorting by date
 
     try {
         const result = await pool.query(query, values);
