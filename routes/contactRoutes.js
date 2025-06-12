@@ -125,19 +125,27 @@ router.get("/send-message2", async (req, res) => {
 
 
 
-router.post('/gmcComplainForm', async(req, res) => {
+router.post('/gmcComplainForm', async (req, res) => {
     try {
-        const { name, Email, issue, description, screenid } = req.body;
-        const query = 'INSERT INTO gmcComplainForm (name, Email, issue, description, screenid)  VALUES ($1, $2, $3, $4, $5) RETURNING *';
-        const values = [name, Email, issue, description, screenid];
+        const { name, Email, issue, description, screenid, number, Occupation, rating } = req.body;
+
+        const query = `
+            INSERT INTO gmcComplainForm 
+            (name, Email, issue, description, screenid, number, Occupation, rating)  
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+            RETURNING *
+        `;
+
+        const values = [name, Email, issue, description, screenid, number, Occupation, rating];
         const result = await pool.query(query, values);
-         res.status(200).json({ status: true, message: 'Data has been created successfully.'});
+
+        res.status(200).json({ status: true, message: 'Data has been created successfully.' });
     } catch (error) {
         console.error(error);
-        // res.status(500).json({ error: 'Failed to create Data' });
-           res.status(500).json({ status: false, message: 'Internal server error' });
+        res.status(500).json({ status: false, message: 'Internal server error' });
     }
 });
+
 
 // ✅ Export the router correctly
 module.exports = router;
