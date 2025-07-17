@@ -93,241 +93,232 @@
         </div>
     </div>
 
-    <script>
-        $(document).ready(function () {
-            const projSelect = $("#project");
-            let workChart = null; // Variable to hold the Chart.js instance
-            let allWorkData = []; // Store all work data for filtering
+ <script>
+    $(document).ready(function () {
+        const projSelect = $("#project");
+        let workChart = null;
+        let allWorkData = []; // Store all work data
+        let allProjects = []; // Store all projects
 
-            // Sidebar toggle logic
-            const sidebar = $('#sidebar');
-            const mainContent = $('#main-content');
-            const openSidebarBtn = $('#openSidebar');
-            const closeSidebarBtn = $('#closeSidebar');
+        // Initialize projects dropdown and store projects
+        allProjects = [
+            <% if (projects && projects.length > 0) { %>
+                <% projects.forEach(proj => { %>
+                    { project_id: "<%= proj.project_id %>", project_name: "<%= proj.project_name %>" },
+                <% }); %>
+            <% } %>
+        ];
 
-            openSidebarBtn.on('click', function() {
+        // Sidebar toggle logic
+        const sidebar = $('#sidebar');
+        const mainContent = $('#main-content');
+        const openSidebarBtn = $('#openSidebar');
+        const closeSidebarBtn = $('#closeSidebar');
+
+        openSidebarBtn.on('click', function() {
+            sidebar.removeClass('-translate-x-full');
+        });
+
+        closeSidebarBtn.on('click', function() {
+            sidebar.addClass('-translate-x-full');
+        });
+
+        $(window).on('resize', function() {
+            if ($(window).width() >= 768) {
+                mainContent.addClass('md:ml-64');
                 sidebar.removeClass('-translate-x-full');
-            });
-
-            closeSidebarBtn.on('click', function() {
+            } else {
+                mainContent.removeClass('md:ml-64');
                 sidebar.addClass('-translate-x-full');
+            }
+        }).trigger('resize');
+
+        function getFullMonthDays() {
+            let today = new Date();
+            let daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+            return Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString());
+        }
+
+        function filterWorkData(projectId) {
+            if (!projectId) return allWorkData;
+            
+            // Find the project name for the selected ID
+            const project = allProjects.find(p => p.project_id === projectId);
+            if (!project) return [];
+            
+            // Filter by project name since your data might use name instead of ID
+            return allWorkData.filter(entry => entry.project_name === project.project_name);
+        }
+
+        function processWorkData(workData) {
+            const daysInMonth = getFullMonthDays();
+            let hoursByDay = {};
+            daysInMonth.forEach(day => (hoursByDay[day] = 0));
+
+            let groupedData = {};
+
+            workData.forEach(entry => {
+                let day = new Date(entry.date).getDate().toString();
+                hoursByDay[day] += parseFloat(entry.hours) || 0;
+
+                if (!groupedData[entry.date]) {
+                    groupedData[entry.date] = [];
+                }
+                groupedData[entry.date].push(entry);
             });
 
-            // Adjust main content margin on window resize for desktop view
-            $(window).on('resize', function() {
-                if ($(window).width() >= 768) {
-                    mainContent.addClass('md:ml-64');
-                    sidebar.removeClass('-translate-x-full');
-                } else {
-                    mainContent.removeClass('md:ml-64');
-                    sidebar.addClass('-translate-x-full');
-                }
-            }).trigger('resize');
+            let hoursArray = daysInMonth.map(day => hoursByDay[day]);
 
-            /**
-             * Calculates the number of days in the current month.
-             * @returns {string[]} An array of day numbers (e.g., ["1", "2", ..., "31"]).
-             */
-            function getFullMonthDays() {
-                let today = new Date();
-                let daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-                return Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString());
-            }
+            renderChart(daysInMonth, hoursArray);
+            renderTable(groupedData);
+        }
 
-            /**
-             * Filters the work data based on selected project
-             * @param {string} projectId - The project ID to filter by (empty for all projects)
-             * @returns {Array} Filtered work data
-             */
-            function filterWorkData(projectId) {
-                if (!projectId) return allWorkData;
-                return allWorkData.filter(entry => entry.project_id === projectId);
-            }
-
-            /**
-             * Processes work data and updates the chart and table
-             * @param {Array} workData - The work data to process
-             */
-            function processWorkData(workData) {
-                const daysInMonth = getFullMonthDays();
-                let hoursByDay = {};
-                daysInMonth.forEach(day => (hoursByDay[day] = 0));
-
-                let groupedData = {};
-
-                workData.forEach(entry => {
-                    let day = new Date(entry.date).getDate().toString();
-                    hoursByDay[day] += parseFloat(entry.hours) || 0;
-
-                    if (!groupedData[entry.date]) {
-                        groupedData[entry.date] = [];
+        function fetchSummary() {
+            $.ajax({
+                url: "/dashboard/employee/projects/get-own-summary",
+                method: "GET",
+                success: function (data) {
+                    console.log("Data loaded:", data);
+                    allWorkData = data;
+                    
+                    // Process data based on current filter
+                    const projectId = projSelect.val();
+                    const filteredData = filterWorkData(projectId);
+                    processWorkData(filteredData);
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error:", error);
+                    $("#reportTableBody").html(`<tr><td colspan="4" class="py-4 px-6 text-center text-red-500">Error loading data. Please try again.</td></tr>`);
+                    if (workChart) {
+                        workChart.destroy();
+                        workChart = null;
                     }
-                    groupedData[entry.date].push(entry);
-                });
-
-                let hoursArray = daysInMonth.map(day => hoursByDay[day]);
-
-                renderChart(daysInMonth, hoursArray);
-                renderTable(groupedData);
-            }
-
-            /**
-             * Fetches work summary data from the backend
-             */
-            function fetchSummary() {
-                $.ajax({
-                    url: "/dashboard/employee/projects/get-own-summary",
-                    method: "GET",
-                    success: function (data) {
-                        console.log("Data loaded successfully");
-                        allWorkData = data; // Store all data for filtering
-                        
-                        // Process data based on currently selected project
-                        const projectId = projSelect.val();
-                        const filteredData = filterWorkData(projectId);
-                        processWorkData(filteredData);
-                    },
-                    error: function (xhr, status, error) {
-                        console.error("Error fetching data:", status, error);
-                        $("#reportTableBody").html(`<tr><td colspan="4" class="py-4 px-6 text-center text-red-500">Error loading data. Please try again.</td></tr>`);
-                        if (workChart) {
-                            workChart.destroy();
-                            workChart = null;
-                        }
-                    }
-                });
-            }
-
-            /**
-             * Renders or updates the bar chart with work hours data.
-             * @param {string[]} dates - Labels for the x-axis (days of the month).
-             * @param {number[]} hours - Data for the y-axis (total hours for each day).
-             */
-            function renderChart(dates, hours) {
-                const ctx = document.getElementById("workSummaryChart").getContext("2d");
-                if (workChart) {
-                    workChart.destroy();
                 }
+            });
+        }
 
-                workChart = new Chart(ctx, {
-                    type: "bar",
-                    data: {
-                        labels: dates,
-                        datasets: [{
-                            label: "Total Work Hours",
-                            data: hours,
-                            backgroundColor: "rgba(54, 162, 235, 0.7)",
-                            borderColor: "rgba(54, 162, 235, 1)",
-                            borderWidth: 1,
-                            borderRadius: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'top',
-                                labels: {
-                                    font: {
-                                        size: 14
-                                    }
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.dataset.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed.y !== null) {
-                                            label += context.parsed.y.toFixed(2) + ' hrs';
-                                        }
-                                        return label;
-                                    }
+        function renderChart(dates, hours) {
+            const ctx = document.getElementById("workSummaryChart").getContext("2d");
+            if (workChart) {
+                workChart.destroy();
+            }
+
+            workChart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: "Total Work Hours",
+                        data: hours,
+                        backgroundColor: "rgba(54, 162, 235, 0.7)",
+                        borderColor: "rgba(54, 162, 235, 1)",
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14
                                 }
                             }
                         },
-                        scales: {
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: "Day of the Month",
-                                    font: { size: 16, weight: 'bold' },
-                                    color: '#555'
-                                },
-                                grid: {
-                                    display: false
-                                },
-                                ticks: {
-                                    font: { size: 12 }
-                                }
-                            },
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: "Total Hours Worked",
-                                    font: { size: 16, weight: 'bold' },
-                                    color: '#555'
-                                },
-                                ticks: {
-                                    font: { size: 12 }
-                                },
-                                grid: {
-                                    color: 'rgba(200, 200, 200, 0.2)'
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toFixed(2) + ' hrs';
+                                    }
+                                    return label;
                                 }
                             }
                         }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: "Day of the Month",
+                                font: { size: 16, weight: 'bold' },
+                                color: '#555'
+                            },
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: { size: 12 }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: "Total Hours Worked",
+                                font: { size: 16, weight: 'bold' },
+                                color: '#555'
+                            },
+                            ticks: {
+                                font: { size: 12 }
+                            },
+                            grid: {
+                                color: 'rgba(200, 200, 200, 0.2)'
+                            }
+                        }
                     }
+                }
+            });
+        }
+
+        function renderTable(groupedData) {
+            let html = "";
+
+            if (Object.keys(groupedData).length === 0) {
+                html = `<tr><td colspan="4" class="py-4 px-6 text-center text-gray-600">No records found for the selected project.</td></tr>`;
+            } else {
+                Object.keys(groupedData).sort().forEach(date => {
+                    groupedData[date].forEach(entry => {
+                        let formattedDate = new Date(entry.date).toLocaleDateString("en-GB", {
+                            year: "numeric",
+                            month: "short",
+                            day: "2-digit"
+                        });
+
+                        html += `<tr class="hover:bg-gray-100 transition-colors duration-150">
+                            <td class="py-3 px-6 border-b border-gray-200">${formattedDate}</td>
+                            <td class="py-3 px-6 border-b border-gray-200">${entry.project_name || "N/A"}</td>
+                            <td class="py-3 px-6 border-b border-gray-200">${entry.work_description || "No description"}</td>
+                            <td class="py-3 px-6 border-b border-gray-200 font-semibold text-blue-700">${parseFloat(entry.hours).toFixed(2)} hrs</td>
+                        </tr>`;
+                    });
                 });
             }
 
-            /**
-             * Renders the detailed work summary table.
-             * @param {Object} groupedData - Data grouped by date.
-             */
-            function renderTable(groupedData) {
-                let html = "";
+            $("#reportTableBody").html(html);
+        }
 
-                if (Object.keys(groupedData).length === 0) {
-                    html = `<tr><td colspan="4" class="py-4 px-6 text-center text-gray-600">No records found for the selected project.</td></tr>`;
-                } else {
-                    Object.keys(groupedData).sort().forEach(date => {
-                        groupedData[date].forEach(entry => {
-                            let formattedDate = new Date(entry.date).toLocaleDateString("en-GB", {
-                                year: "numeric",
-                                month: "short",
-                                day: "2-digit"
-                            });
-
-                            html += `<tr class="hover:bg-gray-100 transition-colors duration-150">
-                                <td class="py-3 px-6 border-b border-gray-200">${formattedDate}</td>
-                                <td class="py-3 px-6 border-b border-gray-200">${entry.project_name || "N/A"}</td>
-                                <td class="py-3 px-6 border-b border-gray-200">${entry.work_description || "No description"}</td>
-                                <td class="py-3 px-6 border-b border-gray-200 font-semibold text-blue-700">${parseFloat(entry.hours).toFixed(2)} hrs</td>
-                            </tr>`;
-                        });
-                    });
-                }
-
-                $("#reportTableBody").html(html);
+        // Project filter change handler
+        projSelect.change(function() {
+            if (allWorkData.length > 0) {
+                const projectId = $(this).val();
+                const filteredData = filterWorkData(projectId);
+                console.log("Filtered data:", filteredData); // Debug log
+                processWorkData(filteredData);
             }
-
-            // Event listener for project selection change
-            projSelect.change(function() {
-                if (allWorkData.length > 0) {
-                    const projectId = $(this).val();
-                    const filteredData = filterWorkData(projectId);
-                    processWorkData(filteredData);
-                }
-            });
-
-            // Initial data fetch when the page loads
-            fetchSummary();
         });
-    </script>
+
+        // Initial load
+        fetchSummary();
+    });
+</script>
 </body>
 </html>
