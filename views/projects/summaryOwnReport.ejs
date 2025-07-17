@@ -35,38 +35,7 @@
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
 
-    <!-- Sidebar -->
-    <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-gray-800 text-white p-5 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out z-50 rounded-r-xl shadow-lg">
-        <div class="text-2xl font-bold mb-8 text-center text-blue-300">My Dashboard</div>
-        <nav>
-            <ul>
-                <li class="mb-4">
-                    <a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-700 transition-colors duration-200">
-                        <i class="fas fa-home mr-3 text-lg"></i>Home
-                    </a>
-                </li>
-                <li class="mb-4">
-                    <a href="#" class="flex items-center p-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors duration-200 shadow-md">
-                        <i class="fas fa-chart-bar mr-3 text-lg"></i>Work Summary
-                    </a>
-                </li>
-                <li class="mb-4">
-                    <a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-700 transition-colors duration-200">
-                        <i class="fas fa-tasks mr-3 text-lg"></i>Tasks
-                    </a>
-                </li>
-                <li class="mb-4">
-                    <a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-700 transition-colors duration-200">
-                        <i class="fas fa-users mr-3 text-lg"></i>Team
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        <!-- Close button for mobile sidebar -->
-        <button id="closeSidebar" class="absolute top-4 right-4 text-white text-3xl md:hidden focus:outline-none">
-            &times;
-        </button>
-    </div>
+   
 
     <!-- Main Content Area -->
     <div id="main-content" class="flex-1 md:ml-64 p-5 transition-all duration-300 ease-in-out">
@@ -85,11 +54,6 @@
                 <label for="project" class="sr-only">Select Project</label>
                 <select id="project" class="w-full p-3 border-2 border-blue-500 rounded-lg text-base mb-5 cursor-pointer bg-blue-50 hover:border-blue-700 transition-colors duration-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm">
                     <option value="">All Projects</option>
-                    <!-- Example projects - In a real app, these would be dynamically loaded -->
-                    <option value="project1">Project Alpha</option>
-                    <option value="project2">Project Beta</option>
-                    <option value="project3">Project Gamma</option>
-                    <option value="project4">Project Delta</option>
                     <!-- <% if (projects && projects.length > 0) { %>
                         <% projects.forEach(proj => { %>
                             <option value="<%= proj.project_id %>"><%= proj.project_name %></option>
