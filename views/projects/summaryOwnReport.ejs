@@ -37,7 +37,6 @@
 
       <%- include('../partials/sidebar') %>   
 
-
     <!-- Main Content Area -->
     <div id="main-content" class="flex-1 md:ml-64 p-5 transition-all duration-300 ease-in-out">
         <!-- Hamburger menu for mobile -->
@@ -98,6 +97,7 @@
         $(document).ready(function () {
             const projSelect = $("#project");
             let workChart = null; // Variable to hold the Chart.js instance
+            let allWorkData = []; // Store all work data for filtering
 
             // Sidebar toggle logic
             const sidebar = $('#sidebar');
@@ -107,7 +107,6 @@
 
             openSidebarBtn.on('click', function() {
                 sidebar.removeClass('-translate-x-full');
-                // No need to adjust mainContent margin for mobile, as it's full width
             });
 
             closeSidebarBtn.on('click', function() {
@@ -116,14 +115,14 @@
 
             // Adjust main content margin on window resize for desktop view
             $(window).on('resize', function() {
-                if ($(window).width() >= 768) { // md breakpoint in Tailwind is 768px
+                if ($(window).width() >= 768) {
                     mainContent.addClass('md:ml-64');
-                    sidebar.removeClass('-translate-x-full'); // Ensure sidebar is visible on desktop
+                    sidebar.removeClass('-translate-x-full');
                 } else {
                     mainContent.removeClass('md:ml-64');
-                    sidebar.addClass('-translate-x-full'); // Ensure sidebar is hidden on mobile
+                    sidebar.addClass('-translate-x-full');
                 }
-            }).trigger('resize'); // Trigger on load to set initial state
+            }).trigger('resize');
 
             /**
              * Calculates the number of days in the current month.
@@ -131,59 +130,66 @@
              */
             function getFullMonthDays() {
                 let today = new Date();
-                // Get the last day of the current month (day 0 of next month)
                 let daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-                // Create an array of strings for each day of the month
                 return Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString());
             }
 
             /**
-             * Fetches work summary data from the backend and updates the chart and table.
+             * Filters the work data based on selected project
+             * @param {string} projectId - The project ID to filter by (empty for all projects)
+             * @returns {Array} Filtered work data
+             */
+            function filterWorkData(projectId) {
+                if (!projectId) return allWorkData;
+                return allWorkData.filter(entry => entry.project_id === projectId);
+            }
+
+            /**
+             * Processes work data and updates the chart and table
+             * @param {Array} workData - The work data to process
+             */
+            function processWorkData(workData) {
+                const daysInMonth = getFullMonthDays();
+                let hoursByDay = {};
+                daysInMonth.forEach(day => (hoursByDay[day] = 0));
+
+                let groupedData = {};
+
+                workData.forEach(entry => {
+                    let day = new Date(entry.date).getDate().toString();
+                    hoursByDay[day] += parseFloat(entry.hours) || 0;
+
+                    if (!groupedData[entry.date]) {
+                        groupedData[entry.date] = [];
+                    }
+                    groupedData[entry.date].push(entry);
+                });
+
+                let hoursArray = daysInMonth.map(day => hoursByDay[day]);
+
+                renderChart(daysInMonth, hoursArray);
+                renderTable(groupedData);
+            }
+
+            /**
+             * Fetches work summary data from the backend
              */
             function fetchSummary() {
-                const projectId = projSelect.val(); // Get the selected project ID
-
-                // AJAX call to fetch data
                 $.ajax({
-                    url: "/dashboard/employee/projects/get-own-summary", // Backend API endpoint
+                    url: "/dashboard/employee/projects/get-own-summary",
                     method: "GET",
-                    data: { project_id: projectId }, // Pass selected project ID as a query parameter
                     success: function (data) {
-                        console.log("Raw Data from API:", data);
-
-                        const daysInMonth = getFullMonthDays();
-                        let hoursByDay = {};
-                        // Initialize all days of the current month with 0 hours
-                        daysInMonth.forEach(day => (hoursByDay[day] = 0));
-
-                        let groupedData = {}; // To group data by date for the table
-
-                        // Process fetched data
-                        data.forEach(entry => {
-                            // Extract day from the date (e.g., "2024-07-17" -> 17)
-                            let day = new Date(entry.date).getDate().toString();
-                            // Accumulate hours for each day
-                            hoursByDay[day] += parseFloat(entry.hours) || 0;
-
-                            // Group entries by date for the detailed table
-                            if (!groupedData[entry.date]) {
-                                groupedData[entry.date] = [];
-                            }
-                            groupedData[entry.date].push(entry);
-                        });
-
-                        // Convert the hoursByDay object into an array ordered by day
-                        let hoursArray = daysInMonth.map(day => hoursByDay[day]);
-
-                        // Render the chart and table with the processed data
-                        renderChart(daysInMonth, hoursArray);
-                        renderTable(groupedData);
+                        console.log("Data loaded successfully");
+                        allWorkData = data; // Store all data for filtering
+                        
+                        // Process data based on currently selected project
+                        const projectId = projSelect.val();
+                        const filteredData = filterWorkData(projectId);
+                        processWorkData(filteredData);
                     },
                     error: function (xhr, status, error) {
                         console.error("Error fetching data:", status, error);
-                        // Display an error message in the table
                         $("#reportTableBody").html(`<tr><td colspan="4" class="py-4 px-6 text-center text-red-500">Error loading data. Please try again.</td></tr>`);
-                        // Destroy existing chart if any, to clear previous data
                         if (workChart) {
                             workChart.destroy();
                             workChart = null;
@@ -199,27 +205,26 @@
              */
             function renderChart(dates, hours) {
                 const ctx = document.getElementById("workSummaryChart").getContext("2d");
-                // Destroy any existing chart instance before creating a new one
                 if (workChart) {
                     workChart.destroy();
                 }
 
                 workChart = new Chart(ctx, {
-                    type: "bar", // Bar chart type
+                    type: "bar",
                     data: {
-                        labels: dates, // Days of the month as labels
+                        labels: dates,
                         datasets: [{
                             label: "Total Work Hours",
-                            data: hours, // Work hours data
-                            backgroundColor: "rgba(54, 162, 235, 0.7)", // Blue color with transparency
-                            borderColor: "rgba(54, 162, 235, 1)", // Solid blue border
+                            data: hours,
+                            backgroundColor: "rgba(54, 162, 235, 0.7)",
+                            borderColor: "rgba(54, 162, 235, 1)",
                             borderWidth: 1,
-                            borderRadius: 6 // Rounded bars
+                            borderRadius: 6
                         }]
                     },
                     options: {
-                        responsive: true, // Chart resizes with the container
-                        maintainAspectRatio: false, // Allows flexible height
+                        responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: {
                                 display: true,
@@ -254,14 +259,14 @@
                                     color: '#555'
                                 },
                                 grid: {
-                                    display: false // Hide x-axis grid lines
+                                    display: false
                                 },
                                 ticks: {
                                     font: { size: 12 }
                                 }
                             },
                             y: {
-                                beginAtZero: true, // Start y-axis from zero
+                                beginAtZero: true,
                                 title: {
                                     display: true,
                                     text: "Total Hours Worked",
@@ -272,7 +277,7 @@
                                     font: { size: 12 }
                                 },
                                 grid: {
-                                    color: 'rgba(200, 200, 200, 0.2)' // Light grid lines
+                                    color: 'rgba(200, 200, 200, 0.2)'
                                 }
                             }
                         }
@@ -282,116 +287,47 @@
 
             /**
              * Renders the detailed work summary table.
-             * @param {Object} groupedData - Data grouped by date, containing an array of entries for each date.
+             * @param {Object} groupedData - Data grouped by date.
              */
             function renderTable(groupedData) {
                 let html = "";
 
                 if (Object.keys(groupedData).length === 0) {
-                    // Display message if no records are found
                     html = `<tr><td colspan="4" class="py-4 px-6 text-center text-gray-600">No records found for the selected project.</td></tr>`;
                 } else {
-                    // Iterate through each date and its associated entries
-                    Object.keys(groupedData).sort().forEach(date => { // Sort by date for chronological order
+                    Object.keys(groupedData).sort().forEach(date => {
                         groupedData[date].forEach(entry => {
-                            // Format the date for display
                             let formattedDate = new Date(entry.date).toLocaleDateString("en-GB", {
                                 year: "numeric",
                                 month: "short",
                                 day: "2-digit"
                             });
 
-                            // Append a new table row for each entry
                             html += `<tr class="hover:bg-gray-100 transition-colors duration-150">
-                                <td>${formattedDate}</td>
-                                <td>${entry.project_name || "N/A"}</td> <!-- Use project_name from backend -->
-                                <td>${entry.work_description || "No description"}</td>
-                                <td class="font-semibold text-blue-700">${parseFloat(entry.hours).toFixed(2)} hrs</td>
+                                <td class="py-3 px-6 border-b border-gray-200">${formattedDate}</td>
+                                <td class="py-3 px-6 border-b border-gray-200">${entry.project_name || "N/A"}</td>
+                                <td class="py-3 px-6 border-b border-gray-200">${entry.work_description || "No description"}</td>
+                                <td class="py-3 px-6 border-b border-gray-200 font-semibold text-blue-700">${parseFloat(entry.hours).toFixed(2)} hrs</td>
                             </tr>`;
                         });
                     });
                 }
 
-                // Update the table body with the generated HTML
                 $("#reportTableBody").html(html);
             }
 
             // Event listener for project selection change
-            projSelect.change(fetchSummary);
+            projSelect.change(function() {
+                if (allWorkData.length > 0) {
+                    const projectId = $(this).val();
+                    const filteredData = filterWorkData(projectId);
+                    processWorkData(filteredData);
+                }
+            });
 
             // Initial data fetch when the page loads
             fetchSummary();
-
-            // Mock data for demonstration if the backend is not available
-            // In a real application, remove this mock data and ensure your backend endpoint works.
-            // This ensures the frontend displays something even without a live backend.
-            // To use mock data, uncomment the following block and comment out the $.ajax call in fetchSummary().
-            /*
-            const mockProjects = [
-                { project_id: "project1", project_name: "Project Alpha" },
-                { project_id: "project2", project_name: "Project Beta" },
-                { project_id: "project3", project_name: "Project Gamma" },
-                { project_id: "project4", project_name: "Project Delta" }
-            ];
-
-            // Populate project dropdown with mock data
-            mockProjects.forEach(proj => {
-                $("#project").append(`<option value="${proj.project_id}">${proj.project_name}</option>`);
-            });
-
-            function fetchSummaryMock() {
-                const projectId = projSelect.val();
-                let mockData = [
-                    { date: "2025-07-01", project_name: "Project Alpha", work_description: "Initial setup", hours: "4.5" },
-                    { date: "2025-07-01", project_name: "Project Beta", work_description: "Meeting with client", hours: "2.0" },
-                    { date: "2025-07-02", project_name: "Project Alpha", work_description: "Backend development", hours: "6.0" },
-                    { date: "2025-07-03", project_name: "Project Gamma", work_description: "UI/UX design", hours: "5.5" },
-                    { date: "2025-07-04", project_name: "Project Alpha", work_description: "Bug fixing", hours: "3.0" },
-                    { date: "2025-07-05", project_name: "Project Beta", work_description: "Documentation", hours: "4.0" },
-                    { date: "2025-07-08", project_name: "Project Delta", work_description: "Testing phase 1", hours: "7.0" },
-                    { date: "2025-07-09", project_name: "Project Alpha", work_description: "Feature implementation", hours: "8.0" },
-                    { date: "2025-07-10", project_name: "Project Gamma", work_description: "Design review", hours: "2.5" },
-                    { date: "2025-07-11", project_name: "Project Beta", work_description: "Deployment prep", hours: "6.5" },
-                    { date: "2025-07-12", project_name: "Project Delta", work_description: "Client presentation", hours: "3.0" },
-                    { date: "2025-07-15", project_name: "Project Alpha", work_description: "Performance optimization", hours: "7.5" },
-                    { date: "2025-07-16", project_name: "Project Gamma", work_description: "User feedback integration", hours: "4.0" },
-                    { date: "2025-07-17", project_name: "Project Beta", work_description: "Final checks", hours: "5.0" }
-                ];
-
-                // Filter mock data based on selected project
-                const filteredData = projectId ? mockData.filter(entry => {
-                    const project = mockProjects.find(p => p.project_id === projectId);
-                    return project && entry.project_name === project.project_name;
-                }) : mockData;
-
-                const daysInMonth = getFullMonthDays();
-                let hoursByDay = {};
-                daysInMonth.forEach(day => (hoursByDay[day] = 0));
-
-                let groupedData = {};
-
-                filteredData.forEach(entry => {
-                    let day = new Date(entry.date).getDate().toString();
-                    hoursByDay[day] += parseFloat(entry.hours) || 0;
-
-                    if (!groupedData[entry.date]) {
-                        groupedData[entry.date] = [];
-                    }
-                    groupedData[entry.date].push(entry);
-                });
-
-                let hoursArray = daysInMonth.map(day => hoursByDay[day]);
-
-                renderChart(daysInMonth, hoursArray);
-                renderTable(groupedData);
-            }
-
-            // Uncomment the line below and comment out projSelect.change(fetchSummary); and fetchSummary(); to use mock data
-            // projSelect.change(fetchSummaryMock);
-            // fetchSummaryMock();
-            */
         });
     </script>
-
 </body>
 </html>
