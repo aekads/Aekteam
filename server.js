@@ -69,7 +69,7 @@ app.use("/dashboard/hr", hrRoutes);
 app.use("/dashboard/employee", empRoutes);
 app.use("/dashboard/employee", leaveRoutes);
 app.use("/dashboard/employee/projects", projectRoutes);
-app.use("/", authHRRoutes);              
+app.use("/api", authHRRoutes);              
 // Routes
 app.use("/IPL", adminRoutes);
 
