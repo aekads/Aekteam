@@ -11,6 +11,7 @@ const path = require("path");
 dotenv.config(); // Load environment variables
 
 const app = express();
+app.use(bodyParser.json()); // for JSON requests
 
 // ✅ Enable CORS
 app.use(
