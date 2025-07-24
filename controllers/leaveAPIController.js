@@ -46,7 +46,7 @@ exports.applyLeave = async (req, res) => {
 exports.getLeaves = async (req, res) => {
   try {
     const result = await pool.query(`SELECT * FROM public.leaves ORDER BY applied_at DESC`);
-    res.json({ success: true, leaves: result.rows });
+    res.json({ success: true ,message: "successfully" , leaves: result.rows });
   } catch (error) {
     console.error('Error fetching leaves:', error);
     res.status(500).json({ success: false, message: "Server error" });
