@@ -60,7 +60,7 @@ const leaveRoutes = require("./routes/leaveRoutes");
 const adminRoutes = require("./routes/pointtableRouter");
 
 
-const leaveRoutes = require('./leaveAPIRoutes');
+const leaveRoutes = require('./routes/leaveAPIRoutes');
 
 app.use('/api', leaveRoutes);
 // ✅ Apply Routes
