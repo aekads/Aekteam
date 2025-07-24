@@ -58,6 +58,11 @@ const hrRoutes = require("./routes/hrRoutes");
 const empRoutes = require("./routes/employeeRoutes");
 const leaveRoutes = require("./routes/leaveRoutes");
 const adminRoutes = require("./routes/pointtableRouter");
+
+
+const leaveRoutes = require('./leaveAPIRoutes');
+
+app.use('/api', leaveRoutes);
 // ✅ Apply Routes
 app.use("/api", authRoutes);
 app.use("/api", inquiryRoutes);
