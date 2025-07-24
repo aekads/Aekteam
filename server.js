@@ -11,7 +11,11 @@ const path = require("path");
 dotenv.config(); // Load environment variables
 
 const app = express();
-app.use(bodyParser.json()); // for JSON requests
+
+const leaveRoutes = require('./routes/leaveAPIRoutes'); 
+
+app.use(bodyParser.json()); 
+app.use('/api', leaveRoutes);// for JSON requests
 
 // ✅ Enable CORS
 app.use(
@@ -60,10 +64,6 @@ const empRoutes = require("./routes/employeeRoutes");
 const leaveRoutes = require("./routes/leaveRoutes");
 const adminRoutes = require("./routes/pointtableRouter");
 
-
-const leaveRoutes = require('./routes/leaveAPIRoutes');
-
-app.use('/api', leaveRoutes);
 // ✅ Apply Routes
 app.use("/api", authRoutes);
 app.use("/api", inquiryRoutes);
