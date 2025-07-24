@@ -1,7 +1,7 @@
 // leaveRoutes.js
 const express = require('express');
 const router = express.Router();
-const leaveController = require('./leaveAPIController');
+const leaveController = require("../controllers/leaveAPIController');
 
 // POST - Apply for leave
 router.post('/leave/apply', leaveController.applyLeave);
