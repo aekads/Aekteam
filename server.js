@@ -12,10 +12,10 @@ dotenv.config(); // Load environment variables
 
 const app = express();
 
-const leaveRoutes = require('./routes/leaveAPIRoutes'); 
+const leaveAPIRoutes = require('./routes/leaveAPIRoutes'); 
 
 app.use(bodyParser.json()); 
-app.use('/api', leaveRoutes);// for JSON requests
+app.use('/api', leaveAPIRoutes);// for JSON requests
 
 // ✅ Enable CORS
 app.use(
