@@ -1,5 +1,6 @@
 // leaveController.js
-const pool = require('./db');
+const pool = require("../config/db");
+
 
 // Apply Leave
 exports.applyLeave = async (req, res) => {
