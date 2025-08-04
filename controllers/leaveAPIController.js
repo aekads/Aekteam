@@ -16,7 +16,7 @@ exports.applyLeave = async (req, res) => {
     } = req.body;
 
     const applied_at = new Date();
-    const status = 'Pending';
+    const status = 'pending';
 
     const result = await pool.query(
       `INSERT INTO public.leaves (emp_id, start_date, end_date, leave_type, half_day, reason, status, applied_at, cc, days)
@@ -59,7 +59,7 @@ exports.cancelLeave = async (req, res) => {
     const { leaveId } = req.body;
 
     const result = await pool.query(
-      `UPDATE public.leaves SET status = 'Cancelled' WHERE id = $1 AND status = 'Pending' RETURNING *`,
+      `UPDATE public.leaves SET status = 'Cancelled' WHERE id = $1 AND status = 'pending' RETURNING *`,
       [leaveId]
     );
 
