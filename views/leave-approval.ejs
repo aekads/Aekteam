@@ -143,7 +143,7 @@ h1 {
                 <% leaveApplications.forEach(application => { %>
                     <tr>
                         <td><%= application.emp_id %></td>
-                        <td><%= application.employee_name || "N/A" %></td> <!-- Ensure you fetch employee name in backend -->
+                        <td><%= application.name  || "N/A" %></td> <!-- Ensure you fetch employee name in backend -->
                         <td><%= application.leave_type %></td>
                         <td><%= new Date(application.start_date).toISOString().substring(0, 10) %></td>
                         <td><%= new Date(application.end_date).toISOString().substring(0, 10) %></td>
