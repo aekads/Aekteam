@@ -60,7 +60,7 @@ exports.cancelLeave = async (req, res) => {
 exports.getLeaves = async (req, res) => {
     try {
         const filters = {
-            emp_id: req.user.role !== "HR" ? req.user.emp_id : null, // Employees can only see their own leaves
+            emp_id: req.user.role !== "HR" ? req.user.emp_id : null,
             status: req.query.status,
             date: req.query.date,
         };
@@ -87,9 +87,11 @@ exports.getLeaves = async (req, res) => {
 //         res.status(500).json({ success: false, message: "Server Error" });
 //     }
 // };
+// ✅ Update leave status (used by approve/reject routes)
 exports.updateLeaveStatus = async (req, res) => {
     try {
         const { leave_id, status } = req.body;
+
         await leaveModel.updateLeaveStatus(leave_id, status, req.user.emp_id);
 
         req.flash("success", `Leave request has been ${status.toLowerCase()} successfully!`);
@@ -97,24 +99,26 @@ exports.updateLeaveStatus = async (req, res) => {
         console.error("Error updating leave status:", error);
         req.flash("error", "Something went wrong while updating leave status.");
     }
-    res.redirect("/dashboard/hr/approval"); // Redirect back
+    res.redirect("/dashboard/hr/approval");
 };
 
 //for Hr
 exports.renderApprovalPage = async (req, res) => {
     try {
-           const emp_id = req.user.emp_id;
-            const employee = await employeeModel.findEmployee(emp_id);
-
-            
+        const emp_id = req.user.emp_id;
+        const employee = await employeeModel.findEmployee(emp_id);
         const leaveApplications = await leaveModel.getPendingLeaves();
-        res.render('leave-approval', { leaveApplications ,employee, messages: req.flash()});
+
+        res.render('leave-approval', {
+            leaveApplications,
+            employee,
+            messages: req.flash()
+        });
     } catch (error) {
-        console.error('Error fetching leave applications:', error);
+        console.error('Error rendering approval page:', error);
         res.status(500).send('Server Error');
     }
 };
-
 
 
 
