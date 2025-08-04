@@ -59,7 +59,7 @@ exports.cancelLeave = async (req, res) => {
     const { leaveId } = req.body;
 
     const result = await pool.query(
-      `UPDATE public.leaves SET status = 'Cancelled' WHERE id = $1 AND status = 'pending' RETURNING *`,
+      `UPDATE public.leaves SET status = 'Canceled' WHERE id = $1 AND status = 'pending' RETURNING *`,
       [leaveId]
     );
 
