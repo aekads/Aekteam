@@ -183,11 +183,31 @@ exports.updateLeaveStatus = async (leave_id, status, hr_id) => {
 };
 
 
+
 exports.getPendingLeaves = async () => {
-    const query = 'SELECT * FROM leaves WHERE status = $1';
-    const values = ['pending'];
-    const result = await pool.query(query, values);
-    return result.rows;
+    const query = `
+        SELECT 
+            l.id,
+            l.emp_id,
+            l.leave_type,
+            l.start_date,
+            l.end_date,
+            l.status,
+            e.name AS employee_name
+        FROM 
+            leaves l
+        JOIN 
+            employees e 
+        ON 
+            l.emp_id = e.emp_id
+        WHERE 
+            l.status = 'Pending'
+        ORDER BY 
+            l.start_date ASC;
+    `;
+
+    const result = await pool.query(query);
+    return result.rows; // returns an array of leave applications with employee_name
 };
 
 
