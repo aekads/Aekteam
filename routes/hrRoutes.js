@@ -51,22 +51,22 @@ router.get('/employees/list', verifyToken, requireHR, hrController.renderEmploye
 router.get("/employee/:emp_id",  verifyToken, requireHR, hrController.renderEmployeeProfile)
 
 // ✅ HR Updates Leave Status
-router.put("/update", verifyToken,requireHR, leaveController.updateLeaveStatus);
+router.get('/approval', verifyToken, requireHR, leaveController.renderApprovalPage);
 
-router.get('/approval', verifyToken,requireHR, leaveController.renderApprovalPage);
+// HR - Update leave status (generic handler)
+router.put('/update', verifyToken, requireHR, leaveController.updateLeaveStatus);
 
-// Route to approve leave
+// HR - Approve leave
 router.post('/approve', verifyToken, requireHR, (req, res) => {
     req.body.status = 'Approved';
     leaveController.updateLeaveStatus(req, res);
 });
 
-// Route to reject leave
+// HR - Reject leave
 router.post('/reject', verifyToken, requireHR, (req, res) => {
     req.body.status = 'Rejected';
     leaveController.updateLeaveStatus(req, res);
-}); 
-  
+});
  
 
 
