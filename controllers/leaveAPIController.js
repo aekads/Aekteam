@@ -82,3 +82,48 @@ function calculateDays(start, end, half_day) {
   const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24)) + 1;
   return half_day ? 0.5 : days;
 }
+
+
+
+
+
+exports.getRegularizationData = async (req, res) => {
+    try {
+        const emp_id = req.params.emp_id;
+
+        if (!emp_id) {
+            return res.status(400).json({ success: false, error: "Employee ID required" });
+        }
+
+        const employee = await employeeModel.findEmployee(emp_id);
+        const pendingRequests = await employeeModel.getPendingEmp(emp_id);
+        const historyRequests = await employeeModel.getHistoryPermissions(emp_id);
+
+        res.json({
+            success: true,
+            employee,
+            pendingRequests,
+            historyRequests
+        });
+    } catch (error) {
+        console.error("Error fetching regularization data:", error);
+        res.status(500).json({ success: false, error: "Server error" });
+    }
+};
+
+exports.applyPermission = async (req, res) => {
+    try {
+        const { emp_id, type, from_time, to_time, reason } = req.body;
+
+        if (!emp_id || !type || !from_time || !to_time || !reason) {
+            return res.status(400).json({ success: false, error: "Missing required fields" });
+        }
+
+        await employeeModel.applyPermission(emp_id, type, from_time, to_time, reason);
+
+        res.json({ success: true, message: "Permission request submitted successfully" });
+    } catch (error) {
+        console.error("Error submitting permission:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
