@@ -201,7 +201,7 @@ exports.getPendingLeaves = async () => {
         ON 
             l.emp_id = e.emp_id
         WHERE 
-            l.status = 'Pending'
+            l.status = 'pending'
         ORDER BY 
             l.start_date ASC;
     `;
