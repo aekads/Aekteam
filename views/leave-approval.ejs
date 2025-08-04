@@ -130,7 +130,7 @@ h1 {
         <table class="table table-bordered table-hover">
             <thead>
                 <tr>
-                    <th>Employee Id</th>
+                    <th>Employee ID</th>
                     <th>Employee Name</th>
                     <th>Leave Type</th>
                     <th>Start Date</th>
@@ -142,11 +142,11 @@ h1 {
             <tbody>
                 <% leaveApplications.forEach(application => { %>
                     <tr>
-                        <td><%= application.id %> </td>
-                        <td><%= employee.name %></td>
+                        <td><%= application.emp_id %></td>
+                        <td><%= application.employee_name || "N/A" %></td> <!-- Ensure you fetch employee name in backend -->
                         <td><%= application.leave_type %></td>
-                        <td><%= new Date(application.start_date).toISOString().substring(0,10) %></td>
-                        <td><%= new Date(application.end_date).toISOString().substring(0,10) %></td>
+                        <td><%= new Date(application.start_date).toISOString().substring(0, 10) %></td>
+                        <td><%= new Date(application.end_date).toISOString().substring(0, 10) %></td>
                         <td>
                             <span class="badge 
                                 <%= application.status.toLowerCase() === 'approved' ? 'bg-success' : 
@@ -157,36 +157,34 @@ h1 {
                         </td>
                         <td>
                             <% if (application.status.toLowerCase() === 'pending') { %>
-                                <form action="/dashboard/hr/approve" method="post" style="display:inline;">
+                                <form action="/dashboard/hr/approve" method="POST" style="display:inline;">
                                     <input type="hidden" name="leave_id" value="<%= application.id %>">
-                                    <button type="submit" class="btn btn-success">Approve</button>
+                                    <button type="submit" class="btn btn-success btn-sm">Approve</button>
                                 </form>
-                                <form action="/dashboard/hr/reject" method="post" style="display:inline;">
+                                <form action="/dashboard/hr/reject" method="POST" style="display:inline;">
                                     <input type="hidden" name="leave_id" value="<%= application.id %>">
-                                    <button type="submit" class="btn btn-danger">Reject</button>
+                                    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
                                 </form>
                             <% } else { %>
                                 <span><%= application.status %></span>
                             <% } %>
                         </td>
                     </tr>
-                <% }); %>
+                <% }) %>
             </tbody>
         </table>
     </div>
 </div>
 
+<!-- Hidden inputs to carry flash messages -->
+<input type="hidden" id="successMessage" value="<%= messages.success ? messages.success[0] : '' %>">
+<input type="hidden" id="errorMessage" value="<%= messages.error ? messages.error[0] : '' %>">
 
-
-<input type="hidden" id="successMessage" value="<%= messages && messages.success ? messages.success[0] : '' %>">
-<input type="hidden" id="errorMessage" value="<%= messages && messages.error ? messages.error[0] : '' %>">
-
-
- <!-- Flash Messages using SweetAlert -->
- <script>
+<!-- Flash Messages with SweetAlert -->
+<script>
     document.addEventListener("DOMContentLoaded", function () {
-        let successMessage = document.getElementById("successMessage").value;
-        let errorMessage = document.getElementById("errorMessage").value;
+        const successMessage = document.getElementById("successMessage").value;
+        const errorMessage = document.getElementById("errorMessage").value;
 
         if (successMessage) {
             Swal.fire({
