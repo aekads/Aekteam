@@ -6,4 +6,11 @@ router.post('/leave/apply', leaveController.applyLeave);
 router.get('/leave/list', leaveController.getLeaves);
 router.post('/leave/cancel', leaveController.cancelLeave);
 
+// Get regularization info
+router.get('/regularization/:emp_id', leaveController.getRegularizationData);
+
+// Submit a permission request
+router.post('/regularization/apply', leaveController.applyPermission);
+
+
 module.exports = router;
