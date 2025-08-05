@@ -7,7 +7,8 @@ router.get('/leave/list', leaveController.getLeaves);
 router.post('/leave/cancel', leaveController.cancelLeave);
 
 // Get regularization info
-router.get('/regularization/list', leaveController.getRegularizationData);
+router.post('/regularization/list', leaveController.getRegularizationData);
+
 
 
 // Submit a permission request
