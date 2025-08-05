@@ -86,10 +86,9 @@ function calculateDays(start, end, half_day) {
 
 
 
-
 exports.getRegularizationData = async (req, res) => {
     try {
-        const emp_id = req.params.emp_id;
+        const emp_id = req.query.emp_id;
 
         if (!emp_id) {
             return res.status(400).json({ success: false, error: "Employee ID required" });
@@ -110,6 +109,7 @@ exports.getRegularizationData = async (req, res) => {
         res.status(500).json({ success: false, error: "Server error" });
     }
 };
+
 
 exports.applyPermission = async (req, res) => {
     try {
