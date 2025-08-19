@@ -159,41 +159,59 @@ exports.getUpcomingBirthdays = async (req, res) => {
         const query = `
             SELECT emp_id, name, dob 
             FROM employees 
-            WHERE dob IS NOT NULL
+            WHERE dob IS NOT NULL 
             ORDER BY name
         `;
+
         const { rows: employees } = await pool.query(query);
+        console.log("Fetched Employees with DOB:", employees);
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const currentYear = today.getFullYear();
 
-        const upcomingBirthdays = employees.map(emp => {
-            let dob = new Date(emp.dob);
+        const upcomingBirthdays = employees
+            .map(emp => {
+                let dob = new Date(emp.dob);
 
-            if (isNaN(dob)) {
-                const [day, month, year] = emp.dob.split("-");
-                dob = new Date(`${year}-${month}-${day}`);
-            }
+                // ✅ Fix for DD-MM-YYYY format
+                if (isNaN(dob)) {
+                    const parts = emp.dob.split("-");
+                    if (parts.length === 3) {
+                        const [day, month, year] = parts;
+                        dob = new Date(`${year}-${month}-${day}`);
+                    }
+                }
 
-            let nextBirthday = new Date(currentYear, dob.getMonth(), dob.getDate());
-            if (nextBirthday < today) nextBirthday.setFullYear(currentYear + 1);
+                if (isNaN(dob)) {
+                    console.warn(`Skipping invalid DOB for employee ID ${emp.emp_id}:`, emp.dob);
+                    return null;
+                }
 
-            const daysUntil = Math.ceil((nextBirthday - today) / (1000 * 60 * 60 * 24));
+                let nextBirthday = new Date(currentYear, dob.getMonth(), dob.getDate());
+                if (nextBirthday < today) nextBirthday.setFullYear(currentYear + 1);
 
-            return {
-                emp_id: emp.emp_id,
-                name: emp.name.trim(),
-                dob: emp.dob,
-                formatted_date: dob.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-                days_until: daysUntil
-            };
-        })
-        .filter(emp => emp.days_until <= 30)
-        .sort((a, b) => a.days_until - b.days_until);
+                const daysUntil = Math.ceil((nextBirthday - today) / (1000 * 60 * 60 * 24));
+
+                const birthdayData = {
+                    emp_id: emp.emp_id,
+                    name: emp.name.trim(),
+                    dob: emp.dob,
+                    formatted_date: dob.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+                    days_until: daysUntil
+                };
+
+                console.log(`Processed birthday for ${emp.name}:`, birthdayData);
+
+                return birthdayData;
+            })
+            .filter(emp => emp && emp.days_until <= 30)
+            .sort((a, b) => a.days_until - b.days_until);
+
+        console.log("Final Upcoming Birthdays List:", upcomingBirthdays);
 
         res.json({ success: true, birthdays: upcomingBirthdays });
-        
+
     } catch (error) {
         console.error("Error fetching birthdays:", error);
         res.status(500).json({ success: false, message: "Error fetching birthday data" });
