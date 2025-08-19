@@ -151,6 +151,51 @@ exports.getEmployeeList = async (req, res) => {
 };
 
 
+const pool = require('../config/db');
 
+// ✅ Get Upcoming Birthdays (filtered by role)
+exports.getUpcomingBirthdays = async (req, res) => {
+    try {
+        const query = `
+            SELECT emp_id, name, dob 
+            FROM employees 
+            WHERE dob IS NOT NULL
+            ORDER BY name
+        `;
+        const { rows: employees } = await pool.query(query);
 
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const currentYear = today.getFullYear();
 
+        const upcomingBirthdays = employees.map(emp => {
+            let dob = new Date(emp.dob);
+
+            if (isNaN(dob)) {
+                const [day, month, year] = emp.dob.split("-");
+                dob = new Date(`${year}-${month}-${day}`);
+            }
+
+            let nextBirthday = new Date(currentYear, dob.getMonth(), dob.getDate());
+            if (nextBirthday < today) nextBirthday.setFullYear(currentYear + 1);
+
+            const daysUntil = Math.ceil((nextBirthday - today) / (1000 * 60 * 60 * 24));
+
+            return {
+                emp_id: emp.emp_id,
+                name: emp.name.trim(),
+                dob: emp.dob,
+                formatted_date: dob.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+                days_until: daysUntil
+            };
+        })
+        .filter(emp => emp.days_until <= 30)
+        .sort((a, b) => a.days_until - b.days_until);
+
+        res.json({ success: true, birthdays: upcomingBirthdays });
+        
+    } catch (error) {
+        console.error("Error fetching birthdays:", error);
+        res.status(500).json({ success: false, message: "Error fetching birthday data" });
+    }
+};
