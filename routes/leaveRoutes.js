@@ -7,7 +7,7 @@ const { verifyToken,requireHR } = require("../config/middleware");
 router.post("/leave/apply", leaveController.applyLeave);
 
 // ✅ Employee Views Their Leave List
-router.get("/leave/list", leaveController.getLeaves);
+router.get("/leave/list",verifyToken, leaveController.getLeaves);
 
 
 router.get('/cc', leaveController.getEmployeeList);
@@ -16,7 +16,8 @@ router.get('/cc', leaveController.getEmployeeList);
 
 
 
-router.get("/leave", leaveController.renderLeavePage)
+router.get("/leave", verifyToken, leaveController.renderLeavePage);
+
 router.post("/leave/cancel", leaveController.cancelLeave);
 
 
