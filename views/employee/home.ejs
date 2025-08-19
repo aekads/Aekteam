@@ -9,66 +9,91 @@
         type="image/png">
 
     <!-- Bootstrap CSS + Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Bootstrap CSS + Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
-    <!-- SweetAlert -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f7f7f7;
-            color: #3b4452;
-        }
+<style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background-color: #f7f7f7;
+        color: #3b4452;
+    }
 
-        .dashboard-container {
-            /* margin-left: 270px; */
-            /* padding: 20px; */
-            transition: margin-left 0.3s ease-in-out;
-        }
+    .dashboard-container {
+        transition: margin-left 0.3s ease-in-out;
+    }
 
+    .main-content {
+        margin-left: 270px;
+        height: 100vh;
+        padding: 20px;
+        transition: margin-left 0.3s ease;
+    }
+
+    @media (max-width: 1000px) {
         .main-content {
-            margin-left: 270px;
-            height: 100vh;
+            margin-left: 0;
+        }
+    }
+
+    .card {
+        border-radius: 12px;
+        transition: all 0.3s ease-in-out;
+    }
+
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+    }
+
+    .fade-in {
+        opacity: 0;
+        animation: fadeIn 0.8s ease-in forwards;
+    }
+
+    @keyframes fadeIn {
+        to {
+            opacity: 1;
+        }
+    }
+
+    @media screen and (max-width: 1024px) {
+        .dashboard-container {
+            margin-left: 0;
             padding: 20px;
-            transition: margin-left 0.3s ease;
         }
+    }
 
-        @media (max-width: 1000px) {
-            .main-content {
-                margin-left: 0;
-            }
-        }
+    .leave-badge {
+        background-color: #e3f2fd;
+        color: #1976d2;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        display: inline-block;
+    }
 
-        .card {
-            border-radius: 12px;
-            transition: all 0.3s ease-in-out;
-        }
+    .birthday-badge {
+        background-color: #fff8e1;
+        color: #ff8f00;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        display: inline-block;
+    }
 
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
-        }
-
-        .fade-in {
-            opacity: 0;
-            animation: fadeIn 0.8s ease-in forwards;
-        }
-
-        @keyframes fadeIn {
-            to {
-                opacity: 1;
-            }
-        }
-
-        @media screen and (max-width: 1024px) {
-            .dashboard-container {
-                margin-left: 0;
-                padding: 20px;
-            }
-        }
-    </style>
+    .badge-icon {
+        margin-right: 5px;
+    }
+</style>
 </head>
 
 <body>
@@ -78,28 +103,22 @@
     <div class="main-content">
         <div class="dashboard-container fade-in">
             <h1 class="h3 fw-bold mb-2">Hello, <%= employee.name %>!</h1>
-            <p class="text-muted mb-4">Employee ID: <%= employee.emp_id %>
-            </p>
+            <p class="text-muted mb-4">Employee ID: <%= employee.emp_id %></p>
 
             <!-- ✅ Motivational Quote Box -->
             <div class="alert alert-primary d-flex align-items-center shadow-sm" role="alert">
                 <i class="bi bi-chat-quote me-2 fs-4"></i>
-                <em>
-                    <%= randomQuote %>
-                </em>
+                <em><%= randomQuote %></em>
             </div>
 
             <!-- ✅ Grid Section -->
-            <div class="row g-3">
+            <div class="row g-3 mb-4">
                 <!-- Profile Card -->
                 <div class="col-md-6 col-xl-3">
                     <div class="card shadow-sm h-100">
                         <div class="card-body">
-                            <h5 class="card-title mb-1">
-                                <%= employee.name %>
-                            </h5>
-                            <p class="text-muted mb-0">Role: <%= employee.role %>
-                            </p>
+                            <h5 class="card-title mb-1"><%= employee.name %></h5>
+                            <p class="text-muted mb-0">Role: <%= employee.role %></p>
                         </div>
                     </div>
                 </div>
@@ -120,10 +139,8 @@
                     <div class="card shadow-sm h-100">
                         <div class="card-body">
                             <h6 class="card-title"><i class="bi bi-telephone me-1"></i>Contact Info</h6>
-                            <p class="mb-1">Email: <%= employee.email %>
-                            </p>
-                            <p class="mb-0">Phone: <%= employee.emp_number %>
-                            </p>
+                            <p class="mb-1">Email: <%= employee.email %></p>
+                            <p class="mb-0">Phone: <%= employee.emp_number %></p>
                         </div>
                     </div>
                 </div>
@@ -133,120 +150,260 @@
                     <div class="card shadow-sm h-100">
                         <div class="card-body">
                             <h6 class="card-title"><i class="bi bi-person-badge me-1"></i>Work Details</h6>
-                            <p class="mb-1">Designation: <%= employee.designation %>
-                            </p>
-                            <p class="mb-0">Joining Date: <%= new
-                                    Date(employee.joining_date).toLocaleDateString("en-GB") %>
-                            </p>
+                            <p class="mb-1">Designation: <%= employee.designation %></p>
+                            <p class="mb-0">Joining Date: <%= employee.joining_date %></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ✅ Additional Information Section -->
+            <div class="row g-3">
+                <!-- Employees on Leave Today -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title d-flex align-items-center">
+                                <i class="bi bi-calendar-x me-2"></i>Employees on Leave Today
+                            </h5>
+                            <div id="onLeaveContainer">
+                                <p class="text-muted">Loading employees on leave...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Birthdays -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title d-flex align-items-center">
+                                <i class="bi bi-gift me-2"></i>Upcoming Birthdays
+                            </h5>
+                            <div id="birthdaysContainer">
+                                <p class="text-muted">Loading upcoming birthdays...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
     </div>        
 
-        <!-- Bootstrap JS -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-        <!-- ✅ Punch Logic & Clock -->
-        <script>
-            function formatISTTime(utcTime) {
-                const date = new Date(utcTime);
-                return date.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-            }
+    <!-- ✅ Punch Logic & Clock -->
+    <script>
+        function formatISTTime(utcTime) {
+            const date = new Date(utcTime);
+            return date.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+        }
 
-            document.addEventListener("DOMContentLoaded", async () => {
-                await checkPunchStatus();
-            });
+        document.addEventListener("DOMContentLoaded", async () => {
+            await checkPunchStatus();
+            fetchEmployeesOnLeave();
+            fetchUpcomingBirthdays();
+        });
 
-            async function checkPunchStatus() {
-                try {
-                    const response = await fetch('/dashboard/employee/punch-status', {
-                        method: 'GET',
-                        credentials: 'include'
-                    });
-                    const data = await response.json();
-                    const punchButton = document.getElementById("punchButton");
-
-                    if (data.punchedIn) {
-                        punchButton.textContent = "Punch Out";
-                        punchButton.onclick = confirmPunchOut;
-                    } else {
-                        punchButton.textContent = "Punch In";
-                        punchButton.onclick = punchIn;
-                    }
-                } catch (error) {
-                    console.error("Error checking punch status:", error);
-                }
-            }
-
-            async function punchIn() {
-                try {
-                    const response = await fetch('/dashboard/employee/punch-in', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                    const data = await response.json();
-
-                    if (response.ok) {
-                        Swal.fire("Success!", data.message, "success").then(() => location.reload());
-                    } else {
-                        Swal.fire("Error!", data.message, "error");
-                    }
-                } catch (error) {
-                    Swal.fire("Server Error!", "Something went wrong.", "error");
-                }
-            }
-
-            function confirmPunchOut() {
-                Swal.fire({
-                    title: "Are you sure?",
-                    text: "Do you want to Punch Out?",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonText: "Yes, Punch Out!",
-                    cancelButtonText: "Cancel"
-                }).then(result => {
-                    if (result.isConfirmed) punchOut();
+        async function checkPunchStatus() {
+            try {
+                const response = await fetch('/dashboard/employee/punch-status', {
+                    method: 'GET',
+                    credentials: 'include'
                 });
-            }
+                const data = await response.json();
+                const punchButton = document.getElementById("punchButton");
 
-            async function punchOut() {
-                try {
-                    const response = await fetch('/dashboard/employee/punch-out', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                    const data = await response.json();
-
-                    if (response.ok) {
-                        Swal.fire("Success!", data.message, "success").then(() => location.reload());
-                    } else {
-                        Swal.fire("Error!", data.message, "error");
-                    }
-                } catch (error) {
-                    Swal.fire("Server Error!", "Something went wrong.", "error");
+                if (data.punchedIn) {
+                    punchButton.textContent = "Punch Out";
+                    punchButton.onclick = confirmPunchOut;
+                } else {
+                    punchButton.textContent = "Punch In";
+                    punchButton.onclick = punchIn;
                 }
+            } catch (error) {
+                console.error("Error checking punch status:", error);
             }
+        }
 
-            function updateDateTime() {
-                const now = new Date();
-                const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-                const formattedDate = now.toLocaleDateString('en-GB', dateOptions);
-                const formattedTime = now.toLocaleDateString('en-GB', { weekday: 'long' }) +
-                    " | 10:00 AM To 7:00 PM";
-                const formattedSeconds = now.getHours().toString().padStart(2, '0') + " : " +
-                    now.getMinutes().toString().padStart(2, '0') + ":" +
-                    now.getSeconds().toString().padStart(2, '0');
+        async function punchIn() {
+            try {
+                const response = await fetch('/dashboard/employee/punch-in', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
 
-                document.getElementById("dateDisplay").textContent = formattedDate;
-                document.getElementById("timeDisplay").textContent = formattedTime + " | " + formattedSeconds;
+                if (response.ok) {
+                    Swal.fire("Success!", data.message, "success").then(() => location.reload());
+                } else {
+                    Swal.fire("Error!", data.message, "error");
+                }
+            } catch (error) {
+                Swal.fire("Server Error!", "Something went wrong.", "error");
             }
+        }
 
-            setInterval(updateDateTime, 1000);
-            updateDateTime();
-        </script>
+        function confirmPunchOut() {
+            Swal.fire({
+                title: "Are you sure?",
+                text: "Do you want to Punch Out?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, Punch Out!",
+                cancelButtonText: "Cancel"
+            }).then(result => {
+                if (result.isConfirmed) punchOut();
+            });
+        }
+
+        async function punchOut() {
+            try {
+                const response = await fetch('/dashboard/employee/punch-out', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    Swal.fire("Success!", data.message, "success").then(() => location.reload());
+                } else {
+                    Swal.fire("Error!", data.message, "error");
+                }
+            } catch (error) {
+                Swal.fire("Server Error!", "Something went wrong.", "error");
+            }
+        }
+
+        function updateDateTime() {
+            const now = new Date();
+            const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+            const formattedDate = now.toLocaleDateString('en-GB', dateOptions);
+            const formattedTime = now.toLocaleDateString('en-GB', { weekday: 'long' }) +
+                " | 10:00 AM To 7:00 PM";
+            const formattedSeconds = now.getHours().toString().padStart(2, '0') + " : " +
+                now.getMinutes().toString().padStart(2, '0') + ":" +
+                now.getSeconds().toString().padStart(2, '0');
+
+            document.getElementById("dateDisplay").textContent = formattedDate;
+            document.getElementById("timeDisplay").textContent = formattedTime + " | " + formattedSeconds;
+        }
+
+        // Fetch employees on leave
+        async function fetchEmployeesOnLeave() {
+            try {
+                const response = await fetch('/dashboard/employee/leave/list?status=approved', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (data.success && data.leaves.length > 0) {
+                    const today = new Date().toISOString().split('T')[0];
+                   const onLeaveToday = data.leaves.filter(leave => {
+    if (!leave.from_date || !leave.to_date) return false;
+
+    const from = new Date(leave.from_date);
+    const to = new Date(leave.to_date);
+    const today = new Date();
+
+    // If parsing failed, skip this leave
+    if (isNaN(from) || isNaN(to)) return false;
+
+    // Compare dates only (ignore time)
+    const todayStr = today.toISOString().split('T')[0];
+    const fromStr = from.toISOString().split('T')[0];
+    const toStr = to.toISOString().split('T')[0];
+
+    return fromStr <= todayStr && toStr >= todayStr;
+});
+                    const container = document.getElementById('onLeaveContainer');
+                    if (onLeaveToday.length > 0) {
+                        let html = '<div>';
+                        onLeaveToday.forEach(leave => {
+                            html += `
+                                <span class="leave-badge">
+                                    <i class="bi bi-person-x badge-icon"></i>
+                                    ${leave.employee_name} (${leave.leave_type})
+                                </span>
+                            `;
+                        });
+                        html += '</div>';
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = '<p class="text-muted">No employees on leave today</p>';
+                    }
+                } else {
+                    document.getElementById('onLeaveContainer').innerHTML = 
+                        '<p class="text-muted">No employees on leave today</p>';
+                }
+            } catch (error) {
+                console.error("Error fetching employees on leave:", error);
+                document.getElementById('onLeaveContainer').innerHTML = 
+                    '<p class="text-danger">Error loading leave data</p>';
+            }
+        }
+
+        // Fetch upcoming birthdays
+   async function fetchUpcomingBirthdays() {
+    try {
+        const response = await fetch('/dashboard/employee/birthdays', {
+            method: 'GET',
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const container = document.getElementById('birthdaysContainer');
+            
+            if (data.success && data.birthdays.length > 0) {
+                let html = '<div class="d-flex flex-wrap gap-2">';
+                
+                data.birthdays.forEach(emp => {
+                    // Determine badge class based on days until
+                    let badgeClass = "birthday-badge";
+                    if (emp.days_until === 0) {
+                        badgeClass = "birthday-badge-today";
+                    } else if (emp.days_until <= 7) {
+                        badgeClass = "birthday-badge-soon";
+                    }
+                    
+                    html += `
+                        <span class="${badgeClass}">
+                            <i class="bi bi-balloon-fill badge-icon"></i>
+                            ${emp.name} - ${emp.formatted_date}
+                            ${emp.days_until === 0 ? ' (Today!)' : 
+                              emp.days_until <= 7 ? ` (in ${emp.days_until} days)` : ''}
+                        </span>
+                    `;
+                });
+                
+                html += '</div>';
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = `
+                    <div class="text-center py-3">
+                        <i class="bi bi-calendar-x fs-1 text-muted"></i>
+                        <p class="text-muted mt-2">No IT Team birthdays in the next 30 days</p>
+                    </div>
+                `;
+            }
+        } else {
+            throw new Error('Failed to fetch birthdays');
+        }
+    } catch (error) {
+        console.error("Error fetching upcoming birthdays:", error);
+        document.getElementById('birthdaysContainer').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle-fill"></i> 
+                Error loading birthday data
+            </div>
+        `;
+    }
+}
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+    </script>
 </body>
-
 </html>
