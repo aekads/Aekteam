@@ -17,12 +17,12 @@
             background-color: #f5f7fa;
             color: #333;
             line-height: 1.6;
+            padding: 20px;
         }
         
-        .main-content {
+        .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
         }
         
         .page-title {
@@ -53,9 +53,21 @@
         
         .form-row {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr auto;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
             gap: 15px;
             align-items: end;
+        }
+        
+        @media (max-width: 1100px) {
+            .form-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
         }
         
         input, select, button {
@@ -80,6 +92,7 @@
             display: flex;
             align-items: center;
             gap: 5px;
+            white-space: nowrap;
         }
         
         button:hover {
@@ -115,6 +128,8 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
         }
         
         .entry {
@@ -124,6 +139,7 @@
             padding: 15px;
             border-bottom: 1px solid #eee;
             transition: background-color 0.2s;
+            position: relative;
         }
         
         .entry:hover {
@@ -138,31 +154,46 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            flex: 1;
         }
         
         .editable {
             cursor: pointer;
-            padding: 5px 10px;
+            padding: 8px 12px;
             border-radius: 4px;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
+            border: 1px solid transparent;
         }
         
         .editable:hover {
             background-color: #e8f4fc;
+            border: 1px dashed #3498db;
+        }
+        
+        .editable.editing {
+            background-color: #e8f4fc;
+            border: 1px solid #3498db;
         }
         
         .edit-input {
-            padding: 5px 10px;
+            padding: 8px 12px;
             border: 1px solid #3498db;
             border-radius: 4px;
             font-size: inherit;
+            width: 100%;
         }
         
         .editable-select {
-            padding: 5px;
+            padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
             cursor: pointer;
+            min-width: 150px;
+        }
+        
+        .editable-select.editing {
+            border: 1px solid #3498db;
+            background-color: #e8f4fc;
         }
         
         .entry-right {
@@ -172,14 +203,22 @@
         }
         
         .editable-time {
-            padding: 5px;
+            padding: 6px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .editable-time.editing {
+            border: 1px solid #3498db;
+            background-color: #e8f4fc;
         }
         
         .duration {
             font-weight: bold;
             color: #3498db;
+            min-width: 80px;
+            text-align: right;
         }
         
         .total-hours {
@@ -192,28 +231,71 @@
             border-radius: 6px;
         }
         
-        /* Responsive design */
-        @media (max-width: 900px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-            
-            .entry {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            
-            .entry-right {
-                width: 100%;
-                justify-content: space-between;
-            }
+        .entry-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 15px;
+        }
+        
+        .btn-edit, .btn-save, .btn-cancel {
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .btn-edit {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-save {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+        }
+        
+        .btn-cancel {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+        }
+        
+        .editing-mode .btn-edit {
+            display: none;
+        }
+        
+        .editing-mode .btn-save, .editing-mode .btn-cancel {
+            display: block;
+        }
+        
+        .entry.editing {
+            background-color: #f4f9ff;
+            border: 1px solid #3498db;
+            border-radius: 6px;
+        }
+        
+        .edit-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            background-color: #2ecc71;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: none;
         }
     </style>
 </head>
 <body>
+    
     <%- include('../partials/sidebar') %>
-    <div class="main-content">
+
+    <div class="container">
         <main>
             <h1 class="page-title">⏳ IT Team - Clockify Time Tracker</h1>
 
@@ -278,6 +360,11 @@
                                         )
                                         <span class="duration">( <%= hours %> hrs )</span>
                                     </div>
+                                    <div class="entry-actions">
+                                        <button class="btn-edit" onclick="enableEditing(this)">✏️</button>
+                                        <button class="btn-save" onclick="saveChanges(this)">💾</button>
+                                        <button class="btn-cancel" onclick="cancelEditing(this)">❌</button>
+                                    </div>
                                 </li>
                             <% }); %>
                         </ul>
@@ -288,10 +375,16 @@
         </main>
     </div>
 
+    <div class="edit-notification" id="editNotification">Changes saved successfully!</div>
+
     <!-- ✅ JavaScript for Inline Editing and Auto-Save -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             console.log("🚀 Script Loaded Successfully");
+
+            // Set today's date as default for the date field
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
 
             // ✅ Real-time hours calculation for the form
             const startTimeInput = document.getElementById("start_time");
@@ -311,150 +404,281 @@
             // ✅ Click-to-Edit for Work Description
             document.querySelectorAll(".editable").forEach(element => {
                 element.addEventListener("click", function () {
-                    let currentText = this.innerText;
-                    let input = document.createElement("input");
-                    input.type = "text";
-                    input.value = currentText;
-                    input.classList.add("edit-input");
+                    enableEditing(this);
+                });
+            });
 
-                    this.replaceWith(input);
-                    input.focus();
+            // ✅ Click-to-Edit for Time fields
+            document.querySelectorAll(".editable-time").forEach(element => {
+                element.addEventListener("click", function() {
+                    const entry = this.closest('.entry');
+                    if (!entry.classList.contains('editing')) {
+                        enableEditing(entry.querySelector('.editable'));
+                    }
+                });
+            });
 
-                    input.addEventListener("blur", function () {
-                        let updatedText = input.value;
-                        let parent = input.closest(".entry");
+            // ✅ Change handler for Project Select
+            document.querySelectorAll(".editable-select").forEach(select => {
+                select.addEventListener("change", function () {
+                    const entry = this.closest('.entry');
+                    if (entry.classList.contains('editing')) {
+                        // If in editing mode, just update the value
+                        this.classList.add('editing');
+                    } else {
+                        // If not in editing mode, save immediately
+                        let parent = select.closest(".entry");
                         let id = parent ? parent.dataset.id : "";
+                        let value = select.value;
 
                         if (!id || id.trim() === "") {
                             console.warn("⚠️ Skipping update: ID is missing.", parent);
                             alert("⚠️ Cannot update entry. ID is missing.");
-                            input.replaceWith(element);
                             return;
                         }
 
-                        updateTimeEntry(id, "work_description", updatedText);
-
-                        let newText = document.createElement("strong");
-                        newText.innerText = updatedText;
-                        newText.classList.add("editable");
-                        newText.dataset.field = "work_description";
-
-                        input.replaceWith(newText);
-                        newText.addEventListener("click", arguments.callee);
-                    });
-                });
-            });
-
-            // ✅ Update Project Selection
-            document.querySelectorAll(".editable-select").forEach(select => {
-                select.addEventListener("change", function () {
-                    let parent = select.closest(".entry");
-                    let id = parent ? parent.dataset.id : "";
-                    let value = select.value;
-
-                    if (!id || id.trim() === "") {
-                        console.warn("⚠️ Skipping update: ID is missing.", parent);
-                        alert("⚠️ Cannot update entry. ID is missing.");
-                        return;
+                        updateTimeEntry(id, "project", value);
+                        showNotification("Project updated successfully!");
                     }
-
-                    updateTimeEntry(id, "project", value);
                 });
             });
 
-            // ✅ Update Time Fields
+            // ✅ Change handler for Time fields (auto-save when not in editing mode)
             document.querySelectorAll(".editable-time").forEach(input => {
                 input.addEventListener("change", function () {
-                    let parent = input.closest(".entry");
-                    let id = parent ? parent.dataset.id : "";
-                    let field = input.dataset.field;
-                    let value = input.value;
+                    const entry = this.closest('.entry');
+                    if (!entry.classList.contains('editing')) {
+                        let parent = input.closest(".entry");
+                        let id = parent ? parent.dataset.id : "";
+                        let field = input.dataset.field;
+                        let value = input.value;
 
-                    if (!id || id.trim() === "") {
-                        console.warn("⚠️ Skipping update: ID is missing.", parent);
-                        alert("⚠️ Cannot update entry. ID is missing.");
-                        return;
+                        if (!id || id.trim() === "") {
+                            console.warn("⚠️ Skipping update: ID is missing.", parent);
+                            alert("⚠️ Cannot update entry. ID is missing.");
+                            return;
+                        }
+
+                        updateTimeEntry(id, field, value);
+                        updateTotalHours(parent);
+                        showNotification("Time updated successfully!");
                     }
-
-                    updateTimeEntry(id, field, value);
-                    updateTotalHours(parent);
                 });
             });
+        });
 
-            // ✅ Update Total Hours Dynamically
-            function updateTotalHours(entryElement) {
-                let startTime = entryElement.querySelector("[data-field='start_time']").value;
-                let endTime = entryElement.querySelector("[data-field='end_time']").value;
-                let durationElement = entryElement.querySelector(".duration");
-
-                if (startTime && endTime) {
-                    let hoursWorked = calculateHours(startTime, endTime);
-                    durationElement.innerText = `( ${hoursWorked} hrs )`;
-                    
-                    // Update day total
-                    const dayGroup = entryElement.closest('.day-group');
-                    if (dayGroup) {
-                        recalculateDayTotal(dayGroup);
-                    }
-                }
-            }
-
-            // ✅ Recalculate day total hours
-            function recalculateDayTotal(dayGroup) {
-                let total = 0;
-                const entries = dayGroup.querySelectorAll('.entry');
-                
-                entries.forEach(entry => {
-                    const startTime = entry.querySelector("[data-field='start_time']").value;
-                    const endTime = entry.querySelector("[data-field='end_time']").value;
-                    
-                    if (startTime && endTime) {
-                        total += parseFloat(calculateHours(startTime, endTime));
+        // ✅ Enable editing for an entry
+        function enableEditing(element) {
+            const entry = element.closest('.entry');
+            if (!entry) return;
+            
+            // Enable editing mode
+            entry.classList.add('editing');
+            entry.closest('.day-group').classList.add('editing-mode');
+            
+            // Convert editable text to input field
+            const editableText = entry.querySelector('.editable');
+            if (editableText && !editableText.classList.contains('converted')) {
+                const currentText = editableText.innerText;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentText;
+                input.className = 'edit-input';
+                input.dataset.field = editableText.dataset.field;
+                input.addEventListener('blur', function() {
+                    // Revert to text if clicked outside without saving
+                    if (entry.classList.contains('editing')) {
+                        cancelEditing(entry.querySelector('.btn-cancel'));
                     }
                 });
                 
-                const totalElement = dayGroup.querySelector('.total-hours');
-                if (totalElement) {
-                    totalElement.textContent = `🕒 Total Hours: ${total.toFixed(2)} hrs`;
-                }
+                editableText.replaceWith(input);
+                input.focus();
             }
+            
+            // Highlight editable fields
+            entry.querySelectorAll('.editable-select, .editable-time').forEach(el => {
+                el.classList.add('editing');
+            });
+        }
 
-            // ✅ Backend Update Request
-            function updateTimeEntry(id, field, value) {
-                if (!id || id.trim() === "") {
-                    console.error("🚨 Error: Missing ID in update request!", { id, field, value });
-                    alert("⚠️ Cannot update entry. ID is missing.");
-                    return;
-                }
-
-                console.log("✅ Sending update request:", { id, field, value });
-
-                fetch("/dashboard/employee/projects/update-time-entry", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ id, field, value }),
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            console.log("✅ Update successful for:", field);
-                        } else {
-                            console.error("❌ Update failed:", data.message);
-                        }
-                    })
-                    .catch(error => console.error("❌ Error updating entry:", error));
+        // ✅ Save changes for an entry
+        function saveChanges(button) {
+            const entry = button.closest('.entry');
+            const id = entry.dataset.id;
+            
+            if (!id || id.trim() === "") {
+                console.warn("⚠️ Skipping update: ID is missing.", entry);
+                alert("⚠️ Cannot update entry. ID is missing.");
+                return;
             }
+            
+            // Collect all changed values
+            const changes = {};
+            
+            // Get work description
+            const workDescInput = entry.querySelector('.edit-input');
+            if (workDescInput) {
+                changes.work_description = workDescInput.value;
+            }
+            
+            // Get project
+            const projectSelect = entry.querySelector('.editable-select');
+            if (projectSelect) {
+                changes.project = projectSelect.value;
+            }
+            
+            // Get times
+            entry.querySelectorAll('.editable-time').forEach(input => {
+                changes[input.dataset.field] = input.value;
+            });
+            
+            // Send updates to server
+            let updateCount = 0;
+            let totalUpdates = Object.keys(changes).length;
+            
+            for (const [field, value] of Object.entries(changes)) {
+                updateTimeEntry(id, field, value, function() {
+                    updateCount++;
+                    if (updateCount === totalUpdates) {
+                        // All updates completed
+                        disableEditing(entry);
+                        updateTotalHours(entry);
+                        showNotification("Changes saved successfully!");
+                    }
+                });
+            }
+            
+            // If no changes were made, just exit editing mode
+            if (totalUpdates === 0) {
+                disableEditing(entry);
+            }
+        }
 
-            // ✅ Time Calculation Logic
-            function calculateHours(start, end) {
-                if (!start || !end) return "0.00";
+        // ✅ Cancel editing
+        function cancelEditing(button) {
+            const entry = button.closest('.entry');
+            disableEditing(entry);
+            
+            // Reload the page to reset any changes
+            location.reload();
+        }
+        
+        // ✅ Disable editing mode
+        function disableEditing(entry) {
+            // Convert input back to text
+            const input = entry.querySelector('.edit-input');
+            if (input) {
+                const textElement = document.createElement('strong');
+                textElement.className = 'editable';
+                textElement.dataset.field = input.dataset.field;
+                textElement.textContent = input.value;
+                textElement.addEventListener('click', function() {
+                    enableEditing(this);
+                });
                 
-                const startTime = new Date("1970-01-01T" + start + "Z");
-                const endTime = new Date("1970-01-01T" + end + "Z");
-                let diff = (endTime - startTime) / (1000 * 60 * 60);
-                return diff < 0 ? (diff + 24).toFixed(2) : diff.toFixed(2);
+                input.replaceWith(textElement);
             }
-        });
+            
+            // Remove editing highlights
+            entry.querySelectorAll('.editable-select, .editable-time').forEach(el => {
+                el.classList.remove('editing');
+            });
+            
+            // Exit editing mode
+            entry.classList.remove('editing');
+            entry.closest('.day-group').classList.remove('editing-mode');
+        }
+
+        // ✅ Update Total Hours Dynamically
+        function updateTotalHours(entryElement) {
+            let startTime = entryElement.querySelector("[data-field='start_time']").value;
+            let endTime = entryElement.querySelector("[data-field='end_time']").value;
+            let durationElement = entryElement.querySelector(".duration");
+
+            if (startTime && endTime) {
+                let hoursWorked = calculateHours(startTime, endTime);
+                durationElement.innerText = `( ${hoursWorked} hrs )`;
+                
+                // Update day total
+                const dayGroup = entryElement.closest('.day-group');
+                if (dayGroup) {
+                    recalculateDayTotal(dayGroup);
+                }
+            }
+        }
+
+        // ✅ Recalculate day total hours
+        function recalculateDayTotal(dayGroup) {
+            let total = 0;
+            const entries = dayGroup.querySelectorAll('.entry');
+            
+            entries.forEach(entry => {
+                const startTime = entry.querySelector("[data-field='start_time']").value;
+                const endTime = entry.querySelector("[data-field='end_time']").value;
+                
+                if (startTime && endTime) {
+                    total += parseFloat(calculateHours(startTime, endTime));
+                }
+            });
+            
+            const totalElement = dayGroup.querySelector('.total-hours');
+            if (totalElement) {
+                totalElement.textContent = `🕒 Total Hours: ${total.toFixed(2)} hrs`;
+            }
+        }
+
+        // ✅ Backend Update Request
+        function updateTimeEntry(id, field, value, callback) {
+            if (!id || id.trim() === "") {
+                console.error("🚨 Error: Missing ID in update request!", { id, field, value });
+                alert("⚠️ Cannot update entry. ID is missing.");
+                if (callback) callback();
+                return;
+            }
+
+            console.log("✅ Sending update request:", { id, field, value });
+
+            fetch("/dashboard/employee/projects/update-time-entry", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, field, value }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log("✅ Update successful for:", field);
+                    } else {
+                        console.error("❌ Update failed:", data.message);
+                    }
+                    if (callback) callback();
+                })
+                .catch(error => {
+                    console.error("❌ Error updating entry:", error);
+                    if (callback) callback();
+                });
+        }
+
+        // ✅ Show notification
+        function showNotification(message) {
+            const notification = document.getElementById('editNotification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // ✅ Time Calculation Logic
+        function calculateHours(start, end) {
+            if (!start || !end) return "0.00";
+            
+            const startTime = new Date("1970-01-01T" + start + "Z");
+            const endTime = new Date("1970-01-01T" + end + "Z");
+            let diff = (endTime - startTime) / (1000 * 60 * 60);
+            return diff < 0 ? (diff + 24).toFixed(2) : diff.toFixed(2);
+        }
     </script>
 </body>
 </html>
