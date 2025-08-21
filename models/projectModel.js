@@ -51,7 +51,7 @@ exports.getProjectById = async (id) => {
 
 
  
-
+// Model
 exports.getTimeEntriesByDay = async (emp_id) => {
     return await pool.query(
         `SELECT id, work_description, project, start_time, end_time, date
@@ -69,10 +69,13 @@ exports.addTimeEntry = async (emp_id, work_description, project, start_time, end
     `;
 
     const values = [emp_id, work_description, project, start_time, end_time, date];
-
     return await pool.query(query, values);
 };
 
+exports.updateTimeEntry = async (id, field, value) => {
+    const query = `UPDATE time_entries_task SET ${field} = $1 WHERE id = $2`;
+    return pool.query(query, [value, id]);
+};
 
 exports.updateTimeEntry = async (id, field, value) => {
     const query = `UPDATE time_entries_task SET ${field} = $1 WHERE id = $2`;
