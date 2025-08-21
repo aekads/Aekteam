@@ -1,443 +1,460 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-
-
+    <title>Time Tracker</title>
     <style>
-        /* 🌟 Reset & Base Styles */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #e0ecfc, #f9fbff);
+        /* Base styles */
+        * {
+            box-sizing: border-box;
             margin: 0;
-            padding: 30px;
-            display: flex;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
-        /* 🌟 Main Layout */
-        main {
-            transition: margin-left 0.3s ease-in-out;
-            display: flex;
-            flex-direction: column;
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
         }
-
+        
         .main-content {
-            margin-left: 270px;
-            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
-            height: 100vh;
-            overflow-y: auto;
         }
-
-        @media (max-width: 1000px) {
-            .main-content {
-                margin-left: 0;
-            }
-        }
-
-        /* 🌟 Title */
+        
         .page-title {
-            text-align: center;
-            font-size: 30px;
-            font-weight: 700;
-            color: #2c3e50;
+            font-size: 28px;
             margin-bottom: 25px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-
-        /* 🌟 Time Entry Form */
+        
+        /* Form styles */
         .time-entry-form {
-            background: rgba(255, 255, 255, 0.85);
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid #e0e0e0;
-        }
-
-        .time-entry-form h2 {
-            font-size: 22px;
-            margin-bottom: 15px;
-            color: #34495e;
-        }
-
-        .form-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .form-row input,
-        .form-row select {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            font-size: 15px;
-            transition: border-color 0.3s;
-            background-color: #fafafa;
-        }
-
-        .form-row input:focus,
-        .form-row select:focus {
-            border-color: #2980b9;
-            outline: none;
-        }
-
-        .form-row button {
-            background: #3498db;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 15px;
-            transition: background 0.3s;
-        }
-
-        .form-row button:hover {
-            background: #1f78b4;
-        }
-
-        /* 🌟 Time Entries */
-        .time-entries {
-            margin-top: 30px;
-        }
-
-        .day-group {
             background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
-            margin-bottom: 25px;
-            border-left: 5px solid #3498db;
-        }
-
-        .day-group h2 {
-            font-size: 20px;
-            color: #2c3e50;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
-        }
-
-        /* 🌟 Entry Display */
-        .entry {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 18px;
-            background: #f9f9f9;
             border-radius: 10px;
-            margin-bottom: 10px;
-            transition: background 0.2s;
-            border-left: 4px solid #3498db;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
         }
-
-        .entry:hover {
-            background: #eef6fb;
-        }
-
-        .entry-left {
-            font-size: 16px;
-            font-weight: 500;
-            color: #34495e;
-        }
-
-        .entry-right {
-            font-size: 14px;
-            color: #555;
+        
+        .time-entry-form h2 {
+            margin-bottom: 20px;
+            color: #3498db;
             display: flex;
             align-items: center;
             gap: 8px;
         }
-
-        /* 🌟 Editable Fields */
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+        
+        input, select, button {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        #calculated_hours {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        /* Time entries styles */
+        .time-entries {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .day-group {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .day-group h2 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+        
+        .entry:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .entry:last-child {
+            border-bottom: none;
+        }
+        
+        .entry-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
         .editable {
             cursor: pointer;
-            transition: color 0.3s;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
         }
-
+        
         .editable:hover {
-            color: #2980b9;
-            text-decoration: underline;
+            background-color: #e8f4fc;
         }
-
-        .editable-time {
-            border: none;
-            background: transparent;
-            font-size: 14px;
+        
+        .edit-input {
+            padding: 5px 10px;
+            border: 1px solid #3498db;
+            border-radius: 4px;
+            font-size: inherit;
+        }
+        
+        .editable-select {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
             cursor: pointer;
-            color: #333;
         }
-
-        .editable-time:focus {
-            outline: 2px solid #3498db;
+        
+        .entry-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .editable-time {
+            padding: 5px;
+            border: 1px solid #ddd;
             border-radius: 4px;
         }
-
-        /* 🌟 Total Hours */
-        .total-hours {
-            font-size: 16px;
+        
+        .duration {
             font-weight: bold;
-            color: #27ae60;
-            text-align: right;
-            margin-top: 10px;
+            color: #3498db;
         }
-
-        /* 🌟 Responsive */
-        @media (max-width: 768px) {
+        
+        .total-hours {
+            margin-top: 15px;
+            text-align: right;
+            font-weight: bold;
+            color: #2c3e50;
+            padding: 10px;
+            background-color: #e8f4fc;
+            border-radius: 6px;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 900px) {
             .form-row {
-                flex-direction: column;
+                grid-template-columns: 1fr;
             }
-
-            .form-row input,
-            .form-row select,
-            .form-row button {
-                width: 100%;
-            }
-
+            
             .entry {
                 flex-direction: column;
                 align-items: flex-start;
+                gap: 10px;
             }
-
+            
             .entry-right {
-                margin-top: 8px;
+                width: 100%;
+                justify-content: space-between;
             }
         }
     </style>
 </head>
-
 <body>
-
-
     <%- include('../partials/sidebar') %>
+    <div class="main-content">
+        <main>
+            <h1 class="page-title">⏳ IT Team - Clockify Time Tracker</h1>
 
-        <div class="main-content">
+            <!-- ✅ Time Entry Form -->
+            <div class="time-entry-form">
+                <h2>🕒 Add Your Work Time</h2>
+                <form action="/dashboard/employee/projects/addTask" method="POST" class="form-row">
+                    <input type="text" name="work_description" placeholder="What are you working on?" required>
 
-            <main>
-                <h1 class="page-title">⏳ IT Team - Clockify Time Tracker</h1>
+                    <select name="project" required>
+                        <% projects.forEach(project=> { %>
+                            <option value="<%= project.name %>">
+                                <%= project.name %>
+                            </option>
+                        <% }) %>
+                    </select>
 
-                <!-- ✅ Time Entry Form -->
-                <div class="time-entry-form">
-                    <h2>🕒 Add Your Work Time</h2>
-                    <form action="/dashboard/employee/projects/addTask" method="POST" class="form-row">
-                        <input type="text" name="work_description" placeholder="What are you working on?" required>
+                    <input type="date" name="date" id="date" value="<%= new Date().toISOString().split('T')[0] %>" required>
+                    
+                    <input type="time" name="start_time" id="start_time" required>
+                    <input type="time" name="end_time" id="end_time" required>
 
-                        <select name="project" required>
-                            <% projects.forEach(project=> { %>
-                                <option value="<%= project.name %>">
-                                    <%= project.name %>
-                                </option>
-                                <% }) %>
-                        </select>
+                    <p id="calculated_hours">⏱ 0 hrs</p>
 
-                        <input type="time" name="start_time" id="start_time" required>
-                        <input type="time" name="end_time" id="end_time" required>
+                    <button type="submit">➕ Add Entry</button>
+                </form>
+            </div>
 
-                        <p id="calculated_hours">⏱ 0 hrs</p><!-- Dynamic Time Calculation -->
+            <!-- ✅ Time Entries Sorted by Day -->
+            <div class="time-entries">
+                <% for (const day in timeEntries) { %>
+                    <div class="day-group">
+                        <% var totalHours=0; %>
+                        <h2>📅 <%= new Date(day).toDateString() %></h2>
+                        <ul>
+                            <% timeEntries[day].forEach(function(entry) { %>
+                                <% var hours=calculateHours(entry.start_time, entry.end_time); %>
+                                <% totalHours +=parseFloat(hours); %>
 
-                        <button type="submit">➕ Add Entry</button>
-                    </form>
-                </div>
+                                <li class="entry" data-id="<%= entry.id ? entry.id : '' %>">
+                                    <div class="entry-left">
+                                        <strong class="editable" data-field="work_description">
+                                            <%= entry.work_description %>
+                                        </strong>
+                                        -
+                                        <select class="editable-select" data-field="project" data-id="<%= entry.id %>">
+                                            <% projects.forEach(project=> { %>
+                                                <option value="<%= project.name %>" 
+                                                    <%= project.name===entry.project ? 'selected' : '' %>>
+                                                    <%= project.name %>
+                                                </option>
+                                            <% }); %>
+                                        </select>
+                                    </div>
+                                    <div class="entry-right">
+                                        (⏱
+                                        <input type="time" class="editable-time" data-field="start_time" 
+                                            value="<%= entry.start_time %>">
+                                        to
+                                        <input type="time" class="editable-time" data-field="end_time" 
+                                            value="<%= entry.end_time %>">
+                                        )
+                                        <span class="duration">( <%= hours %> hrs )</span>
+                                    </div>
+                                </li>
+                            <% }); %>
+                        </ul>
+                        <p class="total-hours">🕒 Total Hours: <%= totalHours.toFixed(2) %> hrs</p>
+                    </div>
+                <% } %>
+            </div>
+        </main>
+    </div>
 
+    <!-- ✅ JavaScript for Inline Editing and Auto-Save -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log("🚀 Script Loaded Successfully");
 
+            // ✅ Real-time hours calculation for the form
+            const startTimeInput = document.getElementById("start_time");
+            const endTimeInput = document.getElementById("end_time");
+            const calculatedHours = document.getElementById("calculated_hours");
 
-                <!-- ✅ Time Entries Sorted by Day -->
-                <div class="time-entries">
-                    <% for (const day in timeEntries) { %>
-                        <div class="day-group">
-                            <% var totalHours=0; %>
-                                <% timeEntries[day].forEach(function(entry) { %>
+            function updateFormHours() {
+                if (startTimeInput.value && endTimeInput.value) {
+                    const hours = calculateHours(startTimeInput.value, endTimeInput.value);
+                    calculatedHours.textContent = `⏱ ${hours} hrs`;
+                }
+            }
 
-                                    <% var hours=calculateHours(entry.start_time, entry.end_time); %>
-                                        <% totalHours +=parseFloat(hours); %>
+            startTimeInput.addEventListener("change", updateFormHours);
+            endTimeInput.addEventListener("change", updateFormHours);
 
-                                            <h2>📅 <%= new Date(entry.date).toDateString() %>
-                                            </h2>
+            // ✅ Click-to-Edit for Work Description
+            document.querySelectorAll(".editable").forEach(element => {
+                element.addEventListener("click", function () {
+                    let currentText = this.innerText;
+                    let input = document.createElement("input");
+                    input.type = "text";
+                    input.value = currentText;
+                    input.classList.add("edit-input");
 
-                                            <ul>
+                    this.replaceWith(input);
+                    input.focus();
 
-
-                                                <!-- ✅ Fix: Ensure entry.id is set properly -->
-                                                <li class="entry" data-id="<%= entry.id ? entry.id : '' %>">
-
-                                                    <div class="entry-left">
-                                                        <!-- Editable Work Description -->
-                                                        <strong class="editable" data-field="work_description">
-                                                            <%= entry.work_description %>
-                                                        </strong>
-                                                        -
-                                                        <!-- Editable Project (Dropdown) -->
-                                                        <select class="editable-select" data-field="project"
-                                                            data-id="<%= entry.id %>">
-                                                            <% projects.forEach(project=> { %>
-                                                                <option value="<%= project.name %>"
-                                                                    <%=project.name===entry.project ? 'selected' : '' %>
-                                                                    >
-                                                                    <%= project.name %>
-                                                                </option>
-                                                                <% }); %>
-                                                        </select>
-                                                    </div>
-                                                    <div class="entry-right">
-                                                        (⏱
-                                                        <!-- Editable Start Time -->
-                                                        <input type="time" class="editable-time" data-field="start_time"
-                                                            value="<%= entry.start_time %>">
-                                                        to
-                                                        <!-- Editable End Time -->
-                                                        <input type="time" class="editable-time" data-field="end_time"
-                                                            value="<%= entry.end_time %>">
-                                                        )
-                                                        <span class="duration">( <%= hours %> hrs )</span>
-                                                    </div>
-                                                </li>
-                                                <% }); %>
-                                            </ul>
-                                            <p class="total-hours">🕒 Total Hours: <%= totalHours.toFixed(2) %> hrs</p>
-                        </div>
-                        <% } %>
-                </div>
-            </main>
-        </div>
-
-        <!-- ✅ JavaScript for Inline Editing and Auto-Save -->
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                console.log("🚀 Script Loaded Successfully");
-
-                // ✅ Click-to-Edit for Work Description
-                document.querySelectorAll(".editable").forEach(element => {
-                    element.addEventListener("click", function () {
-                        let currentText = this.innerText;
-                        let input = document.createElement("input");
-                        input.type = "text";
-                        input.value = currentText;
-                        input.classList.add("edit-input");
-
-                        this.replaceWith(input);
-                        input.focus();
-
-                        input.addEventListener("blur", function () {
-                            let updatedText = input.value;
-                            let parent = input.closest(".entry");
-                            let id = parent ? parent.dataset.id : "";
-
-                            if (!id || id.trim() === "") {
-                                console.warn("⚠️ Skipping update: ID is missing.", parent);
-                                alert("⚠️ Cannot update entry. ID is missing.");
-                                input.replaceWith(element);
-                                return;
-                            }
-
-                            updateTimeEntry(id, "work_description", updatedText);
-
-                            let newText = document.createElement("strong");
-                            newText.innerText = updatedText;
-                            newText.classList.add("editable");
-                            newText.dataset.field = "work_description";
-
-                            input.replaceWith(newText);
-                            newText.addEventListener("click", arguments.callee);
-                        });
-                    });
-                });
-                // ✅ Update Time Fields
-                document.querySelectorAll(".editable-select").forEach(select => {
-                    select.addEventListener("change", function () {
-                        let parent = select.closest(".entry");
-                        let id = parent ? parent.dataset.id : "";
-                        let value = select.value;
-
-                        if (!id || id.trim() === "") {
-                            console.warn("⚠️ Skipping update: ID is missing.", parent);
-                            alert("⚠️ Cannot update entry. ID is missing.");
-                            return;
-                        }
-
-                        updateTimeEntry(id, "project", value);
-                    });
-                });
-
-
-                document.querySelectorAll(".editable-time").forEach(input => {
-                    input.addEventListener("change", function () {
+                    input.addEventListener("blur", function () {
+                        let updatedText = input.value;
                         let parent = input.closest(".entry");
                         let id = parent ? parent.dataset.id : "";
-                        let field = input.dataset.field;
-                        let value = input.value;
 
                         if (!id || id.trim() === "") {
                             console.warn("⚠️ Skipping update: ID is missing.", parent);
                             alert("⚠️ Cannot update entry. ID is missing.");
+                            input.replaceWith(element);
                             return;
                         }
 
-                        updateTimeEntry(id, field, value);
-                        updateTotalHours(parent);
+                        updateTimeEntry(id, "work_description", updatedText);
+
+                        let newText = document.createElement("strong");
+                        newText.innerText = updatedText;
+                        newText.classList.add("editable");
+                        newText.dataset.field = "work_description";
+
+                        input.replaceWith(newText);
+                        newText.addEventListener("click", arguments.callee);
                     });
                 });
+            });
 
+            // ✅ Update Project Selection
+            document.querySelectorAll(".editable-select").forEach(select => {
+                select.addEventListener("change", function () {
+                    let parent = select.closest(".entry");
+                    let id = parent ? parent.dataset.id : "";
+                    let value = select.value;
 
-                // ✅ Update Total Hours Dynamically
-                // ✅ Update Total Hours Dynamically
-                function updateTotalHours(entryElement) {
-                    let startTime = entryElement.querySelector("[data-field='start_time']").value;
-                    let endTime = entryElement.querySelector("[data-field='end_time']").value;
-                    let durationElement = entryElement.querySelector(".duration");
-
-                    if (startTime && endTime) {
-                        let hoursWorked = calculateHours(startTime, endTime);
-                        durationElement.innerText = `( ${hoursWorked} hrs )`;
-                    }
-                }
-
-
-                // ✅ Backend Update Request
-                function updateTimeEntry(id, field, value) {
                     if (!id || id.trim() === "") {
-                        console.error("🚨 Error: Missing ID in update request!", { id, field, value });
+                        console.warn("⚠️ Skipping update: ID is missing.", parent);
                         alert("⚠️ Cannot update entry. ID is missing.");
                         return;
                     }
 
-                    console.log("✅ Sending update request:", { id, field, value });
-
-                    fetch("/dashboard/employee/projects/update-time-entry", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ id, field, value }),
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                console.log("✅ Update successful for:", field);
-                            } else {
-                                console.error("❌ Update failed:", data.message);
-                            }
-                        })
-                        .catch(error => console.error("❌ Error updating entry:", error));
-                }
-
-
-
-
-                // ✅ Time Calculation Logic
-                function calculateHours(start, end) {
-                    const startTime = new Date("1970-01-01T" + start + "Z");
-                    const endTime = new Date("1970-01-01T" + end + "Z");
-                    let diff = (endTime - startTime) / (1000 * 60 * 60);
-                    return diff < 0 ? (diff + 24).toFixed(2) : diff.toFixed(2);
-                }
+                    updateTimeEntry(id, "project", value);
+                });
             });
 
-        </script>
+            // ✅ Update Time Fields
+            document.querySelectorAll(".editable-time").forEach(input => {
+                input.addEventListener("change", function () {
+                    let parent = input.closest(".entry");
+                    let id = parent ? parent.dataset.id : "";
+                    let field = input.dataset.field;
+                    let value = input.value;
 
+                    if (!id || id.trim() === "") {
+                        console.warn("⚠️ Skipping update: ID is missing.", parent);
+                        alert("⚠️ Cannot update entry. ID is missing.");
+                        return;
+                    }
+
+                    updateTimeEntry(id, field, value);
+                    updateTotalHours(parent);
+                });
+            });
+
+            // ✅ Update Total Hours Dynamically
+            function updateTotalHours(entryElement) {
+                let startTime = entryElement.querySelector("[data-field='start_time']").value;
+                let endTime = entryElement.querySelector("[data-field='end_time']").value;
+                let durationElement = entryElement.querySelector(".duration");
+
+                if (startTime && endTime) {
+                    let hoursWorked = calculateHours(startTime, endTime);
+                    durationElement.innerText = `( ${hoursWorked} hrs )`;
+                    
+                    // Update day total
+                    const dayGroup = entryElement.closest('.day-group');
+                    if (dayGroup) {
+                        recalculateDayTotal(dayGroup);
+                    }
+                }
+            }
+
+            // ✅ Recalculate day total hours
+            function recalculateDayTotal(dayGroup) {
+                let total = 0;
+                const entries = dayGroup.querySelectorAll('.entry');
+                
+                entries.forEach(entry => {
+                    const startTime = entry.querySelector("[data-field='start_time']").value;
+                    const endTime = entry.querySelector("[data-field='end_time']").value;
+                    
+                    if (startTime && endTime) {
+                        total += parseFloat(calculateHours(startTime, endTime));
+                    }
+                });
+                
+                const totalElement = dayGroup.querySelector('.total-hours');
+                if (totalElement) {
+                    totalElement.textContent = `🕒 Total Hours: ${total.toFixed(2)} hrs`;
+                }
+            }
+
+            // ✅ Backend Update Request
+            function updateTimeEntry(id, field, value) {
+                if (!id || id.trim() === "") {
+                    console.error("🚨 Error: Missing ID in update request!", { id, field, value });
+                    alert("⚠️ Cannot update entry. ID is missing.");
+                    return;
+                }
+
+                console.log("✅ Sending update request:", { id, field, value });
+
+                fetch("/dashboard/employee/projects/update-time-entry", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id, field, value }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log("✅ Update successful for:", field);
+                        } else {
+                            console.error("❌ Update failed:", data.message);
+                        }
+                    })
+                    .catch(error => console.error("❌ Error updating entry:", error));
+            }
+
+            // ✅ Time Calculation Logic
+            function calculateHours(start, end) {
+                if (!start || !end) return "0.00";
+                
+                const startTime = new Date("1970-01-01T" + start + "Z");
+                const endTime = new Date("1970-01-01T" + end + "Z");
+                let diff = (endTime - startTime) / (1000 * 60 * 60);
+                return diff < 0 ? (diff + 24).toFixed(2) : diff.toFixed(2);
+            }
+        });
+    </script>
 </body>
-
 </html>
