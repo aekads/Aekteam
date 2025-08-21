@@ -82,39 +82,33 @@ exports.editProject = async (req, res) => {
 
 
 //work report
+// Controller
 exports.getTimeEntriesByDay = async (req, res) => {
     try {
-        const emp_id = req.user.emp_id; // Get logged-in user's emp_id
-        const { rows } = await projectModel.getTimeEntriesByDay(emp_id); // Fetch time entries for employee
-        
-        const projects = await projectModel.getAllProjects(); // Fetch all projects
-        const employee = await projectModel.findEmployee(emp_id); // Fetch employee details
+        const emp_id = req.user.emp_id;
+        const { rows } = await projectModel.getTimeEntriesByDay(emp_id);
+        const projects = await projectModel.getAllProjects();
+        const employee = await projectModel.findEmployee(emp_id);
 
         // ✅ Group data by date
         const groupedEntries = rows.reduce((acc, entry) => {
             const date = entry.date ? entry.date.toISOString().split("T")[0] : "Unknown Date";
-            entry.id = entry.id ? entry.id.toString() : "MISSING_ID"; // ✅ Debugging
+            entry.id = entry.id ? entry.id.toString() : "MISSING_ID";
 
             if (!acc[date]) acc[date] = [];
             acc[date].push(entry);
             return acc;
         }, {});
 
-        console.log("✅ Grouped Time Entries:", groupedEntries); // Debugging
-
         // ✅ Function to calculate hours worked
         const calculateHours = (start, end) => {
-            if (!start || !end) return "0.00"; // Prevent errors if time values are missing
+            if (!start || !end) return "0.00";
             const startTime = new Date(`1970-01-01T${start}Z`);
             const endTime = new Date(`1970-01-01T${end}Z`);
             let diff = (endTime - startTime) / (1000 * 60 * 60);
-            return diff < 0 ? (diff + 24).toFixed(2) : diff.toFixed(2); // Handle overnight work
+            return diff < 0 ? (diff + 24).toFixed(2) : diff.toFixed(2);
         };
 
-        console.log("✅ Grouped Time Entries:", groupedEntries);
-        console.log("✅ Projects:", projects);
-
-        // ✅ Send response to EJS template
         res.render("projects/addTask", { 
             timeEntries: groupedEntries, 
             calculateHours, 
@@ -128,29 +122,26 @@ exports.getTimeEntriesByDay = async (req, res) => {
     }
 };
 
-
 exports.addTimeEntry = async (req, res) => {
     try {
-        console.log("User Object:",req.user.emp_id); // Debugging line
-
-        const { work_description, project, start_time, end_time } = req.body;
-
-    
+        const { work_description, project, start_time, end_time, date } = req.body;
         const userId = req.user.emp_id;
-        const date = new Date().toISOString().split("T")[0];
+        
+        // Use provided date or default to today
+        const entryDate = date || new Date().toISOString().split("T")[0];
 
-        await projectModel.addTimeEntry(userId, work_description, project, start_time, end_time, date,);
+        await projectModel.addTimeEntry(userId, work_description, project, start_time, end_time, entryDate);
         res.redirect("/dashboard/employee/projects/addTask");
     } catch (error) {
         console.error("Error adding time entry:", error);
         res.status(500).send("Internal Server Error");
     }
 };
+
 exports.updateTimeEntry = async (req, res) => {
     try {
         const { id, field, value } = req.body;
-        console.log("Received update request:", req.body);
-
+        
         if (!id || isNaN(id)) {
             return res.status(400).json({ success: false, message: "Invalid or missing ID" });
         }
