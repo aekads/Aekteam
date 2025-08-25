@@ -8,10 +8,26 @@ exports.findEmployeeById = async (emp_id) => {
     return result.rows[0];
 };
 
+
+exports.fetchEmployeesWithDob = async () => {
+    const query = `
+        SELECT emp_id, name, dob 
+        FROM employees 
+        WHERE dob IS NOT NULL
+    `;
+    const { rows } = await pool.query(query);
+    return rows;
+};
+
 exports.employeeCount = async () => {  // Remove unnecessary emp_id parameter
     const result = await pool.query(`SELECT COUNT(*) AS total FROM employees`);
     return result.rows[0].total;  // ✅ Return only the total count
 };
+
+
+
+
+
 
 
 //For Add emp HR                                                                
@@ -106,6 +122,18 @@ exports.addEmployee = async (employeeData) => {
         throw error;
     }
 };
+
+// Delete Employee from DB
+exports.deleteEmployee = async (emp_id) => {
+    const result = await pool.query(
+        `DELETE FROM employees WHERE emp_id = $1 RETURNING emp_id`,
+        [emp_id]
+    );
+    return result.rowCount > 0; // ✅ true if deleted, false if not found
+};
+
+
+
 exports.updateEmployee = async (emp_id, updatedData) => {
     try {
         const fields = [];
