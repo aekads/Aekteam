@@ -42,6 +42,8 @@ router.post('/addEmployee', uploadFields, verifyToken, requireHR, hrController.p
 router.get('/employee/edit/:emp_id', verifyToken, hrController.getEditEmployeePage);
 router.post('/update/:emp_id',uploadFields, hrController.postUpdateEmployee);
 
+// Employee Delete Route
+router.get('/employee/delete/:emp_id', verifyToken, requireHR, hrController.deleteEmployee);
 
 
 router.get('/employees/list', verifyToken, requireHR, hrController.renderEmployeeList);
