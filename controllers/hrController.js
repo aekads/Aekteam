@@ -172,6 +172,34 @@ exports.postUpdateEmployee = async (req, res) => {
 };
 
 
+// Delete Employee
+exports.deleteEmployee = async (req, res) => {
+    try {
+        const emp_id = req.params.emp_id;
+
+        // Check if employee exists
+        const employee = await employeeModel.getEmployeeById(emp_id);
+        if (!employee) {
+            return res.status(404).send("Employee not found.");
+        }
+
+        // Perform delete
+        const deleted = await employeeModel.deleteEmployee(emp_id);
+        if (!deleted) {
+            return res.status(500).send("Failed to delete employee.");
+        }
+
+        // Redirect back to HR employee list or dashboard
+        res.redirect('/dashboard/hr/employees/list');  
+
+    } catch (error) {
+        console.error("Error deleting employee:", error);
+        res.status(500).send("Internal Server Error");
+    }
+};
+
+
+
 //emp List For Hr
 exports.renderEmployeeList = async (req, res) => {
     try {
