@@ -152,7 +152,12 @@ td {
               <a href="/dashboard/hr/employee/<%= employee.emp_id %>">View</a> 
               
               <a href="/dashboard/hr/employee/edit/<%= employee.emp_id %>">Edit</a>|
-              <a href="/dashboard/hr/employee/delete/<%= employee.emp_id %>" onclick="return confirm('Are you sure?')">Delete</a>
+          <a href="/dashboard/hr/employee/delete/<%= employee.emp_id %>" 
+   onclick="return confirm('Are you sure you want to delete this employee?')"
+   class="btn btn-danger">
+   Delete
+</a>
+
             </td>
           </tr>
         <% }) %>
