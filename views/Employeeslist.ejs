@@ -133,7 +133,7 @@ td {
           <th>Phone</th>
           <th>City</th>
           <th>CTC</th>
-          <th>Joining Date</th>
+       
           <th>Actions</th>
         </tr>
       </thead>
@@ -146,8 +146,7 @@ td {
             <td><%= employee.emp_number %></td>
             <td><%= employee.assign_city %></td>
             <td><%= employee.ctc %></td>
-            <td><%= new Date(employee.joining_date).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "2-digit" }) %></td>
-
+          
             <td class="action-links">
               <a href="/dashboard/hr/employee/<%= employee.emp_id %>">View</a> 
               
