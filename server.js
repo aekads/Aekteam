@@ -9,7 +9,6 @@ const cron = require("node-cron");
 const dotenv = require("dotenv");
 const path = require("path");
 const db = require("./config/db");
-e
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
