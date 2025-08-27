@@ -9,7 +9,7 @@ const cron = require("node-cron");
 const dotenv = require("dotenv");
 const path = require("path");
 const db = require("./config/db");
-
+e
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
@@ -710,21 +710,28 @@ res.json({ drafts, count: drafts.length });
 });
 
 
+app.get("/api/websitesales/campaigns", async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT id, user_id, user_email, campaign_name, start_date, duration_days, end_date, 
+              package_name, totals, selected_targets, media_url, created_at, status, updated_at
+       FROM public.campaigns
+       ORDER BY created_at DESC`
+    );
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    res.status(200).json({
+      success: true,
+      total: result.rowCount,
+      campaigns: result.rows,
+    });
+  } catch (error) {
+    console.error("Error fetching campaigns:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error. Could not fetch campaigns.",
+    });
+  }
+});
 
 
 
