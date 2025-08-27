@@ -10,7 +10,7 @@ const dotenv = require("dotenv");
 const path = require("path");
 const db = require("./config/db");
 
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 
