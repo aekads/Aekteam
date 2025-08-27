@@ -10,6 +10,11 @@ const dotenv = require("dotenv");
 const path = require("path");
 const db = require("./config/db");
 
+const bcrypt = require('bcrypt');
+const nodemailer = require('nodemailer');
+const jwt = require('jsonwebtoken');
+
+
 dotenv.config(); // Load environment variables
 
 const app = express();
