@@ -733,23 +733,20 @@ app.get("/api/websitesales/campaigns", async (req, res) => {
 });
 
 
-
-
-
 app.post("/api/websitesales/users", async (req, res) => {
   try {
-    const { id, name, pan, gst_number, number, email, password } = req.body;
+    const { id, name, pan, gst_number, number, email } = req.body;
 
     let result;
 
     if (id) {
-      // 🔹 Update existing user
+      // 🔹 Update existing user (NO PASSWORD update here)
       result = await db.query(
         `UPDATE public.websitesalesusers
-         SET name=$1, pan=$2, gst_number=$3, number=$4, email=$5, password=$6
-         WHERE id=$7
+         SET name=$1, pan=$2, gst_number=$3, number=$4, email=$5
+         WHERE id=$6
          RETURNING *`,
-        [name, pan, gst_number, number, email, password, id]
+        [name, pan, gst_number, number, email, id]
       );
 
       if (result.rows.length === 0) {
@@ -763,16 +760,16 @@ app.post("/api/websitesales/users", async (req, res) => {
       result = await db.query(
         `INSERT INTO public.websitesalesusers 
           (name, pan, gst_number, number, email, password, otp, otp_expiry, status, wallet_balance) 
-         VALUES ($1,$2,$3,$4,$5,$6,NULL,NULL,'inactive',0) 
+         VALUES ($1,$2,$3,$4,$5,'changeme',NULL,NULL,'inactive',0) 
          RETURNING *`,
-        [name, pan, gst_number, number, email, password]
+        [name, pan, gst_number, number, email]
       );
 
       return res.status(201).json({ success: true, message: "User created", user: result.rows[0] });
     }
 
   } catch (err) {
-    console.error("Error saving user:", err);
+    console.error("Error saving user:", err.message);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
