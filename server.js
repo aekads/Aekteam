@@ -736,7 +736,46 @@ app.get("/api/websitesales/campaigns", async (req, res) => {
 
 
 
+app..post("/api/websitesales/users", async (req, res) => {
+  try {
+    const { id, name, pan, gst_number, number, email, password } = req.body;
 
+    let result;
+
+    if (id) {
+      // 🔹 Update existing user
+      result = await pool.query(
+        `UPDATE public.websitesalesusers
+         SET name=$1, pan=$2, gst_number=$3, number=$4, email=$5, password=$6
+         WHERE id=$7
+         RETURNING *`,
+        [name, pan, gst_number, number, email, password, id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ success: false, message: "User not found" });
+      }
+
+      return res.json({ success: true, message: "User updated", user: result.rows[0] });
+
+    } else {
+      // 🔹 Insert new user
+      result = await pool.query(
+        `INSERT INTO public.websitesalesusers 
+          (name, pan, gst_number, number, email, password, otp, otp_expiry, status, wallet_balance) 
+         VALUES ($1,$2,$3,$4,$5,$6,NULL,NULL,'inactive',0) 
+         RETURNING *`,
+        [name, pan, gst_number, number, email, password]
+      );
+
+      return res.status(201).json({ success: true, message: "User created", user: result.rows[0] });
+    }
+
+  } catch (err) {
+    console.error("Error saving user:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 
 
