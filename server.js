@@ -736,7 +736,7 @@ app.get("/api/websitesales/campaigns", async (req, res) => {
 
 
 
-app..post("/api/websitesales/users", async (req, res) => {
+app.post("/api/websitesales/users", async (req, res) => {
   try {
     const { id, name, pan, gst_number, number, email, password } = req.body;
 
@@ -744,7 +744,7 @@ app..post("/api/websitesales/users", async (req, res) => {
 
     if (id) {
       // 🔹 Update existing user
-      result = await pool.query(
+      result = await db.query(
         `UPDATE public.websitesalesusers
          SET name=$1, pan=$2, gst_number=$3, number=$4, email=$5, password=$6
          WHERE id=$7
@@ -760,7 +760,7 @@ app..post("/api/websitesales/users", async (req, res) => {
 
     } else {
       // 🔹 Insert new user
-      result = await pool.query(
+      result = await db.query(
         `INSERT INTO public.websitesalesusers 
           (name, pan, gst_number, number, email, password, otp, otp_expiry, status, wallet_balance) 
          VALUES ($1,$2,$3,$4,$5,$6,NULL,NULL,'inactive',0) 
