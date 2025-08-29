@@ -1124,6 +1124,43 @@ app.post("/api/websitesales/users/edit", async (req, res) => {
 
 
 
+// --- Get All Campaigns (for listing) ---
+app.get('/api/websitesales/campaigns', async (req, res) => {
+  try {
+    const user_email = req.headers['x-user-email'];
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    const status = req.query.status; // Optional filter by status
+
+    if (!user_email) {
+      return res.status(400).json({ message: 'User email is required' });
+    }
+
+    let query = `SELECT id, user_id, user_email, campaign_name, start_date, duration_days, 
+                        end_date, package_name, totals, selected_targets, media_url, 
+                        created_at, status, updated_at
+                 FROM campaigns 
+                 WHERE user_email = $1`;
+    let params = [user_email];
+
+    if (status) {
+      query += ' AND status = $2';
+      params.push(status);
+    }
+
+    query += ' ORDER BY created_at DESC';
+
+    const result = await db.query(query, params);
+
+    res.json({
+      count: result.rows.length,
+      campaigns: result.rows
+    });
+  } catch (err) {
+    console.error('❌ Error fetching campaigns:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 
 
 
