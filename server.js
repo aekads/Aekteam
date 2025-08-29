@@ -384,6 +384,8 @@ app.get('/api/websitesales/city-info/:city', async (req, res) => {
 
 //api for createing user campaigns
 
+
+//api for createing user campaigns
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinaryLib = require('cloudinary').v2;
 
@@ -408,7 +410,20 @@ const campaignVideoStorage = new CloudinaryStorage({
   },
 });
 
-// ✅ Multer middleware
+// ✅ Configure storage for images (if needed)
+const imageStorage = new CloudinaryStorage({
+  cloudinary: cloudinaryLib,
+  params: {
+    folder: 'campaign_images',
+    resource_type: 'image',
+    public_id: (req, file) => {
+      const timestamp = Date.now();
+      return `image_${timestamp}_${file.originalname.split('.')[0]}`;
+    },
+  },
+});
+
+// ✅ Multer middleware for videos
 const campaignVideoUpload = multer({ 
   storage: campaignVideoStorage,
   limits: {
@@ -425,11 +440,68 @@ const campaignVideoUpload = multer({
 
 // ✅ Multiple upload middleware (up to 10 files)
 const campaignVideoUploadMultiple = campaignVideoUpload.array('media', 10);
- 
-// ✅ Campaign API
-// --- Create Paid Campaign (deduct wallet balance) ---
-// --- Create Paid Campaign (deduct wallet balance) ---
 
+// ✅ Function to extract Cloudinary public ID from URL
+const getCloudinaryPublicId = (url) => {
+  if (!url) return null;
+  try {
+    const urlParts = url.split('/');
+    const publicIdWithExtension = urlParts.slice(-2).join('/');
+    return publicIdWithExtension.split('.')[0];
+  } catch (error) {
+    console.error('Error extracting public ID from URL:', url, error);
+    return null;
+  }
+};
+
+// ✅ Function to delete file from Cloudinary
+const deleteFromCloudinary = async (url, resourceType = 'video') => {
+  try {
+    const publicId = getCloudinaryPublicId(url);
+    if (!publicId) {
+      console.error('Could not extract public ID from URL:', url);
+      return false;
+    }
+    
+    const result = await cloudinaryLib.uploader.destroy(publicId, {
+      resource_type: resourceType
+    });
+    
+    return result.result === 'ok';
+  } catch (error) {
+    console.error('Error deleting from Cloudinary:', error);
+    return false;
+  }
+};
+
+
+// --- Wallet Balance API ---
+app.get("/api/websitesales/wallet-balance", async (req, res) => {
+  // console.log("GET /api/websitesales/wallet-balance called");
+  try {
+    const email = req.query.email;
+    if (!email) {
+      return res.status(400).json({ message: "Email required" });
+    }
+
+    const result = await db.query(
+      "SELECT wallet_balance FROM public.websitesalesusers WHERE email = $1",
+      [email]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ wallet_balance: result.rows[0].wallet_balance || 0 });
+  } catch (err) {
+    console.error("Error fetching wallet balance:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+// --- Create Paid Campaign (deduct wallet balance) ---
 app.post('/api/websitesales/campaigns', async (req, res) => {
   campaignVideoUploadMultiple(req, res, async function (err) {
     if (err instanceof multer.MulterError) {
@@ -477,12 +549,20 @@ app.post('/api/websitesales/campaigns', async (req, res) => {
         [user_email]
       );
       if (walletRes.rows.length === 0) {
+        // Clean up uploaded files if user not found
+        for (const file of uploadedFiles) {
+          await deleteFromCloudinary(file.path);
+        }
         return res.status(404).json({ message: 'User not found' });
       }
       let walletBalance = Number(walletRes.rows[0].wallet_balance || 0);
 
       const campaignCost = Number(totals?.grandTotal || 0);
       if (walletBalance < campaignCost) {
+        // Clean up uploaded files if insufficient balance
+        for (const file of uploadedFiles) {
+          await deleteFromCloudinary(file.path);
+        }
         return res.status(400).json({ message: 'Insufficient wallet balance' });
       }
 
@@ -551,39 +631,17 @@ app.post('/api/websitesales/campaigns', async (req, res) => {
       });
     } catch (err) {
       console.error('❌ Error saving campaign:', err);
+      // Clean up uploaded files on error
+      if (req.files && req.files.length > 0) {
+        for (const file of req.files) {
+          await deleteFromCloudinary(file.path);
+        }
+      }
       res.status(500).json({ message: 'Server error', error: err.message });
     }
   });
 });
 
-// --- Wallet Balance API ---
-app.get("/api/websitesales/wallet-balance", async (req, res) => {
-  // console.log("GET /api/websitesales/wallet-balance called");
-  try {
-    const email = req.query.email;
-    if (!email) {
-      return res.status(400).json({ message: "Email required" });
-    }
-
-    const result = await db.query(
-      "SELECT wallet_balance FROM public.websitesalesusers WHERE email = $1",
-      [email]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json({ wallet_balance: result.rows[0].wallet_balance || 0 });
-  } catch (err) {
-    console.error("Error fetching wallet balance:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-
-
-// POST /api/websitesales/campaigns/draft - Save campaign as draft
 // --- Save Draft Campaign (NO balance cut) ---
 app.post('/api/websitesales/campaigns/draft', async (req, res) => {
   campaignVideoUploadMultiple(req, res, async function (err) {
@@ -670,65 +728,365 @@ app.post('/api/websitesales/campaigns/draft', async (req, res) => {
       });
     } catch (err) {
       console.error('❌ Error saving draft campaign:', err);
+      // Clean up uploaded files on error
+      if (req.files && req.files.length > 0) {
+        for (const file of req.files) {
+          await deleteFromCloudinary(file.path);
+        }
+      }
       res.status(500).json({ message: 'Server error', error: err.message });
     }
   });
 });
-// GET /api/websitesales/campaigns/drafts - Retrieve user's draft campaigns
-app.get('/api/websitesales/campaigns/drafts', async (req, res) => {
-  try {
-    // ✅ Extract email from headers (sent by frontend)
-    const userEmail = req.headers['x-user-email'];
 
-    if (!userEmail) {
+// --- Update Draft Campaign ---
+app.post('/api/websitesales/campaigns/update-draft', async (req, res) => {
+  campaignVideoUploadMultiple(req, res, async function (err) {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+        return res.status(400).json({
+          message: 'Too many files. Maximum 10 videos allowed.',
+        });
+      }
+      return res.status(500).json({ message: 'File upload error', error: err.message });
+    } else if (err) {
+      return res.status(500).json({ message: 'File upload error', error: err.message });
+    }
+
+    try {
+      // ✅ Get draft_id with proper validation
+      let draft_id = req.body.draft_id || req.body.campaign_id;
+      
+      // If draft_id is an array, take the first element
+      if (Array.isArray(draft_id)) {
+        draft_id = draft_id[0];
+      }
+      
+      // Validate draft_id is a valid number
+      if (!draft_id) {
+        return res.status(400).json({ message: 'Draft ID is required' });
+      }
+      
+      const parsedDraftId = parseInt(draft_id);
+      if (isNaN(parsedDraftId)) {
+        return res.status(400).json({ 
+          message: 'Invalid Draft ID format. Must be a valid number.',
+          received_value: draft_id
+        });
+      }
+
+      // ✅ Parse inputs with proper validation
+      let duration_days = req.body.duration_days;
+      
+      // Handle array case for duration_days
+      if (Array.isArray(duration_days)) {
+        duration_days = duration_days[0];
+      }
+      
+      // Convert to integer with proper validation
+      duration_days = duration_days ? parseInt(duration_days) : 30;
+      if (isNaN(duration_days)) {
+        duration_days = 30; // Default value
+      }
+
+      // Handle other parameters that might be arrays
+      const user_email = Array.isArray(req.body.user_email) ? req.body.user_email[0] : req.body.user_email;
+      const campaign_name = Array.isArray(req.body.campaign_name) ? req.body.campaign_name[0] : req.body.campaign_name;
+      const start_date = Array.isArray(req.body.start_date) ? req.body.start_date[0] : req.body.start_date;
+      let end_date = Array.isArray(req.body.end_date) ? req.body.end_date[0] : req.body.end_date;
+      const package_name = Array.isArray(req.body.package_name) ? req.body.package_name[0] : req.body.package_name;
+      const status = Array.isArray(req.body.status) ? req.body.status[0] : (req.body.status || 'draft');
+
+      // Validate required fields
+      if (!user_email) {
+        return res.status(400).json({ message: 'User email is required' });
+      }
+      
+      if (!campaign_name) {
+        return res.status(400).json({ message: 'Campaign name is required' });
+      }
+
+      if (!end_date && start_date && duration_days) {
+        const start = new Date(start_date);
+        start.setDate(start.getDate() + duration_days);
+        end_date = start.toISOString().split('T')[0];
+      }
+
+      // ✅ Parse JSON data with better error handling
+      let totals = {};
+      try { 
+        const totalsInput = Array.isArray(req.body.totals) ? req.body.totals[0] : req.body.totals;
+        totals = totalsInput ? JSON.parse(totalsInput) : {}; 
+      } catch (e) {
+        console.warn('Failed to parse totals, using empty object:', e.message);
+        totals = {};
+      }
+      
+      let selected_targets = [];
+      try {
+        const targetsInput = Array.isArray(req.body.selected_targets) ? req.body.selected_targets[0] : req.body.selected_targets;
+        selected_targets = targetsInput ? JSON.parse(targetsInput) : [];
+        
+        if (Array.isArray(selected_targets)) {
+          selected_targets = selected_targets.map((t) => {
+            if (typeof t === 'string') {
+              try {
+                return JSON.parse(t);
+              } catch (e) {
+                console.warn('Failed to parse target item:', e.message);
+                return {};
+              }
+            }
+            return t;
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to parse selected_targets, using empty array:', e.message);
+        selected_targets = [];
+      }
+
+      const uploadedFiles = req.files || [];
+
+      // Check if campaign exists and belongs to user
+      const existingCampaign = await db.query(
+        'SELECT id, user_email, status, media_url FROM campaigns WHERE id = $1',
+        [parsedDraftId]
+      );
+
+      if (existingCampaign.rows.length === 0) {
+        // Clean up uploaded files if campaign not found
+        for (const file of uploadedFiles) {
+          await deleteFromCloudinary(file.path);
+        }
+        return res.status(404).json({ message: 'Draft campaign not found' });
+      }
+
+      if (existingCampaign.rows[0].user_email !== user_email) {
+        // Clean up uploaded files if unauthorized
+        for (const file of uploadedFiles) {
+          await deleteFromCloudinary(file.path);
+        }
+        return res.status(403).json({ message: 'Unauthorized to update this campaign' });
+      }
+
+      // If updating from draft to active, check wallet balance
+      if (status === 'active' && existingCampaign.rows[0].status === 'draft') {
+        const walletRes = await db.query(
+          'SELECT wallet_balance FROM public.websitesalesusers WHERE email = $1',
+          [user_email]
+        );
+        
+        if (walletRes.rows.length === 0) {
+          // Clean up uploaded files if user not found
+          for (const file of uploadedFiles) {
+            await deleteFromCloudinary(file.path);
+          }
+          return res.status(404).json({ message: 'User not found' });
+        }
+        
+        let walletBalance = Number(walletRes.rows[0].wallet_balance || 0);
+        const campaignCost = Number(totals?.grandTotal || 0);
+        
+        if (walletBalance < campaignCost) {
+          // Clean up uploaded files if insufficient balance
+          for (const file of uploadedFiles) {
+            await deleteFromCloudinary(file.path);
+          }
+          return res.status(400).json({ message: 'Insufficient wallet balance' });
+        }
+
+        // Deduct balance
+        walletBalance -= campaignCost;
+        await db.query(
+          'UPDATE public.websitesalesusers SET wallet_balance = $1 WHERE email = $2',
+          [walletBalance, user_email]
+        );
+      }
+
+      // ✅ STEP 3: Update campaign with proper parameter handling
+      const campaignResult = await db.query(
+        `UPDATE campaigns 
+         SET campaign_name = $1, start_date = $2, duration_days = $3, end_date = $4, 
+             package_name = $5, totals = $6::jsonb, selected_targets = $7::jsonb, 
+             status = $8, updated_at = NOW()
+         WHERE id = $9
+         RETURNING id`,
+        [
+          campaign_name,
+          start_date,
+          duration_days,
+          end_date,
+          package_name,
+          JSON.stringify(totals),
+          JSON.stringify(selected_targets),
+          status,
+          parsedDraftId
+        ]
+      );
+
+      if (campaignResult.rows.length === 0) {
+        // Clean up uploaded files if update failed
+        for (const file of uploadedFiles) {
+          await deleteFromCloudinary(file.path);
+        }
+        return res.status(404).json({ message: 'Failed to update campaign' });
+      }
+
+      const campaignId = campaignResult.rows[0].id;
+      let mediaUrls = [];
+
+      // Get existing media URLs
+      const existingMedia = await db.query(
+        'SELECT media_url FROM campaigns WHERE id = $1',
+        [parsedDraftId]
+      );
+      
+      if (existingMedia.rows.length > 0 && existingMedia.rows[0].media_url) {
+        mediaUrls = existingMedia.rows[0].media_url;
+      }
+
+      // ✅ STEP 4: Save new videos if any
+      if (uploadedFiles.length > 0) {
+        for (let i = 0; i < uploadedFiles.length; i++) {
+          const file = uploadedFiles[i];
+          const videoType = file.mimetype;
+          const videoClientName = file.originalname;
+          const videoTag = `${campaignId}_${mediaUrls.length + i + 1}`;
+
+          const videoResult = await db.query(
+            `INSERT INTO videos_campaigns 
+              (campaign_id, video_type, video_url, video_client_name, video_tag, status) 
+             VALUES ($1, $2, $3, $4, $5, $6)
+             RETURNING video_id`,
+            [
+              parseInt(campaignId),
+              videoType, 
+              file.path, 
+              videoClientName, 
+              videoTag, 
+              status
+            ]
+          );
+
+          mediaUrls.push({
+            video_id: videoResult.rows[0].video_id,
+            video_url: file.path,
+          });
+        }
+
+        await db.query(
+          'UPDATE campaigns SET media_url = $1::jsonb, updated_at = NOW() WHERE id = $2',
+          [JSON.stringify(mediaUrls), parseInt(campaignId)]
+        );
+      }
+
+      res.status(200).json({
+        message: status === 'active' ? '✅ Campaign updated & activated' : '📝 Draft campaign updated',
+        campaign: { 
+          campaign_id: campaignId, 
+          campaign_name, 
+          status: status,
+          media_url: mediaUrls 
+        },
+        videos_count: mediaUrls.length,
+      });
+    } catch (err) {
+      console.error('❌ Error updating draft campaign:', err);
+      // Clean up uploaded files on error
+      if (req.files && req.files.length > 0) {
+        for (const file of req.files) {
+          await deleteFromCloudinary(file.path);
+        }
+      }
+      res.status(500).json({ message: 'Server error', error: err.message });
+    }
+  });  
+});
+
+// --- Delete Draft Campaign ---
+app.delete('/api/websitesales/campaigns/drafts/:id', async (req, res) => {
+  try {
+    const campaignId = req.params.id;
+    const user_email = req.headers['x-user-email'];
+
+    if (!user_email) {
       return res.status(400).json({ message: 'User email is required' });
     }
 
-    const result = await db.query(
-  `SELECT id, campaign_name, start_date, duration_days, end_date, 
-          package_name, totals, selected_targets, media_url, created_at
-   FROM campaigns 
-   WHERE user_email = $1 AND status = 'draft'
-   ORDER BY created_at DESC`,
-  [userEmail]
-);
+    // Check if campaign exists and belongs to user
+    const existingCampaign = await db.query(
+      'SELECT id, media_url FROM campaigns WHERE id = $1 AND user_email = $2 AND status = $3',
+      [campaignId, user_email, 'draft']
+    );
 
-// ✅ Parse JSON fields if stored as string
-const drafts = result.rows.map(r => ({
-  ...r,
-  totals: typeof r.totals === "string" ? JSON.parse(r.totals) : r.totals,
-  selected_targets: typeof r.selected_targets === "string" ? JSON.parse(r.selected_targets) : r.selected_targets
-}));
+    if (existingCampaign.rows.length === 0) {
+      return res.status(404).json({ message: 'Draft campaign not found or unauthorized' });
+    }
 
-res.json({ drafts, count: drafts.length });
+    // Delete associated media files from Cloudinary
+    const mediaUrls = existingCampaign.rows[0].media_url || [];
+    for (const media of mediaUrls) {
+      await deleteFromCloudinary(media.video_url);
+    }
 
+    // Delete campaign (cascade will delete associated videos from database)
+    await db.query('DELETE FROM campaigns WHERE id = $1', [campaignId]);
+
+    res.json({ message: 'Draft campaign deleted successfully' });
   } catch (err) {
-    console.error('❌ Error fetching draft campaigns:', err);
+    console.error('❌ Error deleting draft campaign:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
-
-app.get("/api/websitesales/campaigns", async (req, res) => {
+// --- Delete specific media from campaign ---
+app.delete('/api/websitesales/campaigns/:campaignId/media/:mediaId', async (req, res) => {
   try {
-    const result = await db.query(
-      `SELECT id, user_id, user_email, campaign_name, start_date, duration_days, end_date, 
-              package_name, totals, selected_targets, media_url, created_at, status, updated_at
-       FROM public.campaigns
-       ORDER BY created_at DESC`
+    const { campaignId, mediaId } = req.params;
+    const user_email = req.headers['x-user-email'];
+
+    if (!user_email) {
+      return res.status(400).json({ message: 'User email is required' });
+    }
+
+    // Check if campaign exists and belongs to user
+    const existingCampaign = await db.query(
+      'SELECT id, media_url FROM campaigns WHERE id = $1 AND user_email = $2',
+      [campaignId, user_email]
     );
 
-    res.status(200).json({
-      success: true,
-      total: result.rowCount,
-      campaigns: result.rows,
-    });
-  } catch (error) {
-    console.error("Error fetching campaigns:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Server error. Could not fetch campaigns.",
-    });
+    if (existingCampaign.rows.length === 0) {
+      return res.status(404).json({ message: 'Campaign not found or unauthorized' });
+    }
+
+    // Get the media URL to delete from Cloudinary
+    const mediaUrls = existingCampaign.rows[0].media_url || [];
+    const mediaToDelete = mediaUrls.find(media => media.video_id == mediaId);
+    
+    if (!mediaToDelete) {
+      return res.status(404).json({ message: 'Media not found in campaign' });
+    }
+
+    // Delete from Cloudinary
+    const deleteSuccess = await deleteFromCloudinary(mediaToDelete.video_url);
+    if (!deleteSuccess) {
+      console.warn('Failed to delete media from Cloudinary, but proceeding with database removal');
+    }
+
+    // Delete from videos_campaigns table
+    await db.query('DELETE FROM videos_campaigns WHERE video_id = $1', [mediaId]);
+
+    // Update campaign media_url
+    const updatedMediaUrls = mediaUrls.filter(media => media.video_id != mediaId);
+    await db.query(
+      'UPDATE campaigns SET media_url = $1::jsonb, updated_at = NOW() WHERE id = $2',
+      [JSON.stringify(updatedMediaUrls), campaignId]
+    );
+
+    res.json({ message: 'Media deleted successfully' });
+  } catch (err) {
+    console.error('❌ Error deleting media:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
