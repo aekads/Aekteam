@@ -735,18 +735,18 @@ app.get("/api/websitesales/campaigns", async (req, res) => {
 // Only UPDATE user (no insert)
 app.post("/api/websitesales/users/edit", async (req, res) => {
   try {
-    const { id, name, pan, gst_number, number, email } = req.body;
+    const { name, pan, gst_number, number, email } = req.body;
 
-    if (!id) {
-      return res.status(400).json({ success: false, message: "User ID is required for editing" });
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required for editing" });
     }
 
     const result = await db.query(
       `UPDATE public.websitesalesusers
-       SET name=$1, pan=$2, gst_number=$3, number=$4, email=$5
-       WHERE id=$6
+       SET name=$1, pan=$2, gst_number=$3, number=$4
+       WHERE email=$5
        RETURNING *`,
-      [name, pan, gst_number, number, email, id]
+      [name, pan, gst_number, number, email]
     );
 
     if (result.rows.length === 0) {
@@ -760,11 +760,6 @@ app.post("/api/websitesales/users/edit", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-
-
-
-
-
 
 
 
