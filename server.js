@@ -381,108 +381,95 @@ app.get('/api/websitesales/city-info/:city', async (req, res) => {
 
 
 
-// --- Save Draft Campaign (NO balance cut) ---
-app.post('/api/websitesales/campaigns/draft', async (req, res) => {
-  campaignVideoUploadMultiple(req, res, async function (err) {
-    if (err instanceof multer.MulterError) {
-      console.error("Multer error:", err);
-      if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-        return res.status(400).json({
-          message: 'Too many files. Maximum 10 videos allowed.',
-        });
-      }
-      return res.status(500).json({ message: 'File upload error', error: err.message });
-    } else if (err) {
-      console.error("Unknown upload error:", err);
-      return res.status(500).json({ message: 'File upload error', error: err.message });
-    }
 
-    try {
-      const duration_days = req.body.duration_days ? parseInt(req.body.duration_days) : 30;
-      const user_email = req.body.user_email || null;
-      const campaign_name = req.body.campaign_name || 'Draft Campaign';
-      const start_date = req.body.start_date || new Date().toISOString().split('T')[0];
-      let end_date = req.body.end_date || null;
-      const package_name = req.body.package_name || 'Gold';
+//api for createing user campaigns
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinaryLib = require('cloudinary').v2;
 
-      if (Array.isArray(end_date)) end_date = end_date[0];
-      if (!end_date && start_date && duration_days) {
-        const start = new Date(start_date);
-        start.setDate(start.getDate() + duration_days);
-        end_date = start.toISOString().split('T')[0];
-      }
-
-      let totals = {};
-      try { totals = JSON.parse(req.body.totals || '{}'); } catch {}
-      let selected_targets = [];
-      try {
-        selected_targets = JSON.parse(req.body.selected_targets || '[]');
-        if (Array.isArray(selected_targets)) {
-          selected_targets = selected_targets.map((t) => (typeof t === 'string' ? JSON.parse(t) : t));
-        }
-      } catch {}
-
-      const uploadedFiles = req.files || [];
-      console.log("Uploaded files:", uploadedFiles);  // 👀 debug
-
-      const campaignResult = await db.query(
-        `INSERT INTO campaigns 
-          (user_email, campaign_name, start_date, duration_days, end_date, package_name, totals, selected_targets, status, created_at, updated_at) 
-         VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb,'draft',NOW(),NOW())
-         RETURNING id`,
-        [user_email, campaign_name, start_date, duration_days, end_date, package_name, JSON.stringify(totals), JSON.stringify(selected_targets)]
-      );
-
-      const campaignId = campaignResult.rows[0].id;
-      const mediaUrls = [];
-
-      if (uploadedFiles.length > 0) {
-        for (let i = 0; i < uploadedFiles.length; i++) {
-          const file = uploadedFiles[i];
-          const videoType = file.mimetype;
-          const videoClientName = file.originalname;
-          const videoTag = `${campaignId}_${i + 1}`;
-
-          // ✅ Use Cloudinary URL (secure_url preferred)
-          const videoUrl = file.secure_url || file.path;
-
-          const videoResult = await db.query(
-            `INSERT INTO videos_campaigns 
-              (campaign_id, video_type, video_url, video_client_name, video_tag, status) 
-             VALUES ($1,$2,$3,$4,$5,'draft')
-             RETURNING video_id`,
-            [campaignId, videoType, videoUrl, videoClientName, videoTag]
-          );
-
-          mediaUrls.push({
-            video_id: videoResult.rows[0].video_id,
-            video_url: videoUrl,
-          });
-        }
-
-        await db.query(
-          'UPDATE campaigns SET media_url = $1::jsonb, updated_at = NOW() WHERE id = $2',
-          [JSON.stringify(mediaUrls), campaignId]
-        );
-      }
-
-      res.status(201).json({
-        message: '📝 Draft campaign saved (no wallet deduction)',
-        campaign: { campaign_id: campaignId, campaign_name, status: 'draft', media_url: mediaUrls },
-        videos_count: uploadedFiles.length,
-      });
-    } catch (err) {
-      console.error('❌ Error saving draft campaign:', err);
-      // Clean up uploaded files on error
-      if (req.files && req.files.length > 0) {
-        for (const file of req.files) {
-          await deleteFromCloudinary(file.secure_url || file.path, 'video');
-        }
-      }
-      res.status(500).json({ message: 'Server error', error: err.message });
-    }
-  });
+// ✅ Configure Cloudinary
+cloudinaryLib.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
+// ✅ Configure storage for Cloudinary
+const campaignVideoStorage = new CloudinaryStorage({
+  cloudinary: cloudinaryLib,
+  params: {
+    folder: 'campaign_videos',
+    resource_type: 'video',
+    format: async () => 'mp4', // Always convert to mp4
+    public_id: (req, file) => {
+      const timestamp = Date.now();
+      return `campaign_${timestamp}_${file.originalname.split('.')[0]}`;
+    },
+  },
+});
+
+// ✅ Configure storage for images (if needed)
+const imageStorage = new CloudinaryStorage({
+  cloudinary: cloudinaryLib,
+  params: {
+    folder: 'campaign_images',
+    resource_type: 'image',
+    public_id: (req, file) => {
+      const timestamp = Date.now();
+      return `image_${timestamp}_${file.originalname.split('.')[0]}`;
+    },
+  },
+});
+
+// ✅ Multer middleware for videos
+const campaignVideoUpload = multer({ 
+  storage: campaignVideoStorage,
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('video/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only video files are allowed!'), false);
+    }
+  }
+});
+
+// ✅ Multiple upload middleware (up to 10 files)
+const campaignVideoUploadMultiple = campaignVideoUpload.array('media', 10);
+
+// ✅ Function to extract Cloudinary public ID from URL
+const getCloudinaryPublicId = (url) => {
+  if (!url) return null;
+  try {
+    const urlParts = url.split('/');
+    const publicIdWithExtension = urlParts.slice(-2).join('/');
+    return publicIdWithExtension.split('.')[0];
+  } catch (error) {
+    console.error('Error extracting public ID from URL:', url, error);
+    return null;
+  }
+};
+
+// ✅ Function to delete file from Cloudinary
+const deleteFromCloudinary = async (url, resourceType = 'video') => {
+  try {
+    const publicId = getCloudinaryPublicId(url);
+    if (!publicId) {
+      console.error('Could not extract public ID from URL:', url);
+      return false;
+    }
+    
+    const result = await cloudinaryLib.uploader.destroy(publicId, {
+      resource_type: resourceType
+    });
+    
+    return result.result === 'ok';
+  } catch (error) {
+    console.error('Error deleting from Cloudinary:', error);
+    return false;
+  }
+};
 
 
 // --- Wallet Balance API ---
@@ -653,9 +640,11 @@ app.post('/api/websitesales/campaigns', async (req, res) => {
 });
 
 // --- Save Draft Campaign (NO balance cut) ---
+// --- Save Draft Campaign (NO balance cut) ---
 app.post('/api/websitesales/campaigns/draft', async (req, res) => {
   campaignVideoUploadMultiple(req, res, async function (err) {
     if (err instanceof multer.MulterError) {
+      console.error("Multer error:", err);
       if (err.code === 'LIMIT_UNEXPECTED_FILE') {
         return res.status(400).json({
           message: 'Too many files. Maximum 10 videos allowed.',
@@ -663,6 +652,7 @@ app.post('/api/websitesales/campaigns/draft', async (req, res) => {
       }
       return res.status(500).json({ message: 'File upload error', error: err.message });
     } else if (err) {
+      console.error("Unknown upload error:", err);
       return res.status(500).json({ message: 'File upload error', error: err.message });
     }
 
@@ -692,6 +682,7 @@ app.post('/api/websitesales/campaigns/draft', async (req, res) => {
       } catch {}
 
       const uploadedFiles = req.files || [];
+      console.log("Uploaded files:", uploadedFiles);  // 👀 debug
 
       const campaignResult = await db.query(
         `INSERT INTO campaigns 
@@ -711,17 +702,20 @@ app.post('/api/websitesales/campaigns/draft', async (req, res) => {
           const videoClientName = file.originalname;
           const videoTag = `${campaignId}_${i + 1}`;
 
+          // ✅ Use Cloudinary URL (secure_url preferred)
+          const videoUrl = file.secure_url || file.path;
+
           const videoResult = await db.query(
             `INSERT INTO videos_campaigns 
               (campaign_id, video_type, video_url, video_client_name, video_tag, status) 
              VALUES ($1,$2,$3,$4,$5,'draft')
              RETURNING video_id`,
-            [campaignId, videoType, file.path, videoClientName, videoTag]
+            [campaignId, videoType, videoUrl, videoClientName, videoTag]
           );
 
           mediaUrls.push({
             video_id: videoResult.rows[0].video_id,
-            video_url: file.path,
+            video_url: videoUrl,
           });
         }
 
@@ -741,13 +735,14 @@ app.post('/api/websitesales/campaigns/draft', async (req, res) => {
       // Clean up uploaded files on error
       if (req.files && req.files.length > 0) {
         for (const file of req.files) {
-          await deleteFromCloudinary(file.path);
+          await deleteFromCloudinary(file.secure_url || file.path, 'video');
         }
       }
       res.status(500).json({ message: 'Server error', error: err.message });
     }
   });
 });
+
 
 // --- Update Draft Campaign ---
 app.post('/api/websitesales/campaigns/update-draft', async (req, res) => {
