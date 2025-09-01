@@ -387,11 +387,15 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinaryLib = require('cloudinary').v2;
 
 // ✅ Configure Cloudinary
+// ✅ Configure Cloudinary directly (no env)
 cloudinaryLib.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+  cloud_name: "dnmdaadrr",
+  api_key: "366566435625199",
+  api_secret: "JCfg4sL2x3c_EhfPiw6e6eqVIMQ"
 });
+
+
+
 
 // ✅ Configure storage for Cloudinary
 const campaignVideoStorage = new CloudinaryStorage({
