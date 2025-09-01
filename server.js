@@ -383,9 +383,6 @@ app.get('/api/websitesales/city-info/:city', async (req, res) => {
 
 
 //api for createing user campaigns
-
-
-//api for createing user campaigns
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinaryLib = require('cloudinary').v2;
 
@@ -1124,8 +1121,8 @@ app.post("/api/websitesales/users/edit", async (req, res) => {
 
 
 
-// --- Get All Campaigns (for listing) ---
-app.get('/api/websitesales/campaigns', async (req, res) => {
+
+app.get("/api/websitesales/campaigns", async (req, res) => {
   try {
     const user_email = req.headers['x-user-email'];
     const token = req.headers.authorization?.replace('Bearer ', '');
@@ -1164,8 +1161,9 @@ app.get('/api/websitesales/campaigns', async (req, res) => {
 
 
 
+
 // ✅ Start Server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
+});  
