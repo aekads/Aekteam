@@ -11,6 +11,7 @@ router.post('/regularization/list', leaveController.getRegularizationData);
 
 
 router.post('/punch-status', leaveController.getPunchStatus );
+router.post('/attendance', leaveController.getAttendanceByDate);
 
 
 // Submit a permission request
