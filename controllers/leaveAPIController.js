@@ -127,3 +127,23 @@ exports.applyPermission = async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 };
+
+
+
+exports.getPunchStatus = async (req, res) => {
+    try {
+        const emp_id = req.body.emp_id;
+ console.log('✅ punch-status POST hit');
+        if (!emp_id) {
+            return res.status(400).json({ message: "Employee ID missing" });
+        }
+
+        const date = new Date().toISOString().split("T")[0];
+        const activePunch = await employeeModel.getActivePunch(emp_id, date);
+
+        res.json({ punchedIn: activePunch.length > 0 });
+    } catch (error) {
+        console.error("Punch status error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
