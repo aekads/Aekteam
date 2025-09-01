@@ -147,3 +147,61 @@ exports.getPunchStatus = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+const moment = require('moment-timezone'); 
+
+exports.getAttendanceByDate = async (req, res) => {
+    try {
+        const emp_id = req.body.emp_id;
+        const date = req.body.date;
+
+        if (!emp_id) {
+            return res.status(400).json({ message: "Employee ID missing" });
+        }
+
+        if (!date) {
+            return res.status(400).json({ message: "Date is required" });
+        }
+
+        const attendanceEntries = await employeeModel.getAttendance(emp_id, date);
+
+        if (!attendanceEntries || attendanceEntries.length === 0) {
+            return res.json({
+                punch_in: "Not Available",
+                punch_out: "Not Available",
+                working_hours: "Not Available"
+            });
+        }
+
+        let totalWorkingMinutes = 0;
+        let firstPunchIn = null;
+        let lastPunchOut = null;
+
+        for (let i = 0; i < attendanceEntries.length; i++) {
+            const entry = attendanceEntries[i];
+
+            if (!firstPunchIn) firstPunchIn = entry.punch_in_time;
+            lastPunchOut = entry.punch_out_time || lastPunchOut;
+
+            if (entry.punch_in_time && entry.punch_out_time) {
+                const punchInTime = moment(entry.punch_in_time);
+                const punchOutTime = moment(entry.punch_out_time);
+                totalWorkingMinutes += punchOutTime.diff(punchInTime, 'minutes');
+            }
+        }
+
+        const workingHours =
+            totalWorkingMinutes > 0
+                ? `${Math.floor(totalWorkingMinutes / 60)}h ${totalWorkingMinutes % 60}m`
+                : "Not Available";
+
+        res.json({
+            punch_in: firstPunchIn ? moment(firstPunchIn).format('YYYY-MM-DD HH:mm:ss') : "Not Available",
+            punch_out: lastPunchOut ? moment(lastPunchOut).format('YYYY-MM-DD HH:mm:ss') : "Not Available",
+            working_hours: workingHours
+        });
+
+    } catch (error) {
+        console.error("Error fetching attendance:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
