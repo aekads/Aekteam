@@ -205,3 +205,83 @@ exports.getAttendanceByDate = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+
+// ✅ Get Profile (JSON API)
+exports.getProfileAPI = async (req, res) => {
+   try {
+        const { emp_id } = req.body;
+
+        if (!emp_id) {
+            return res.status(400).json({
+                success: false,
+                message: "emp_id is required"
+            });
+        }
+
+        const employee = await employeeModel.findEmployee(emp_id);
+
+        if (!employee) {
+            return res.status(404).json({
+                success: false,
+                message: "Employee not found"
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Profile fetched successfully",
+            data: employee
+        });
+    } catch (error) {
+        console.error("Error fetching profile:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+};
+
+
+// ✅ Update Profile (JSON API)
+exports.updateProfileAPI = async (req, res) => {
+     try {
+        const { emp_id, name, email, phone, dob, assign_city, designation, bank_number, ifsc } = req.body;
+
+        if (!emp_id) {
+            return res.status(400).json({
+                success: false,
+                message: "emp_id is required for update"
+            });
+        }
+
+        const employee = await employeeModel.findEmployee(emp_id);
+        if (!employee) {
+            return res.status(404).json({
+                success: false,
+                message: "Employee not found"
+            });
+        }
+
+        await employeeModel.updateEmployee(emp_id, {
+            name,
+            email,
+            phone,
+            dob,
+            assign_city,
+            designation,
+            bank_number,
+            ifsc
+        });
+
+        res.json({
+            success: true,
+            message: "Profile updated successfully"
+        });
+    } catch (error) {
+        console.error("Profile update error:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message || "Internal Server Error"
+        });
+    }
+};
