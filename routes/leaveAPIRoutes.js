@@ -25,6 +25,10 @@ router.post('/profile-emp', leaveController.getProfileAPI);
 router.post('/profile/update', leaveController.updateProfileAPI);
 
 
+router.get('/cc', leaveController.getEmployeeList);
+
+
+
 // --- GET Work Projects ---
 router.get("/Get-projects", async (req, res) => {
   try {
