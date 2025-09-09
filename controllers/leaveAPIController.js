@@ -53,6 +53,18 @@ exports.getLeaves = async (req, res) => {
   }
 };
 
+//for cc in list show
+exports.getEmployeeList = async (req, res) => {
+    try {
+        const employees = await employeeModel.getEmployees();
+        res.json({ success: true, employees });
+    } catch (error) {
+        console.error("Error fetching employees:", error);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
+
 // Cancel Leave
 exports.cancelLeave = async (req, res) => {
   try {
