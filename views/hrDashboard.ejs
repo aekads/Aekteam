@@ -264,11 +264,17 @@
       font-size: 24px;
     }
     
-    .punch-card {
-      padding: 20px 15px;
-      order: -1; /* Move punch card to top on mobile */
-    }
-    
+.punch-card {
+    position: static; /* relative => static */
+    z-index: 0;       /* sidebar ke neeche aayega */
+  }
+
+  .sidebar {
+    position: fixed; 
+    left: 0; 
+    top: 0;
+    z-index: 10;      /* punch-card se upar */
+  }
     .stat-box {
       padding: 15px 10px;
     }
