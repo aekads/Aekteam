@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Inquiry</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+    /* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/* Body Styling */
+body {
+    background-color: #f4f4f4;
+    padding: 20px;
+    text-align: center;
+}
+
+/* Header */
+h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+/* Buttons */
+button {
+    padding: 10px 15px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 5px;
+    border-radius: 5px;
+}
+
+#openModal {
+    background-color: #007bff;
+    color: white;
+}
+
+#logoutBtn {
+    background-color: red;
+    color: white;
+}
+
+/* Modal Overlay */
+/* .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+} */
+
+.modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 5px; box-shadow: 0px 0px 10px rgba(0,0,0,0.3); }
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+/* Modal Box */
+#inquiryModal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+}
+
+#inquiryModal h3 {
+    margin-bottom: 15px;
+}
+
+/* Form Inputs */
+#inquiryForm input,
+#inquiryForm button {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+#inquiryForm button {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Close Button */
+.close-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Checkbox Group */
+.checkbox-group {
+    text-align: left;
+    margin: 10px 0;
+}
+
+.checkbox-group label {
+    display: block;
+    font-size: 14px;
+}
+
+/* Inquiry List */
+h3 {
+    margin-top: 20px;
+    font-size: 18px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+table th,
+table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    font-size: 14px;
+}
+
+table th {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    h2 {
+        font-size: 18px;
+    }
+
+    #inquiryModal {
+        width: 95%;
+    }
+}
+
+    </style>
+</head>
+<body>
+
+    <h2>Welcome, <%= name %> | City: <%= assign_city %></h2>
+
+    <button id="openModal">Add Inquiry</button>
+    <button id="logoutBtn" style="background-color: red; color: white; padding: 10px; border: none; cursor: pointer;">
+        Logout
+    </button>
+    
+
+    <!-- Modal Popup -->
+    <div class="modal-overlay"></div>
+    <div id="inquiryModal">
+        <h3>Create New Inquiry</h3>
+        <form id="inquiryForm">
+            <input type="text" id="name" name="name" placeholder="Customer Name" required>
+            <input type="text" id="mobile_number" name="mobile_number" placeholder="Mobile Number" required>
+            <input type="number" id="budget" name="budget" placeholder="Budget" required>
+            <input type="number" id="screen_count" name="screen_count" placeholder="Screen Count" required>
+
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="screen_type" value="Residential"> Residential</label>
+                <label><input type="checkbox" name="screen_type" value="Corporate"> Corporate</label>
+                <label><input type="checkbox" name="screen_type" value="Outdoor"> Outdoor</label>
+            </div>
+
+            <input type="number" id="total_days" name="total_days" placeholder="Total Days" required>
+            <input type="text" id="campaign_remark" name="campaign_remark" placeholder="Campaign Remark">
+            <input type="email" id="email" name="email" placeholder="Email">
+            <input type="text" id="company_name" name="company_name" placeholder="Company Name">
+
+            <button type="submit">Save Inquiry</button>
+            <button type="button" class="close-btn">Close</button>
+        </form>
+    </div>
+
+    <!-- Inquiry List -->
+    <h3>My Inquiries</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Mobile</th>
+                <th>Budget</th>
+                <th>Screen Count</th>
+              
+                <th>Total Days</th>
+                <th>Company</th>
+                <th>Status</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody id="inquiryList">
+            <!-- Inquiries will be loaded here -->
+        </tbody>
+    </table>
+
+
+
+    <div class="modal-overlay"></div>
+    <div class="modal" id="editModal">
+        <h3>Edit Inquiry</h3>
+        <form id="editInquiryForm">
+            <input type="hidden" id="edit_id">
+            <label>Name: <input type="text" id="edit_name"></label><br>
+            <label>Mobile: <input type="text" id="edit_mobile_number"></label><br>
+            <label>Budget: <input type="text" id="edit_budget"></label><br>
+            <label>Screen Count: <input type="text" id="edit_screen_count"></label><br>
+
+            <label>Screen Type:</label><br>
+            <input type="checkbox" class="screen_type" value="Residential"> Residential
+            <input type="checkbox" class="screen_type" value="Corporate"> Corporate
+            <input type="checkbox" class="screen_type" value="Outdoor"> Outdoor<br>
+
+            <label>Total Days: <input type="text" id="edit_total_days"></label><br>
+            <label>Company: <input type="text" id="edit_company_name"></label><br>
+
+            <label>Status:
+                <select id="edit_status">
+                    <option value="New Inquiry">New Inquiry</option>
+                    <option value="Proposal Sent">Proposal Sent</option>
+                    <option value="Attempted to Contact">Attempted to Contact</option>
+                    <option value="Discussion Done">Discussion Done</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Deal Done">Deal Done</option>
+                    <option value="Not Interested">Not Interested</option>
+                </select>
+            </label><br>
+
+            <button type="submit">Save Changes</button>
+            <button type="button" id="closeModal">Cancel</button>
+        </form>
+    </div>
+
+
+    
+
+    <script>
+    $(document).ready(function () {
+    const emp_id = "<%= emp_id %>"; // Get logged-in emp_id
+    const token = localStorage.getItem("token");
+
+    // Load inquiries for the employee
+    function loadInquiries() {
+    $.ajax({
+        url: `/api/inquiry/list?emp_id=${emp_id}`,
+        type: "GET",
+        headers: { "Authorization": `Bearer ${token}` },
+        success: function (response) {
+            $("#inquiryList").empty();
+            response.data.forEach(inquiry => {
+                $("#inquiryList").append(`
+                    <tr 
+                        data-id="${inquiry.id}" 
+                        data-name="${inquiry.name}" 
+                        data-mobile="${inquiry.mobile_number}" 
+                        data-budget="${inquiry.budget}" 
+                        data-screen_count="${inquiry.screen_count}" 
+                        data-screen_type='${inquiry.screen_type}' 
+                        data-total_days="${inquiry.total_days}" 
+                        data-company="${inquiry.company_name}" 
+                        data-status="${inquiry.status}">
+                        
+                        <td>${inquiry.id}</td>
+                        <td>${inquiry.name}</td>
+                        <td>${inquiry.mobile_number}</td>
+                        <td>${inquiry.budget}</td>
+                        <td>${inquiry.screen_count}</td>
+                        <td>${inquiry.total_days}</td>
+                        <td>${inquiry.company_name}</td>
+                        <td>${inquiry.status}</td>
+                        <td>${inquiry.created_time}</td>
+                    </tr>
+                `);
+            });
+        },
+            error: function (xhr, status, error) {
+                console.error("Error loading inquiries:", error);
+            }
+        });
+    }
+
+            // Open Modal
+            $("#openModal").click(function () {
+                $(".modal-overlay, #inquiryModal").fadeIn();
+            });
+
+            $(".close-btn, .modal-overlay").click(function () {
+                $(".modal-overlay, #inquiryModal").fadeOut();
+            });
+
+            // Handle form submission
+            $("#inquiryForm").submit(function (e) {
+                e.preventDefault();
+
+                // Get selected checkboxes and format them as ["Residential", "Corporate"]
+                const selectedScreenTypes = [];
+                $("input[name='screen_type']:checked").each(function () {
+                    selectedScreenTypes.push($(this).val());
+                });
+
+                $.ajax({
+                    url: "/api/inquiry",
+                    type: "POST",
+                    headers: { "Authorization": `Bearer ${token}` },
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        name: $("#name").val(),
+                        mobile_number: $("#mobile_number").val(),
+                        budget: $("#budget").val(),
+                        screen_count: $("#screen_count").val(),
+                        screen_type: JSON.stringify(selectedScreenTypes),
+                        total_days: $("#total_days").val(),
+                        campaign_remark: $("#campaign_remark").val(),
+                        email: $("#email").val(),
+                        company_name: $("#company_name").val()
+                    }),
+                    success: function (response) {
+                        alert(response.message);
+                        $(".modal-overlay, #inquiryModal").fadeOut();
+                        $("#inquiryForm")[0].reset();
+                        loadInquiries(); // Reload data
+                    },
+                    error: function (xhr) {
+                        alert("Error: " + xhr.responseJSON.message);
+                    }
+                });
+            });
+
+            // Load data initially
+            loadInquiries();
+
+            $(document).on("click", "#inquiryList tr", function () {
+    $("#edit_id").val($(this).attr("data-id"));
+    $("#edit_name").val($(this).attr("data-name"));
+    $("#edit_mobile_number").val($(this).attr("data-mobile"));
+    $("#edit_budget").val($(this).attr("data-budget"));
+    $("#edit_screen_count").val($(this).attr("data-screen_count"));
+    $("#edit_total_days").val($(this).attr("data-total_days"));
+    $("#edit_company_name").val($(this).attr("data-company"));
+    $("#edit_status").val($(this).attr("data-status"));
+
+    // Set checkboxes for screen_type
+    $(".screen_type").prop("checked", false);
+    let screenTypes = [];
+    try {
+        let screenTypeString = $(this).attr("data-screen_type");
+        if (screenTypeString) {
+            screenTypes = JSON.parse(screenTypeString);
+        }
+    } catch (e) {
+        console.error("Error parsing screen_type:", e);
+    }
+    $(".screen_type").each(function () {
+        if (screenTypes.includes($(this).val())) {
+            $(this).prop("checked", true);
+        }
+    });
+
+    $(".modal-overlay, #editModal").show();
+});
+
+            // Close modal
+            $("#closeModal, .modal-overlay").click(function () {
+                $(".modal-overlay, #editModal").hide();
+            });
+
+            // Submit edit form
+            $("#editInquiryForm").submit(function (e) {
+                e.preventDefault();
+                
+                let selectedScreenTypes = [];
+                $(".screen_type:checked").each(function () {
+                    selectedScreenTypes.push($(this).val());
+                });
+
+                $.ajax({
+                    url: "/api/inquiry/edit",
+                    type: "POST",
+                    headers: { "Authorization": `Bearer ${token}` },
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        id: $("#edit_id").val(),
+                        name: $("#edit_name").val(),
+                        mobile_number: $("#edit_mobile_number").val(),
+                        budget: $("#edit_budget").val(),
+                        screen_count: $("#edit_screen_count").val(),
+                        screen_type: selectedScreenTypes,
+                        total_days: $("#edit_total_days").val(),
+                        company_name: $("#edit_company_name").val(),
+                        status: $("#edit_status").val()
+                    }),
+                    success: function (response) {
+                        alert(response.message);
+                        $(".modal-overlay, #editModal").hide();
+                        loadInquiries();
+                    },
+                    error: function (xhr) {
+                        alert("Failed to update inquiry");
+                    }
+                });
+            });
+        });
+            
+      
+
+
+
+
+
+
+
+
+
+
+        //logout
+        document.getElementById("logoutBtn").addEventListener("click", async function () {
+        const emp_id = "<%= emp_id %>"; // Get employee ID from EJS variable
+        const token = localStorage.getItem("token");
+
+        if (!emp_id) {
+            alert("Employee ID not found.");
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/logout", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ emp_id })
+            });
+
+            const data = await response.json();
+
+            if (data.status) {
+                // Clear local storage and redirect to login
+                localStorage.removeItem("token");
+                window.location.href = "/api/login";
+            } else {
+                alert(data.message);
+            }
+        } catch (error) {
+            console.error("Error during logout:", error);
+            alert("Logout failed. Please try again.");
+        }
+    });
+
+
+    </script>
+
+</body>
+</html>

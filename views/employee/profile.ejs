@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --text-color: #2b2d42;
+            --light-gray: #f8f9fa;
+            --medium-gray: #e9ecef;
+            --dark-gray: #6c757d;
+            --white: #ffffff;
+            --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            color: var(--text-color);
+            background-color: var(--light-gray);
+            line-height: 1.6;
+        }
+
+        .main-content {
+            margin-left: 270px;
+            height: 100vh;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
+
+        @media (max-width: 1000px) {
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        .container {
+            /* max-width: 1000px; */
+            /* margin: 2rem auto;    */
+            /* display: grid;
+            align-content: space-evenly;
+            height: 100%; */
+            padding: 1.5rem;
+            background: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .profile-img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--primary-color);
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .profile-img:hover {
+            transform: scale(1.05);
+            cursor: pointer;
+        }
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .designation {
+            color: var(--dark-gray);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .profile-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .profile-section {
+            background: linear-gradient(to bottom right, var(--light-gray), var(--white));
+            border-left: 4px solid var(--primary-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .profile-section:hover {
+            transform: translateY(-5px);
+        }
+
+        .profile-section h3 {
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--medium-gray);
+            padding-bottom: 0.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .info-label {
+            font-weight: 600;
+            min-width: 150px;
+        }
+
+        .info-value {
+            color: var(--dark-gray);
+            flex: 1;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary-color);
+            color: var(--white);
+        }
+
+        #editProfileForm {
+            display: none;
+            margin-top: 2rem;
+            background: var(--light-gray);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border-radius: 5px;
+            border: 1px solid var(--medium-gray);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .profile-content {
+                grid-template-columns: 1fr;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .profile-img {
+                width: 100px;
+                height: 100px;
+            }
+
+            #editProfileForm {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('../partials/sidebar') %>
+<div class="main-content">
+  <div class="container">
+    <div class="profile-header">
+      <img class="profile-img"
+           src="<%= employee.photo ? employee.photo : 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png' %>"
+           alt="Profile Picture">
+      <h2><%= employee.name %></h2>
+      <div class="designation"><%= employee.designation %></div>
+    </div>
+
+    <div class="profile-content">
+      <div class="profile-section">
+        <h3>Personal Information</h3>
+        <div class="info-item"><span class="info-label">Employee ID:</span><span class="info-value"><%= employee.emp_id %></span></div>
+        <div class="info-item"><span class="info-label">Email:</span><span class="info-value"><%= employee.email %></span></div>
+        <div class="info-item"><span class="info-label">Phone:</span><span class="info-value"><%= employee.emp_number %></span></div>
+        <div class="info-item"><span class="info-label">Date of Birth:</span><span class="info-value"><%= employee.dob %></span></div>
+      </div>
+
+      <div class="profile-section">
+        <h3>Employment Details</h3>
+        <div class="info-item"><span class="info-label">Joining Date:</span><span class="info-value"><%= employee.joining_date %></span></div>
+        <div class="info-item"><span class="info-label">Assigned City:</span><span class="info-value"><%= employee.assign_city %></span></div>
+        <div class="info-item"><span class="info-label">Department:</span><span class="info-value"><%= employee.department || 'Not specified' %></span></div>
+        <div class="info-item"><span class="info-label">Status:</span><span class="info-value">Active</span></div>
+      </div>
+
+      <div class="profile-section">
+        <h3>Documents</h3>
+        <div class="info-item">
+          <span class="info-label">Aadhar Card:</span>
+          <% if (employee.aadhar_card) { %>
+            <a href="<%= employee.aadhar_card %>" target="_blank">View</a>
+          <% } else { %>
+            <span class="text-muted">Not uploaded</span>
+          <% } %>
+        </div>
+        <div class="info-item">
+          <span class="info-label">PAN Card:</span>
+          <% if (employee.pan_card) { %>
+            <a href="<%= employee.pan_card %>" target="_blank">View</a>
+          <% } else { %>
+            <span class="text-muted">Not uploaded</span>
+          <% } %>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Passbook:</span>
+          <% if (employee.passbook_image) { %>
+            <a href="<%= employee.passbook_image %>" target="_blank">View</a>
+          <% } else { %>
+            <span class="text-muted">Not uploaded</span>
+          <% } %>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Offer Letter:</span>
+          <% if (employee.offer_letter) { %>
+            <a href="<%= employee.offer_letter %>" target="_blank">View</a>
+          <% } else { %>
+            <span class="text-muted">Not uploaded</span>
+          <% } %>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Experience Letter:</span>
+          <% if (employee.last_company_experience_letter) { %>
+            <a href="<%= employee.last_company_experience_letter %>" target="_blank">View</a>
+          <% } else { %>
+            <span class="text-muted">Not uploaded</span>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <% if (editable) { %>
+      <div class="action-buttons">
+        <button class="btn btn-primary" onclick="openEditForm()"><i class="fas fa-edit"></i> Edit Profile</button>
+        <button class="btn btn-outline" onclick="window.location.href='/dashboard/employee/home'"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+      </div>
+
+      <form id="editProfileForm" action="/dashboard/employee/profile/update" method="POST" enctype="multipart/form-data" style="display:none;">
+  <h3>Edit Profile</h3>
+
+  <div class="form-group">
+    <label for="name">Full Name</label>
+    <input type="text" name="name" value="<%= employee.name %>" required>
+  </div>
+  <div class="form-group">
+    <label for="email">Email</label>
+    <input type="email" name="email" value="<%= employee.email %>" required>
+  </div>
+  <div class="form-group">
+    <label for="emp_number">Phone Number</label>
+    <input type="tel" name="emp_number" value="<%= employee.emp_number %>" required>
+  </div>
+  <div class="form-group">
+    <label for="dob">Date of Birth</label>
+    <input type="date" name="dob" 
+       value="<%= employee.dob ? new Date(employee.dob).toISOString().split('T')[0] : '' %>">
+
+  </div>
+  <div class="form-group">
+  <label for="joining_date">Joining Date</label>
+  <input type="date" name="joining_date" id="joining_date"
+    value="<%= employee.joining_date ? new Date(employee.joining_date).toISOString().split('T')[0] : '' %>">
+</div>
+
+
+  <!-- File uploads -->
+  <h4>Upload Documents</h4>
+  <div class="form-group"><label>Profile Photo</label><input type="file" name="photo"></div>
+  <div class="form-group"><label>Aadhar Card</label><input type="file" name="aadhar_card"></div>
+  <div class="form-group"><label>PAN Card</label><input type="file" name="pan_card"></div>
+  <div class="form-group"><label>Passbook</label><input type="file" name="passbook_image"></div>
+  <div class="form-group"><label>Offer Letter</label><input type="file" name="offer_letter"></div>
+  <div class="form-group"><label>Experience Letter</label><input type="file" name="last_company_experience_letter"></div>
+
+  <div class="action-buttons">
+    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+    <button type="button" class="btn btn-outline" onclick="closeEditForm()"><i class="fas fa-times"></i> Cancel</button>
+  </div>
+</form>
+    <% } %>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+<script>
+  function openEditForm() {
+    document.getElementById('editProfileForm').style.display = 'block';
+    window.scrollTo({ top: document.getElementById('editProfileForm').offsetTop - 20, behavior: 'smooth' });
+  }
+  function closeEditForm() {
+    document.getElementById('editProfileForm').style.display = 'none';
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("success") === "true") {
+    Swal.fire({ title: "Success!", text: "Profile updated successfully.", icon: "success" })
+      .then(() => window.history.replaceState({}, document.title, window.location.pathname));
+  } else if (urlParams.get("error")) {
+    Swal.fire({ title: "Error!", text: decodeURIComponent(urlParams.get("error")), icon: "error" })
+      .then(() => window.history.replaceState({}, document.title, window.location.pathname));
+  }
+</script>
+
+</body>
+</html>

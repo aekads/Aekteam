@@ -1,0 +1,1054 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+     <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --success: #06d6a0;
+            --danger: #ef476f;
+            --warning: #ffd166;
+            --info: #118ab2;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Poppins", sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            z-index: 1000;
+            overflow-y: auto;
+            /* height: 100vh; */
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--light-gray);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-logo {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 15px 0;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: var(--gray);
+            text-decoration: none;
+            transition: var(--transition);
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background-color: rgba(67, 97, 238, 0.05);
+            color: var(--primary);
+            border-left: 3px solid var(--primary);
+        }
+
+        .sidebar-menu i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 20px;
+            transition: var(--transition);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 50px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Card Styles */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+        }
+
+        .card-header {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary);
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        /* Form styles */
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: var(--dark);
+            font-size: 14px;
+        }
+
+        input, select, button {
+            padding: 12px 15px;
+            border: 1px solid var(--light-gray);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .hours-display {
+            background: var(--light);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        /* Time entries styles */
+        .time-entries {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .day-group {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .day-header {
+            margin-bottom: 15px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-gray);
+        }
+
+        .entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid var(--light-gray);
+            transition: var(--transition);
+            position: relative;
+            border-radius: 8px;
+        }
+
+        .entry:hover {
+            background-color: #f9f9f9;
+        }
+
+        .entry:last-child {
+            border-bottom: none;
+        }
+
+        .entry-content {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .entry-description {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .entry-details {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .entry-project {
+            padding: 5px 12px;
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .entry-time {
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .entry-duration {
+            font-weight: bold;
+            color: var(--primary);
+            min-width: 80px;
+            text-align: right;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .entry-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 15px;
+        }
+
+        .btn-icon {
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+
+        .btn-edit {
+            background-color: rgba(17, 138, 178, 0.1);
+            color: var(--info);
+            border: none;
+        }
+
+        .btn-save {
+            background-color: rgba(6, 214, 160, 0.1);
+            color: var(--success);
+            border: none;
+        }
+
+        .btn-cancel {
+            background-color: rgba(239, 71, 111, 0.1);
+            color: var(--danger);
+            border: none;
+        }
+
+        .btn-delete {
+            background-color: rgba(239, 71, 111, 0.1);
+            color: var(--danger);
+            border: none;
+        }
+
+        .total-hours {
+            margin-top: 15px;
+            text-align: right;
+            font-weight: bold;
+            color: var(--dark);
+            padding: 12px;
+            background-color: rgba(67, 97, 238, 0.05);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        /* Editing state */
+        .entry.editing {
+            background-color: rgba(67, 97, 238, 0.03);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+        }
+
+        .edit-input {
+            padding: 8px 12px;
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            font-size: inherit;
+            width: 100%;
+        }
+
+        .edit-select {
+            padding: 8px;
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            background-color: white;
+            min-width: 150px;
+        }
+
+        .edit-time {
+            padding: 6px;
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            background-color: white;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            background-color: var(--success);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        /* Mobile menu toggle */
+        .menu-toggle {
+            display: none;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 15px;
+            font-size: 18px;
+            cursor: pointer;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* Responsive styles */
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 220px;
+            }
+            
+            .main-content {
+                margin-left: 220px;
+            }
+            
+            .form-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 992px) {
+            .entry {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .entry-actions {
+                margin-left: 0;
+                align-self: flex-end;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 15px;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .entry-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .entry-details {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .entry {
+                padding: 12px;
+            }
+            
+            .entry-actions {
+                align-self: stretch;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+
+</head>
+  
+ <%- include('../partials/sidebar') %>
+
+<body>
+    <!-- Sidebar -->
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container">
+            <!-- Header -->
+            <div class="page-header">
+                <h1 class="page-title"><i class="fas fa-clock"></i> IT Team - Time Tracker</h1>
+                <div class="user-info">
+                 
+                </div>
+            </div>
+
+            <!-- Time Entry Form -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-plus-circle"></i>
+                    <h2>Add Your Work Time</h2>
+                </div>
+                <form action="/dashboard/employee/projects/addTask" method="POST" class="form-row">
+                    <div class="form-group">
+                        <label for="work_description">Task Description</label>
+                        <input type="text" id="work_description" name="work_description" placeholder="What are you working on?" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="project">Project</label>
+                        <select name="project" id="project" required>
+                            <% projects.forEach(project=> { %>
+                                <option value="<%= project.name %>">
+                                    <%= project.name %>
+                                </option>
+                            <% }) %>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="date">Date</label>
+                        <input type="date" name="date" id="date" value="<%= new Date().toISOString().split('T')[0] %>" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="start_time">Start Time</label>
+                        <input type="time" name="start_time" id="start_time" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="end_time">End Time</label>
+                        <input type="time" name="end_time" id="end_time" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Total Hours</label>
+                        <div class="hours-display">
+                            <i class="fas fa-clock"></i>
+                            <span id="calculated_hours">0.00 hrs</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button type="submit">
+                            <i class="fas fa-plus"></i>
+                            Add Entry
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Time Entries Sorted by Day -->
+            <div class="time-entries">
+                <% for (const day in timeEntries) { %>
+                    <div class="day-group">
+                        <% var totalHours=0; %>
+                        <div class="day-header">
+                            <i class="fas fa-calendar-day"></i>
+                            <h2><%= new Date(day).toDateString() %></h2>
+                        </div>
+                        
+                        <div class="entries-list">
+                            <% timeEntries[day].forEach(function(entry) { %>
+                                <% var hours=calculateHours(entry.start_time, entry.end_time); %>
+                                <% totalHours +=parseFloat(hours); %>
+
+                                <div class="entry" data-id="<%= entry.id ? entry.id : '' %>">
+                                    <div class="entry-content">
+                                        <div class="entry-description editable" data-field="work_description">
+                                            <%= entry.work_description %>
+                                        </div>
+                                        <div class="entry-details">
+                                            <span class="entry-project">
+                                                <select class="edit-select" data-field="project" data-id="<%= entry.id %>" style="display: none;">
+                                                    <% projects.forEach(project=> { %>
+                                                        <option value="<%= project.name %>" 
+                                                            <%= project.name===entry.project ? 'selected' : '' %>>
+                                                            <%= project.name %>
+                                                        </option>
+                                                    <% }); %>
+                                                </select>
+                                                <span class="project-text"><%= entry.project %></span>
+                                            </span>
+                                            <span class="entry-time">
+                                                <input type="time" class="edit-time" data-field="start_time" 
+                                                    value="<%= entry.start_time %>" style="display: none;">
+                                                <span class="time-text start-time"><%= entry.start_time %></span>
+                                                to
+                                                <input type="time" class="edit-time" data-field="end_time" 
+                                                    value="<%= entry.end_time %>" style="display: none;">
+                                                <span class="time-text end-time"><%= entry.end_time %></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="entry-duration">
+                                        <i class="fas fa-clock"></i>
+                                        <span><%= hours %> hrs</span>
+                                    </div>
+                                    <div class="entry-actions">
+                                        <button class="btn-icon btn-edit" onclick="enableEditing(this)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-icon btn-save" onclick="saveChanges(this)" style="display: none;">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn-icon btn-cancel" onclick="cancelEditing(this)" style="display: none;">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                        <div class="total-hours">
+                            <i class="fas fa-clock"></i>
+                            <span>Total Hours: <%= totalHours.toFixed(2) %> hrs</span>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="editNotification">
+        <i class="fas fa-check-circle"></i>
+        <span>Changes saved successfully!</span>
+    </div>
+
+    <button class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log("🚀 Script Loaded Successfully");
+
+            // Set today's date as default for the date field
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+
+            // Real-time hours calculation for the form
+            const startTimeInput = document.getElementById("start_time");
+            const endTimeInput = document.getElementById("end_time");
+            const calculatedHours = document.getElementById("calculated_hours");
+
+            function updateFormHours() {
+                if (startTimeInput.value && endTimeInput.value) {
+                    const hours = calculateHours(startTimeInput.value, endTimeInput.value);
+                    calculatedHours.textContent = `${hours} hrs`;
+                }
+            }
+
+            startTimeInput.addEventListener("change", updateFormHours);
+            endTimeInput.addEventListener("change", updateFormHours);
+
+            // Click-to-Edit for Work Description
+            document.querySelectorAll(".editable").forEach(element => {
+                element.addEventListener("click", function () {
+                    enableEditing(this);
+                });
+            });
+
+            // Mobile menu toggle
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.querySelector('.sidebar');
+            
+            menuToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('open');
+                
+                if (sidebar.classList.contains('open')) {
+                    sidebar.style.height = 'auto';
+                    sidebar.style.overflowY = 'auto';
+                } else {
+                    sidebar.style.height = '60px';
+                    sidebar.style.overflowY = 'hidden';
+                }
+            });
+
+            // Adjust sidebar on resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    sidebar.style.height = 'auto';
+                    sidebar.style.overflowY = 'auto';
+                } else {
+                    if (!sidebar.classList.contains('open')) {
+                        sidebar.style.height = '60px';
+                        sidebar.style.overflowY = 'hidden';
+                    }
+                }
+            });
+        });
+
+        // Enable editing for an entry
+        function enableEditing(element) {
+            const entry = element.closest('.entry');
+            if (!entry) return;
+            
+            // Enable editing mode
+            entry.classList.add('editing');
+            
+            // Convert editable text to input field
+            const editableText = entry.querySelector('.editable');
+            if (editableText) {
+                const currentText = editableText.innerText;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentText;
+                input.className = 'edit-input';
+                input.dataset.field = editableText.dataset.field;
+                
+                editableText.replaceWith(input);
+                input.focus();
+            }
+            
+            // Show edit inputs for project and time
+            entry.querySelectorAll('.edit-select, .edit-time').forEach(el => {
+                el.style.display = 'block';
+            });
+            
+            // Hide text displays
+            entry.querySelectorAll('.project-text, .time-text').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Toggle action buttons
+            entry.querySelector('.btn-edit').style.display = 'none';
+            entry.querySelector('.btn-save').style.display = 'flex';
+            entry.querySelector('.btn-cancel').style.display = 'flex';
+        }
+
+        // Save changes for an entry
+        function saveChanges(button) {
+            const entry = button.closest('.entry');
+            const id = entry.dataset.id;
+            
+            if (!id || id.trim() === "") {
+                console.warn("⚠️ Skipping update: ID is missing.", entry);
+                alert("⚠️ Cannot update entry. ID is missing.");
+                return;
+            }
+            
+            // Collect all changed values
+            const changes = {};
+            
+            // Get work description
+            const workDescInput = entry.querySelector('.edit-input');
+            if (workDescInput) {
+                changes.work_description = workDescInput.value;
+                
+                // Revert to text display
+                const textElement = document.createElement('div');
+                textElement.className = 'entry-description editable';
+                textElement.dataset.field = workDescInput.dataset.field;
+                textElement.textContent = workDescInput.value;
+                textElement.addEventListener('click', function() {
+                    enableEditing(this);
+                });
+                
+                workDescInput.replaceWith(textElement);
+            }
+            
+            // Get project
+            const projectSelect = entry.querySelector('.edit-select');
+            if (projectSelect) {
+                changes.project = projectSelect.value;
+                projectSelect.style.display = 'none';
+                entry.querySelector('.project-text').textContent = projectSelect.value;
+                entry.querySelector('.project-text').style.display = 'inline';
+            }
+            
+            // Get times
+            entry.querySelectorAll('.edit-time').forEach(input => {
+                changes[input.dataset.field] = input.value;
+                input.style.display = 'none';
+                
+                if (input.dataset.field === 'start_time') {
+                    entry.querySelector('.start-time').textContent = input.value;
+                    entry.querySelector('.start-time').style.display = 'inline';
+                } else if (input.dataset.field === 'end_time') {
+                    entry.querySelector('.end-time').textContent = input.value;
+                    entry.querySelector('.end-time').style.display = 'inline';
+                }
+            });
+            
+            // Send updates to server
+            let updateCount = 0;
+            let totalUpdates = Object.keys(changes).length;
+            
+            for (const [field, value] of Object.entries(changes)) {
+                updateTimeEntry(id, field, value, function() {
+                    updateCount++;
+                    if (updateCount === totalUpdates) {
+                        // All updates completed
+                        disableEditing(entry);
+                        updateTotalHours(entry);
+                        showNotification("Changes saved successfully!");
+                    }
+                });
+            }
+            
+            // If no changes were made, just exit editing mode
+            if (totalUpdates === 0) {
+                disableEditing(entry);
+            }
+        }
+
+        // Cancel editing
+        function cancelEditing(button) {
+            const entry = button.closest('.entry');
+            
+            // Revert any input fields back to text
+            const workDescInput = entry.querySelector('.edit-input');
+            if (workDescInput) {
+                const textElement = document.createElement('div');
+                textElement.className = 'entry-description editable';
+                textElement.dataset.field = workDescInput.dataset.field;
+                textElement.textContent = entry.querySelector('.entry-description').dataset.originalValue;
+                textElement.addEventListener('click', function() {
+                    enableEditing(this);
+                });
+                
+                workDescInput.replaceWith(textElement);
+            }
+            
+            // Hide edit inputs
+            entry.querySelectorAll('.edit-select, .edit-time').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Show text displays
+            entry.querySelectorAll('.project-text, .time-text').forEach(el => {
+                el.style.display = 'inline';
+            });
+            
+            disableEditing(entry);
+        }
+        
+        // Disable editing mode
+        function disableEditing(entry) {
+            // Toggle action buttons
+            entry.querySelector('.btn-edit').style.display = 'flex';
+            entry.querySelector('.btn-save').style.display = 'none';
+            entry.querySelector('.btn-cancel').style.display = 'none';
+            
+            // Exit editing mode
+            entry.classList.remove('editing');
+        }
+
+        // Delete entry
+        function deleteEntry(button) {
+            const entry = button.closest('.entry');
+            const id = entry.dataset.id;
+            
+            if (!id || id.trim() === "") {
+                console.warn("⚠️ Skipping delete: ID is missing.", entry);
+                alert("⚠️ Cannot delete entry. ID is missing.");
+                return;
+            }
+            
+            if (confirm("Are you sure you want to delete this time entry?")) {
+                fetch("/dashboard/employee/projects/delete-time-entry", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        entry.remove();
+                        showNotification("Entry deleted successfully!");
+                        
+                        // Recalculate day total
+                        const dayGroup = entry.closest('.day-group');
+                        if (dayGroup) {
+                            recalculateDayTotal(dayGroup);
+                        }
+                    } else {
+                        console.error("❌ Delete failed:", data.message);
+                        alert("Failed to delete entry: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("❌ Error deleting entry:", error);
+                    alert("An error occurred while deleting the entry.");
+                });
+            }
+        }
+
+        // Update Total Hours Dynamically
+        function updateTotalHours(entryElement) {
+            const startTime = entryElement.querySelector("[data-field='start_time']").value;
+            const endTime = entryElement.querySelector("[data-field='end_time']").value;
+            const durationElement = entryElement.querySelector(".entry-duration span");
+
+            if (startTime && endTime) {
+                const hoursWorked = calculateHours(startTime, endTime);
+                durationElement.innerText = `${hoursWorked} hrs`;
+                
+                // Update day total
+                const dayGroup = entryElement.closest('.day-group');
+                if (dayGroup) {
+                    recalculateDayTotal(dayGroup);
+                }
+            }
+        }
+
+        // Recalculate day total hours
+        function recalculateDayTotal(dayGroup) {
+            let total = 0;
+            const entries = dayGroup.querySelectorAll('.entry');
+            
+            entries.forEach(entry => {
+                const startTime = entry.querySelector("[data-field='start_time']").value;
+                const endTime = entry.querySelector("[data-field='end_time']").value;
+                
+                if (startTime && endTime) {
+                    total += parseFloat(calculateHours(startTime, endTime));
+                }
+            });
+            
+            const totalElement = dayGroup.querySelector('.total-hours span');
+            if (totalElement) {
+                totalElement.textContent = `Total Hours: ${total.toFixed(2)} hrs`;
+            }
+        }
+
+        // Backend Update Request
+        function updateTimeEntry(id, field, value, callback) {
+            if (!id || id.trim() === "") {
+                console.error("🚨 Error: Missing ID in update request!", { id, field, value });
+                alert("⚠️ Cannot update entry. ID is missing.");
+                if (callback) callback();
+                return;
+            }
+
+            console.log("✅ Sending update request:", { id, field, value });
+
+            fetch("/dashboard/employee/projects/update-time-entry", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, field, value }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log("✅ Update successful for:", field);
+                    } else {
+                        console.error("❌ Update failed:", data.message);
+                    }
+                    if (callback) callback();
+                })
+                .catch(error => {
+                    console.error("❌ Error updating entry:", error);
+                    if (callback) callback();
+                });
+        }
+
+        // Show notification
+        function showNotification(message) {
+            const notification = document.getElementById('editNotification');
+            notification.querySelector('span').textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Time Calculation Logic
+    // Time Calculation Logic (Hours + Minutes format)
+function calculateHours(start, end) {
+    if (!start || !end) return "0h 0m";
+
+    const [sh, sm, ss = 0] = start.split(":").map(Number);
+    const [eh, em, es = 0] = end.split(":").map(Number);
+
+    const startMinutes = sh * 60 + sm + ss / 60;
+    const endMinutes = eh * 60 + em + es / 60;
+
+    let diffMinutes = endMinutes - startMinutes;
+    if (diffMinutes < 0) diffMinutes += 24 * 60; // handle overnight shifts
+
+    const hrs = Math.floor(diffMinutes / 60);
+    const mins = Math.round(diffMinutes % 60);
+
+    return `${hrs}h ${mins}m`;
+}
+    </script>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<%- include('./partials/hrsidebar') %> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Approval Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+ /* General Body */
+body {
+    font-family: "SF Pro Display", "Poppins", sans-serif;
+    background: #ecf0f3;
+    margin: 0;
+    color: #2d3436;
+}
+
+/* Container */
+.container {
+    margin-left: 270px;
+    padding: 25px;
+}
+
+/* Title */
+h1 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 25px;
+    padding-left: 12px;
+    border-left: 6px solid #007bff;
+}
+
+/* Table Wrapper - Glassmorphism Style */
+.table-responsive {
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Table */
+.table {
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table thead th {
+    background: linear-gradient(90deg, #007bff, #0056b3);
+    color: #fff;
+    font-weight: 600;
+    text-align: center;
+    padding: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    letter-spacing: 0.3px;
+}
+
+.table td {
+    text-align: center;
+    padding: 14px;
+    vertical-align: middle;
+    border-bottom: 1px solid #eaeaea;
+}
+
+/* Hover Effect */
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+    transform: scale(1.005);
+    transition: all 0.2s ease-in-out;
+}
+
+/* Badges */
+.badge {
+    padding: 7px 14px;
+    font-size: 13px;
+    border-radius: 30px;
+    font-weight: 500;
+    text-transform: capitalize;
+    box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+}
+
+.bg-success { background: #27ae60 !important; }
+.bg-danger { background: #e74c3c !important; }
+.bg-warning { background: #f1c40f !important; color: #000; }
+
+/* Buttons */
+.btn {
+    border-radius: 30px;
+    font-weight: 500;
+    padding: 7px 16px;
+    transition: all 0.3s ease-in-out;
+}
+
+.btn-success:hover { transform: scale(1.07); background: #229954; }
+.btn-danger:hover { transform: scale(1.07); background: #c0392b; }
+
+/* Responsive - Tablet & Mobile */
+@media (max-width: 992px) {
+    .container {
+        margin-left: 0;
+        padding: 15px;
+    }
+
+    .table thead {
+        display: none; /* Hide table header */
+    }
+
+    .table tbody tr {
+        display: block;
+        margin-bottom: 15px;
+        border: 1px solid #eaeaea;
+        border-radius: 12px;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.05);
+        padding: 12px;
+        background: #fff;
+    }
+
+    .table tbody td {
+        display: flex;
+        justify-content: space-between;
+        text-align: left;
+        border: none;
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+
+    .table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #555;
+    }
+}
+@media (min-width: 1000px) and (max-width: 1300px) {
+    .container, 
+    .container-sm, 
+    .container-md, 
+    .container-lg, 
+    .container-xl, 
+    .container-xxl {
+        max-width: 1000px; /* or 100% if you want fluid inside the range */
+    }
+}
+
+
+    </style>
+</head>                                                                         
+<body>
+   <%
+function formatDate(date) {
+  if (!date) return '';
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+%>
+
+<div class="container">
+    <h1>Leave Approval Dashboard</h1>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Employee Name</th>
+                    <th>Leave Type</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% leaveApplications.forEach(application => { %>
+                  <tr>
+  <td data-label="Employee ID"><%= application.emp_id %></td>
+  <td data-label="Employee Name"><%= application.employee_name %></td>
+  <td data-label="Leave Type"><%= application.leave_type %></td>
+ <td data-label="Start Date"><%= formatDate(application.start_date) %></td>
+<td data-label="End Date"><%= formatDate(application.end_date) %></td>
+  <td data-label="Status">
+    <span class="badge 
+      <%= application.status.toLowerCase() === 'approved' ? 'bg-success' : 
+          application.status.toLowerCase() === 'rejected' ? 'bg-danger' : 
+          'bg-warning' %>">
+      <%= application.status %>
+    </span>
+  </td>
+  <td data-label="Actions">
+    <% if (application.status.toLowerCase() === 'pending') { %>
+      <form action="/dashboard/hr/approve" method="POST" style="display:inline;">
+        <input type="hidden" name="leave_id" value="<%= application.id %>">
+        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+      </form>
+      <form action="/dashboard/hr/reject" method="POST" style="display:inline;">
+        <input type="hidden" name="leave_id" value="<%= application.id %>">
+        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+      </form>
+    <% } else { %>
+      <span><%= application.status %></span>
+    <% } %>
+  </td>
+</tr>
+
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Hidden inputs to carry flash messages -->
+<input type="hidden" id="successMessage" value="<%= messages.success ? messages.success[0] : '' %>">
+<input type="hidden" id="errorMessage" value="<%= messages.error ? messages.error[0] : '' %>">
+
+<!-- Flash Messages with SweetAlert -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const successMessage = document.getElementById("successMessage").value;
+        const errorMessage = document.getElementById("errorMessage").value;
+
+        if (successMessage) {
+            Swal.fire({
+                title: "Success!",
+                text: successMessage,
+                icon: "success",
+                confirmButtonColor: "#3085d6",
+                confirmButtonText: "OK"
+            });
+        }
+
+        if (errorMessage) {
+            Swal.fire({
+                title: "Error!",
+                text: errorMessage,
+                icon: "error",
+                confirmButtonColor: "#d33",
+                confirmButtonText: "OK"
+            });
+        }
+    });
+</script>
+
+
+
+</body>
+</html>

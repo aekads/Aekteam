@@ -1,0 +1,564 @@
+<%- include('./partials/hrsidebar') %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HR Dashboard</title>
+  
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  
+  <style>
+  /* Modern CSS Reset and Base Styles */
+  :root {
+    --primary: #4361ee;
+    --secondary: #3f37c9;
+    --success: #4cc9f0;
+    --info: #4895ef;
+    --warning: #f72585;
+    --light: #f8f9fa;
+    --dark: #212529;
+    --gray: #6c757d;
+    --light-gray: #e9ecef;
+    --white: #ffffff;
+    --border-radius: 12px;
+    --box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f7fb;
+    color: #333;
+    line-height: 1.6;
+    padding-bottom: 20px;
+    margin-left: 270px; /* Account for sidebar width */
+    transition: margin-left 0.3s ease;
+  }
+
+  /* Header Styles */
+  .dashboard-header {
+    text-align: center;
+    margin: 20px 0 30px;
+  }
+
+  .dashboard-header h2 {
+    color: var(--dark);
+    font-weight: 600;
+    margin-bottom: 5px;
+    font-size: 28px;
+  }
+
+  .dashboard-header p {
+    color: var(--gray);
+    font-size: 16px;
+  }
+
+  /* Main Dashboard Container */
+  .dashboard-container {
+    padding: 0 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* Grid Layout for Desktop */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 25px;
+  }
+
+  /* Card Styles */
+  .dashboard-box, .stat-box {
+    background: var(--white);
+    padding: 25px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    margin-bottom: 25px;
+  }
+
+  .dashboard-box:hover, .stat-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12);
+  }
+
+  /* Punch Card Styles */
+  .punch-card {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: var(--white);
+    padding: 30px 20px;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .punch-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(45deg);
+    z-index: 1;
+  }
+
+  .punch-card > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .punch-card h2 {
+    margin-bottom: 15px;
+    font-weight: 600;
+    font-size: 22px;
+  }
+
+  .punch-card p {
+    margin: 8px 0;
+    font-size: 15px;
+  }
+
+  .punch-card button {
+    padding: 12px 25px;
+    background: var(--white);
+    color: var(--primary);
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 50px;
+    margin-top: 20px;
+    transition: var(--transition);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  }
+
+  .punch-card button:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Stats Grid */
+  .dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .stat-box {
+    text-align: center;
+    padding: 20px 15px;
+    border-radius: var(--border-radius);
+    background: var(--white);
+    border-top: 4px solid transparent;
+  }
+
+  .stat-box h3 {
+    font-size: 15px;
+    color: var(--gray);
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+
+  .stat-box p {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--dark);
+  }
+
+  .total-employees { border-color: var(--primary); }
+  .leave { border-color: var(--warning); }
+  .present { border-color: #4CAF50; }
+  .absent { border-color: #F44336; }
+
+  .stat-box i {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .total-employees i { color: var(--primary); }
+  .leave i { color: var(--warning); }
+  .present i { color: #4CAF50; }
+  .absent i { color: #F44336; }
+
+  /* Chart Styling */
+  canvas {
+    max-width: 100%;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 15px;
+    background: var(--white);
+  }
+
+  /* Tablet Layout (768px - 1024px) */
+  @media (min-width: 768px) and (max-width: 1024px) {
+    body {
+      margin-left: 0; /* Sidebar is hidden on tablets */
+      padding-top: 70px; /* Space for hamburger menu */
+    }
+    
+    .dashboard-container {
+      padding: 0 15px;
+    }
+    
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    
+    .dashboard-stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .punch-card {
+    position: static; /* relative => static */
+    z-index: 0;       /* sidebar ke neeche aayega */
+  }
+
+  .sidebar {
+    position: fixed; 
+    left: 0; 
+    top: 0;
+    z-index: 10;      /* punch-card se upar */
+  }
+  }
+
+  /* Mobile Layout (up to 767px) */
+  @media (max-width: 767px) {
+    body {
+      margin-left: 0; /* Sidebar is hidden on mobile */
+      padding-top: 70px; /* Space for hamburger menu */
+    }
+    
+    .dashboard-container {
+      padding: 0 15px;
+    }
+    
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+    
+    .dashboard-stats {
+      grid-template-columns: 1fr;
+    }
+    
+    .dashboard-header h2 {
+      font-size: 24px;
+    }
+    
+    .punch-card {
+      padding: 20px 15px;
+      order: -1; /* Move punch card to top on mobile */
+    }
+    
+    .stat-box {
+      padding: 15px 10px;
+    }
+    
+    .stat-box p {
+      font-size: 24px;
+    }
+  }
+
+  /* Large Desktop Layout (min-width: 1440px) */
+  @media (min-width: 1440px) {
+    .dashboard-container {
+      max-width: 1400px;
+    }
+    
+    .dashboard-grid {
+      grid-template-columns: 1fr 2fr;
+      gap: 30px;
+    }
+    
+    .dashboard-stats {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 25px;
+    }
+  }
+  </style>
+
+  <script>
+      function formatISTTime(utcTime) {
+    const date = new Date(utcTime);
+    return date.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+}
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            await checkPunchStatus();
+        })
+        async function checkPunchStatus() {
+            try {
+                const response = await fetch('/dashboard/employee/punch-status', { method: 'GET', credentials: 'include' });
+                const data = await response.json();
+
+                const punchButton = document.getElementById("punchButton");
+
+                if (data.punchedIn) {
+                    punchButton.textContent = "Punch Out"  ;
+                    punchButton.setAttribute("onclick", "punchOut()");
+                } else {
+                    punchButton.textContent = "Punch In" ;
+                    punchButton.setAttribute("onclick", "punchIn()");
+                }
+            } catch (error) {
+                console.error("Error checking punch status:", error);
+            }
+        }
+                                           
+  async function punchIn() {
+    const response = await fetch('/dashboard/employee/punch-in', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await response.json();
+    alert(data.message);
+    location.reload(); // ✅ reload after alert
+}
+
+async function punchOut() {
+    const response = await fetch('/dashboard/employee/punch-out', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await response.json();
+    alert(data.message);
+    location.reload(); // ✅ reload after alert
+}
+
+        //time for puchin out btn card
+        function updateDateTime() {
+    const now = new Date();
+
+    // Format date: "4 March 2025"
+    const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+    const formattedDate = now.toLocaleDateString('en-GB', dateOptions);
+
+    // Format time: "Tuesday | 10:00 AM To 7:00 PM"
+    const timeOptions = { weekday: 'long', hour: '2-digit', minute: '2-digit', hour12: true };
+    const formattedTime = now.toLocaleDateString('en-GB', { weekday: 'long' }) + 
+                          " | 10:00 AM To 7:00 PM";
+
+    // Format seconds time: "11 : 59:10"
+    const formattedSeconds = now.getHours().toString().padStart(2, '0') + " : " + 
+                             now.getMinutes().toString().padStart(2, '0') + ":" + 
+                             now.getSeconds().toString().padStart(2, '0');
+
+    // Set values in HTML
+    document.getElementById("dateDisplay").textContent = formattedDate;
+    document.getElementById("timeDisplay").textContent = formattedTime + " | " + formattedSeconds;
+}
+
+async function showEmployees(status) {
+    try {
+        const today = new Date().toISOString().split("T")[0];
+        const res = await fetch(`/dashboard/hr/employee-status?status=${status}&date=${today}`);
+        const data = await res.json();
+
+        const modal = document.getElementById("employeeModal");
+        const list = document.getElementById("employeeList");
+        const title = document.getElementById("modalTitle");
+
+        list.innerHTML = "";
+
+        if (data.success && data.employees.length > 0) {
+            title.textContent = 
+                status === "present" ? "Present Today" :
+                status === "absent" ? "Absent Today" : "On Leave";
+
+            data.employees.forEach(emp => {
+                const li = document.createElement("li");
+                li.textContent = emp.name;
+                list.appendChild(li);
+            });
+        } else {
+            title.textContent = "No Employees Found";
+        }
+
+        modal.style.display = "flex";
+    } catch (err) {
+        console.error("Error fetching employee list:", err);
+    }
+}
+
+function closeModal() {
+    document.getElementById("employeeModal").style.display = "none";
+}
+
+
+// Update time every second
+setInterval(updateDateTime, 1000);
+updateDateTime();
+  </script>
+</head>
+<body>
+<!-- Popup Modal -->
+<!-- Employee Modal -->
+<div id="employeeModal" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modalTitle"></h2>
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <ul id="employeeList" class="employee-list"></ul>
+    </div>
+  </div>
+</div>
+
+
+<style>
+/* Modal Background */
+.modal {
+  display: none; /* hidden by default */
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Modal Box */
+.modal-content {
+  background: #fff;
+  border-radius: 12px;
+  width: 450px;
+  max-width: 95%;
+  max-height: 80%;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  animation: fadeIn 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+  background: #f8f9fa;
+}
+
+.modal-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.close-btn {
+  font-size: 22px;
+  cursor: pointer;
+  color: #666;
+  transition: color 0.2s;
+}
+.close-btn:hover {
+  color: #000;
+}
+
+/* Body */
+.modal-body {
+  padding: 15px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Employee List */
+.employee-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.employee-list li {
+  background: #f9f9f9;
+  padding: 12px 15px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.employee-list li:hover {
+  background: #eef3ff;
+  transform: translateX(4px);
+}
+
+/* Small animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+</style>
+
+  <div class="dashboard-container">
+    <div class="dashboard-header">
+      <h2>Welcome, <%= user.name %></h2>
+      <p>HR Dashboard - Manage Employees</p>
+    </div>
+
+    <!-- Grid Layout -->
+    <div class="dashboard-grid"> 
+      
+      <!-- Attendance -->
+      <div class="dashboard-box punch-card">
+        <h2>Attendance System</h2>
+        <p id="dateDisplay"></p>
+        <p id="timeDisplay"></p>
+        <button id="punchButton" onclick="handlePunch()">Punch In</button>
+      </div>
+
+      <!-- Stats Section -->
+      <div class="dashboard-stats">
+        <div class="stat-box total-employees">
+          <i class="fas fa-users"></i>
+          <h3>Total Employees</h3>
+          <p><%= totalEmployees %></p>
+        </div>
+        <div class="stat-box leave" onclick="showEmployees('leave')">
+  <i class="fas fa-umbrella-beach"></i>
+  <h3>On Leave</h3>
+  <p><%= leaveData %></p>
+</div>
+       <div class="stat-box present" onclick="showEmployees('present')">
+  <i class="fas fa-user-check"></i>
+  <h3>Present Today</h3>
+  <p><%= attendanceData.present || 0 %></p>
+</div>
+        <div class="stat-box absent" onclick="showEmployees('absent')">
+  <i class="fas fa-user-times"></i>
+  <h3>Absent Today</h3>
+  <p><%= attendanceData.absent || 0 %></p>
+</div>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

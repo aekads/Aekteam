@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Projects</title>
+    <link rel="stylesheet" href="/css/projects.css"> <!-- Link to external CSS -->
+
+    <style>
+        /* General Page Styling */
+        body {
+            font-family: Open Sans, sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            font-style: normal;
+            font-stretch: normal;
+            line-height: normal;
+            letter-spacing: normal;
+            text-align: left;
+            color: #3b4452;
+            background-color: #f7f7f7;
+        }
+
+
+        /* Container Styling */
+        .container {
+            margin-left: 280px;
+            /* Sidebar width */
+            padding: 20px;
+            width: 80%;
+        }
+
+        /* Page Title */
+        .page-title {
+            font-size: 24px;
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Project List */
+        .projects-list {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .projects-list h2 {
+            color: #444;
+            margin-bottom: 15px;
+        }
+
+        .projects-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .project-item {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .project-item strong {
+            color: #333;
+        }
+
+        .added-by {
+            font-size: 14px;
+            color: #777;
+        }
+
+        /* Add Project Form */
+        .add-project {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .add-project h2 {
+            color: #444;
+        }
+
+        .add-project form {
+            margin-left: 315px;
+            /* Sidebar width */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .add-project label {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .add-project input,
+        .add-project textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .add-project button {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px;
+            margin-top: 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .add-project button:hover {
+            background: #219150;
+        }
+
+
+        /* 🔹 Form Container */
+        .edit-form-container {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        /* 🔹 Form Title */
+        .edit-form-title {
+            text-align: center;
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        /* 🔹 Input Fields */
+        .edit-input,
+        .edit-textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        /* 🔹 Textarea */
+        .edit-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* 🔹 Buttons */
+        .edit-btn {
+            width: 48%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* 🔹 Submit Button */
+        .edit-submit {
+            background: #28a745;
+            color: white;
+        }
+
+        /* 🔹 Cancel Button */
+        .edit-cancel {
+            background: #dc3545;
+            color: white;
+            float: right;
+        }
+
+        /* 🔹 Hover Effects */
+        .edit-btn:hover {
+            opacity: 0.8;
+        }
+
+        /* 🔹 Responsive Design */
+        @media (max-width: 500px) {
+            .edit-form-container {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <%- include('../partials/sidebar') %>
+
+        <div class="container">
+            <h1 class="page-title">📋 Project Management</h1>
+
+            <!-- ✅ Project List -->
+            <div class="projects-list">
+                <h2>All Projects</h2>
+                <ul>
+                    <% projects.forEach(project=> { %>
+                        <li class="project-item">
+
+                            <strong>
+                                <%= project.name %>
+                            </strong> - <%= project.description %>
+                                <span class="added-by">Added by: <%= project.emp_id %></span>
+                                <button class="edit-btn"
+                                    onclick="showEditForm('<%= project.id %>', '<%= project.name %>', '<%= project.Client %>', '<%= project.description %>')">
+                                    ✏️ Edit
+                                </button>
+
+                        </li>
+                        <% }) %>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ✅ Hidden Edit Form -->
+        <!-- ✅ Hidden Edit Form -->
+        <div id="edit-form-container" class="edit-form-container" style="display: none;">
+            <h2 class="edit-form-title">✏️ Edit Project</h2>
+            <form id="edit-form" class="edit-form">
+                <input type="hidden" id="edit-id" name="id">
+
+                <label for="edit-name">Project Name:</label>
+                <input type="text" id="edit-name" name="name" class="edit-input" required>
+
+                <label for="edit-client">Client:</label>
+                <input type="text" id="edit-client" name="Client" class="edit-input" required>
+
+                <label for="edit-description">Description:</label>
+                <textarea id="edit-description" name="description" class="edit-textarea" required></textarea>
+
+                <button type="submit" class="edit-btn edit-submit">Update Project</button>
+                <button type="button" class="edit-btn edit-cancel" onclick="hideEditForm()">Cancel</button>
+            </form>
+        </div>
+
+
+        <!-- ✅ Add New Project Form (Visible only for allowed employees) -->
+        <% if (canAddProjects) { %>
+            <div class="add-project">
+                <h2>➕ Add a New Project</h2>
+                <form action="/dashboard/employee/projects/add" method="POST">
+                    <label for="name">Project Name:</label>
+                    <input type="text" id="name" name="name" required>
+
+                    <label for="Client">Client:</label>
+                    <input type="text" id="Client" name="Client" required>
+
+                    <label for="description">Description:</label>
+                    <textarea id="description" name="description" required></textarea>
+
+                    <button type="submit">Add Project</button>
+                </form>
+            </div>
+            <% } %>
+                </div>
+
+
+
+                <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+                <script>
+                    // ✅ Show Edit Form with Project Data
+                    function showEditForm(id, name, client, description) {
+                        document.getElementById("edit-id").value = id;
+                        document.getElementById("edit-name").value = name;
+                        document.getElementById("edit-client").value = client;
+                        document.getElementById("edit-description").value = description;
+                        // console.log("Project ID in showEditForm:", id); // Debugging
+                        document.getElementById("edit-form-container").style.display = "block";
+                    }
+
+                    // ✅ Hide Edit Form
+                    function hideEditForm() {
+                        document.getElementById("edit-form-container").style.display = "none";
+                    }
+
+                    // ✅ Handle Form Submission with Axios
+                    document.getElementById("edit-form").addEventListener("submit", async function (event) {
+                        event.preventDefault();
+
+                        const id = document.getElementById("edit-id").value;
+                        const name = document.getElementById("edit-name").value;
+                        const client = document.getElementById("edit-client").value;
+                        const description = document.getElementById("edit-description").value;
+
+                        if (!id) {
+                            console.error("Error: Missing project ID!");
+                            alert("Project ID is missing!");
+                            return;
+                        }
+
+                        try {
+                            const response = await axios.put(`/dashboard/employee/projects/edit/${id}`, { name, client, description });
+                            alert(response.data.message);
+                            hideEditForm();
+                            location.reload();
+                        } catch (error) {
+                            console.error("Error updating project:", error);
+                            alert("Failed to update project.");
+                        }
+                    });
+                </script>
+</body>
+
+</html>
