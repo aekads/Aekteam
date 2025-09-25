@@ -1,4 +1,7 @@
-<!DOCTYPE html>
+
+
+ <%- include('../partials/sidebar') %>    
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,379 +11,205 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     
-  <style>
-        /* General Page Styles */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f4f6f9;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            min-height: 100vh;
-        }
+    <style>
+      /* General Page Styles */
+/* General Page Styles */
+/* General Page Styles */
+/* General Page Styles */
+/* General Page Styles */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f4f6f9;
+    margin: 0;
+    padding: 0;
+}
 
-        /* Sidebar Styles */
-        .sidebar {
-            width: 250px;
-            background: #2c3e50;
-            color: #ecf0f1;
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            overflow-y: auto;
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
+/* Main Container */
+.container {
+    max-width: 1200px; /* Best width for desktops & laptops */
+    width: 100%;
+    margin: 30px auto;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+}
 
-        .sidebar-header {
-            padding: 20px;
-            background: #1a252f;
-            text-align: center;
-        }
+/* Page Title */
+h1 {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 25px;
+}
 
-        .sidebar-menu {
-            padding: 15px 0;
-        }
+/* Filters Section */
+.filters {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
 
-        .sidebar-menu ul {
-            list-style: none;
-        }
+.filters div {
+    flex: 1;
+}
 
-        .sidebar-menu li {
-            padding: 0;
-            margin: 0;
-        }
+.filters label {
+    font-weight: 600;
+    color: #555;
+    display: block;
+    margin-bottom: 5px;
+}
 
-        .sidebar-menu a {
-            color: #bdc3c7;
-            text-decoration: none;
-            display: block;
-            padding: 12px 20px;
-            transition: all 0.3s;
-        }
+.filters select,
+.filters input {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+}
+.charts {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
 
-        .sidebar-menu a:hover, .sidebar-menu a.active {
-            background: #34495e;
-            color: #fff;
-            border-left: 4px solid #3498db;
-        }
+canvas {
+    width: 65% !important;
+    height: 400px !important; /* Adjust height for better visibility */
+    background: #fff;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
+}
 
-        .sidebar-menu i {
-            margin-right: 10px;
-            width: 20px;
-            text-align: center;
-        }
+/* Section Title */                                                             
+h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-top: 30px;
+    color: #444;
+}
 
-        /* Main Content Area */
-        .main-content {
-            flex: 1;
-            margin-left: 305px;
-            padding: 20px;
-            transition: all 0.3s ease;
-        }
+/* Table Container */
+.table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+    background: #fff;
+    padding: 15px;
+    box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
+}
 
-        /* Mobile Menu Toggle */
-        .menu-toggle {
-            display: none;
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            background: #2c3e50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 10px;
-            z-index: 1001;
-            cursor: pointer;
-        }
-   
-        /* Main Container */
-        .container {
-            max-width: 1200px;
-            width: 100%;
-            margin: 0 auto;
-            background: #ffffff;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
-        }
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    margin-top: 15px;
+}
 
-        /* Page Title */
-        h1 {
-            text-align: center;
-            font-size: 28px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 25px;
-        }
+thead {
+    background: #007bff;
+    color: #fff;
+}
 
-        /* Filters Section */
-        .filters {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            gap: 15px;
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
+thead tr th {
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 500;
+}
 
-        .filter-group {
-            flex: 1;
-            min-width: 200px;
-        }
+tbody tr {
+    border-bottom: 1px solid #ddd;
+}
 
-        .filter-group label {
-            font-weight: 600;
-            color: #555;
-            display: block;
-            margin-bottom: 5px;
-        }
+tbody tr td {
+    padding: 12px;
+    font-size: 15px;
+    color: #333;
+}
 
-        .filter-group select,
-        .filter-group input {
-            width: 100%;
-            padding: 10px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            background: #fff;
-        }
+tbody tr:nth-child(even) {
+    background: #f8f9fa;
+}
 
-        /* Charts Layout */
-        .charts {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
+tbody tr:hover {
+    background: #e9ecef;
+}
 
-        .chart-container {
-            flex: 1;
-            min-width: 300px;
-            background: #fff;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
-        }
+/* Responsive Adjustments */
+@media (max-width: 1200px) {
+    .container {
+        max-width: 100%;
+        padding: 20px;
+    }
 
-        .chart-container canvas {
-            width: 100% !important;
-            height: 300px !important;
-        }
+    .filters {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 
-        /* Section Title */
-        h2 {
-            font-size: 24px;
-            font-weight: 600;
-            margin-top: 30px;
-            color: #444;
-        }
+    .charts {
+        flex-direction: column;
+        align-items: center;
+    }
 
-        /* Table Container */
-        .table-container {
-            overflow-x: auto;
-            border-radius: 8px;
-            background: #fff;
-            padding: 15px;
-            box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
+    canvas {
+        width: 100%;
+        height: 280px;
+    }
+}
 
-        /* Table Styles */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            margin-top: 15px;
-            min-width: 600px;
-        }
-
-        thead {
-            background: #007bff;
-            color: #fff;
-        }
-
-        thead tr th {
-            padding: 14px;
-            font-size: 16px;
-            font-weight: 500;
-        }
-
-        tbody tr {
-            border-bottom: 1px solid #ddd;
-        }
-
-        tbody tr td {
-            padding: 12px;
-            font-size: 15px;
-            color: #333;
-        }
-
-        tbody tr:nth-child(even) {
-            background: #f8f9fa;
-        }
-
-        tbody tr:hover {
-            background: #e9ecef;
-        }
-
-        /* Responsive Adjustments */
-        @media (max-width: 1024px) {
-            .sidebar {
-                width: 70px;
-                transform: translateX(0);
-            }
-            
-            .sidebar-header span, 
-            .sidebar-menu a span {
-                display: none;
-            }
-            
-            .sidebar-menu i {
-                margin-right: 0;
-                font-size: 20px;
-            }
-            
-            .main-content {
-                margin-left: 70px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                width: 250px;
-            }
-            
-            .sidebar-header span, 
-            .sidebar-menu a span {
-                display: inline;
-            }
-            
-            .sidebar-menu i {
-                margin-right: 10px;
-                font-size: 16px;
-            }
-            
-            .sidebar.active {
-                transform: translateX(0);
-            }
-            
-            .main-content {
-                margin-left: 0;
-                padding: 15px;
-            }
-            
-            .menu-toggle {
-                display: block;
-            }
-            
-            .container {
-                padding: 15px;
-            }
-            
-            .filters {
-                flex-direction: column;
-            }
-            
-            .filter-group {
-                width: 100%;
-            }
-            
-            .charts {
-                flex-direction: column;
-            }
-            
-            .chart-container canvas {
-                height: 250px !important;
-            }
-            
-            h1 {
-                font-size: 24px;
-                margin-top: 40px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 10px;
-            }
-            
-            h1 {
-                font-size: 22px;
-            }
-            
-            h2 {
-                font-size: 20px;
-            }
-            
-            thead tr th,
-            tbody tr td {
-                padding: 10px 8px;
-                font-size: 14px;
-            }
-            
-            .chart-container {
-                padding: 10px;
-            }
-            
-            .chart-container canvas {
-                height: 220px !important;
-            }
-        }
     </style>
 </head>
 <body>
                                 
-    <%- include('../partials/sidebar') %>    
+   
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="container">
-            <h1 class="page-title">📊 Work Hours Summary</h1>
-        
-            <div class="filters">
-                <div class="filter-group">
-                    <label for="employee">👨‍💼 Employee:</label>
-                    <select id="employee">
-                        <option value="">All Employees</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="project">📁 Project:</label>
-                    <select id="project">
-                        <option value="">All Projects</option>
-                        <% if (projects && projects.length > 0) { %>
-                            <% projects.forEach(proj => { %>
-                                <option value="<%= proj.project_id %>"><%= proj.project_name %></option>
-                            <% }); %>
-                        <% } else { %>
-                            <option value="" disabled>No projects available</option>
-                        <% } %>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="month">📅 Month:</label>
-                    <input type="month" id="month" value="<%= new Date().toISOString().slice(0,7) %>">
-                    <div class="filter-group" style="display: none;"> 
-                        <label for="pastMonth">📅 Include Past Month:</label>
-                        <input type="checkbox" id="pastMonth">
-                    </div>
-                </div>
+    <div class="container">
+        <h1 class="page-title">📊 Work Hours Summary</h1>
+    
+        <div class="filters">
+            <div class="filter-group">
+                <label for="employee">👨‍💼 Employee:</label>
+                <select id="employee">
+                    <option value="">All Employees</option>
+                </select>
             </div>
+            <div class="filter-group">
+                <label for="project">📁 Project:</label>
+                <select id="project">
+                    <option value="">All Projects</option>
+                    <% if (projects && projects.length > 0) { %>
+                        <% projects.forEach(proj => { %>
+                            <option value="<%= proj.project_id %>"><%= proj.project_name %></option>
+                        <% }); %>
+                    <% } else { %>
+                        <option value="" disabled>No projects available</option>
+                    <% } %>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="month">📅 Month:</label>
+                <input type="month" id="month" value="<%= new Date().toISOString().slice(0,7) %>">
+                <div class="filter-group"  style="display: none;"> 
+                    <label for="pastMonth">📅 Include Past Month:</label>
+                    <input type="checkbox" id="pastMonth">
+                </div>
+                
+            </div>
+        </div>
     
         <div class="charts">
             <canvas id="workSummaryChart"></canvas>
-            <canvas id="projectChart" style="display:none;"></canvas>
+            <canvas id="projectChart"></canvas>
         </div>
     
         <h2 class="section-title">📅 Date-wise Work Summary</h2>
@@ -401,8 +230,7 @@
             </table>
         </div>
     </div>
-    </div>
-        </div>
+
     <script>
  document.addEventListener("DOMContentLoaded", function () {
     const empSelect = document.getElementById("employee");
