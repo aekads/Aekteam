@@ -390,10 +390,26 @@ async function showEmployees(status) {
                 status === "present" ? "Present Today" :
                 status === "absent" ? "Absent Today" : "On Leave";
 
+            // Group employees by role
+            const grouped = {};
             data.employees.forEach(emp => {
-                const li = document.createElement("li");
-                li.textContent = emp.name;
-                list.appendChild(li);
+                if (!grouped[emp.role]) grouped[emp.role] = [];
+                grouped[emp.role].push(emp.name);
+            });
+
+            // Render grouped roles
+            Object.keys(grouped).forEach(role => {
+                const roleHeader = document.createElement("h4");
+                roleHeader.textContent = role;
+                list.appendChild(roleHeader);
+
+                const ul = document.createElement("ul");
+                grouped[role].forEach(name => {
+                    const li = document.createElement("li");
+                    li.textContent = name;
+                    ul.appendChild(li);
+                });
+                list.appendChild(ul);
             });
         } else {
             title.textContent = "No Employees Found";
@@ -404,6 +420,7 @@ async function showEmployees(status) {
         console.error("Error fetching employee list:", err);
     }
 }
+
 
 function closeModal() {
     document.getElementById("employeeModal").style.display = "none";
