@@ -110,7 +110,7 @@ exports.postAddEmployee = async (req, res) => {
         };
 
         // Ensure required fields exist
-        if (!employeeData.full_name || !employeeData.phone) {
+        if (!employeeData.full_name) {
             return res.status(400).json({ error: "Missing required fields" });
         }
 
