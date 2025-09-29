@@ -211,7 +211,7 @@ exports.getEmployees = async () => {
 exports.findEmployee = async (emp_id) => {
   try {
     const result = await pool.query(
-      `SELECT emp_id, name, emp_number, email, role, photo, designation, joining_date, 
+      `SELECT emp_id, name, emp_number,pin, email, role, photo, designation, joining_date, 
               assign_city, dob, bank_number, ifsc, passbook_image, pan_card, aadhar_card, 
               offer_letter, last_company_experience_letter, leave_balance 
        FROM employees 
@@ -631,9 +631,10 @@ exports.getAttendanceStats = async (date) => {
 // models/employeeModel.js
 
 // ✅ Employees who are present today
+// ✅ Employees who are present today
 exports.getPresentEmployees = async (date) => {
     const result = await pool.query(
-        `SELECT e.emp_id, e.name
+        `SELECT e.emp_id, e.name, e.role
          FROM public.employees e
          INNER JOIN public.attendance a 
          ON e.emp_id = a.emp_id
@@ -646,7 +647,7 @@ exports.getPresentEmployees = async (date) => {
 // ✅ Employees who are absent today
 exports.getAbsentEmployees = async (date) => {
     const result = await pool.query(
-        `SELECT e.emp_id, e.name
+        `SELECT e.emp_id, e.name, e.role
          FROM public.employees e
          WHERE e.emp_id NOT IN (
             SELECT emp_id FROM public.attendance WHERE date = $1
@@ -660,16 +661,18 @@ exports.getAbsentEmployees = async (date) => {
     return result.rows;
 };
 
-// ✅ Employees who are on leave today
+// ✅ Employees who are on leave
 exports.getLeaveEmployees = async (date) => {
     const result = await pool.query(
-        `SELECT e.emp_id, e.name
+        `SELECT e.emp_id, e.name, e.role
          FROM public.employees e
-         INNER JOIN public.leaves l ON e.emp_id = l.emp_id
-         WHERE l.status = 'approved'
-         AND l.start_date <= $1
-         AND l.end_date >= $1`,
+         INNER JOIN public.leaves l
+         ON e.emp_id = l.emp_id
+         WHERE l.status = 'approved' 
+           AND l.start_date <= $1 
+           AND l.end_date >= $1`,
         [date]
     );
     return result.rows;
 };
+
