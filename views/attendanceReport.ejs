@@ -260,34 +260,32 @@ tbody tr:hover { background: rgba(0,123,255,0.1); }
     
 
     <table id="attendanceTable" data-has-data="<%= attendanceData.length > 0 %>" style="<%= attendanceData.length > 0 ? '' : 'display:none;' %>">
-    <thead>
-        <tr>
-            <th>Employee ID</th>
-            <th>Employee Name</th>
-            <th>Date</th>
-            <th>Punch In</th>
-            <th>Punch Out</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        <% if (attendanceData.length > 0) { %>
-            <% attendanceData.forEach(record => { %>
-                <tr>
-                    <td><%= record.emp_id %></td>
-                    <td><%= record.name %></td>
-                    <td><%= new Date(record.date).toLocaleDateString('en-IN') %></td>
-                    <td><%= record.punch_in_time ? new Date(record.punch_in_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-' %></td>
-                    <td><%= record.punch_out_time ? new Date(record.punch_out_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-' %></td>
-                    <td class="<%= record.status === 'Present' ? 'text-success' : 'text-danger' %>"><%= record.status %></td>
-                </tr>
-            <% }); %>
-        <% } else { %>
-            <tr>
-                <td colspan="6">Please select employee and date range to view report.</td>
-            </tr>
-        <% } %>
-    </tbody>
+  <thead>
+  <tr>
+    <th>Employee ID</th>
+    <th>Employee Name</th>
+    <th>Date</th>
+    <th>Day</th>
+    <th>Punch In</th>
+    <th>Punch Out</th>
+    <th>Status</th>
+  </tr>
+</thead>
+<tbody>
+  <% attendanceData.forEach(record => { %>
+    <tr>
+      <td><%= record.emp_id %></td>
+      <td><%= record.name %></td>
+      <td><%= new Date(record.date).toLocaleDateString('en-IN') %></td>
+      <td><%= record.day %></td>
+      <td><%= record.punch_in_time ? new Date(record.punch_in_time).toLocaleTimeString('en-IN') : '-' %></td>
+      <td><%= record.punch_out_time ? new Date(record.punch_out_time).toLocaleTimeString('en-IN') : '-' %></td>
+      <td class="<%= record.status === 'Present' ? 'text-success' : record.status === 'Official Leave' ? 'text-info' : 'text-danger' %>">
+        <%= record.status %>
+      </td>
+    </tr>
+  <% }) %>
+</tbody>
 </table>
 
     </div>
