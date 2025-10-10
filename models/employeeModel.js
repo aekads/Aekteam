@@ -295,44 +295,86 @@ exports.findEmployees = async () => {
 // ✅ Fetch attendance records with employee details
 const moment = require("moment");
 exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
-    try {
-        // ✅ Generate all dates for the selected range
-        const allDates = [];
-        let currentDate = moment(start_date);
-        while (currentDate.isSameOrBefore(moment(end_date))) {
-            allDates.push(currentDate.format("YYYY-MM-DD"));
-            currentDate.add(1, "day");
-        }
-
-        const dateArray = allDates.length > 0 ? allDates : ["1900-01-01"]; // Fallback date if empty
-
-        // ✅ Fix: Remove "Absent" from COALESCE
-        let query = `
-            SELECT 
-                dates.date, 
-                e.emp_id, 
-                e.name, 
-                a.punch_in_time, 
-                a.punch_out_time,
-                CASE 
-                    WHEN a.punch_in_time IS NOT NULL AND a.punch_out_time IS NOT NULL THEN 'Present'
-                    ELSE 'Absent' 
-                END AS status
-            FROM (
-                SELECT UNNEST($1::DATE[]) AS date  
-            ) AS dates
-            CROSS JOIN employees e
-            LEFT JOIN attendance a ON e.emp_id = a.emp_id AND dates.date = a.date
-            WHERE ($2::TEXT IS NULL OR e.emp_id = $2::TEXT)  
-            ORDER BY e.emp_id, dates.date;
-        `;
-
-        const result = await pool.query(query, [dateArray, emp_id || null]);
-        return result.rows;
-    } catch (error) {
-        console.error("Database Error (getAttendanceReport):", error);
-        throw error;
+  try {
+    // Generate all dates for the selected range
+    const allDates = [];
+    let currentDate = moment(start_date);
+    while (currentDate.isSameOrBefore(moment(end_date))) {
+      allDates.push(currentDate.format("YYYY-MM-DD"));
+      currentDate.add(1, "day");
     }
+
+    const dateArray = allDates.length > 0 ? allDates : ["1900-01-01"];
+
+    // ✅ Fetch employee role (if emp_id provided)
+    let role = null;
+    if (emp_id && emp_id !== "all") {
+      const roleRes = await pool.query(
+        "SELECT role FROM employees WHERE emp_id = $1",
+        [emp_id]
+      );
+      if (roleRes.rows.length > 0) {
+        role = roleRes.rows[0].role;
+      }
+    }
+
+    // ✅ Fetch all attendance data
+    const query = `
+      SELECT 
+          dates.date,
+          e.emp_id,
+          e.name,
+          e.role,
+          a.punch_in_time,
+          a.punch_out_time
+      FROM (
+          SELECT UNNEST($1::DATE[]) AS date
+      ) AS dates
+      CROSS JOIN employees e
+      LEFT JOIN attendance a 
+        ON e.emp_id = a.emp_id AND dates.date = a.date
+      WHERE ($2::TEXT IS NULL OR $2::TEXT = 'all' OR e.emp_id = $2::TEXT)
+      ORDER BY e.emp_id, dates.date;
+    `;
+
+    const result = await pool.query(query, [dateArray, emp_id || null]);
+    const rows = result.rows;
+
+    // ✅ Apply weekend logic
+    const finalData = rows.map((record) => {
+      const dayName = moment(record.date).format("dddd"); // e.g., Sunday
+      const roleName = (record.role || "").toLowerCase();
+
+      let isWeekend = false;
+      if (["it_team", "graphic_team"].includes(roleName)) {
+        isWeekend = ["Saturday", "Sunday"].includes(dayName);
+      } else if (
+        ["sales", "acquisition", "maintenance"].includes(roleName)
+      ) {
+        isWeekend = dayName === "Sunday";
+      }
+
+      let status;
+      if (record.punch_in_time && record.punch_out_time) {
+        status = "Present";
+      } else if (isWeekend) {
+        status = "Official Leave";
+      } else {
+        status = "Absent";
+      }
+
+      return {
+        ...record,
+        status,
+        day: dayName,
+      };
+    });
+
+    return finalData;
+  } catch (error) {
+    console.error("Database Error (getAttendanceReport):", error);
+    throw error;
+  }
 };
 exports.findEmployeee = async (emp_id = null) => {
     let query = `SELECT emp_id, name FROM employees`;
