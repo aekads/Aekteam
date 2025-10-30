@@ -1,51 +1,42 @@
 const employeeModel = require('../models/employeeModel');
-
+const pool = require('../config/db');
 
 const moment = require('moment-timezone'); 
-
 exports.getEmployeeHome = async (req, res) => {
-    try {
-        const emp_id = req.user.emp_id; // Extracted from JWT
-        const employee = await employeeModel.findEmployee(emp_id);
+  try {
+    const emp_id = req.user.emp_id; // Extracted from JWT
+    const employee = await employeeModel.findEmployee(emp_id);
 
-        if (!employee) {
-            return res.status(404).send("Employee not found");
-        }
-
-        // ✅ Get Current Hour
-        
-      
-        // ✅ Ensure Correct Timezone
-        const currentHour = new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata", hour: "2-digit", hour12: false });
-
-        let greeting = "Good Morning";
-
-        if (currentHour >= 12 && currentHour < 13) {
-            greeting = "Good Noon";
-        } else if (currentHour >= 13 && currentHour < 17) {
-            greeting = "Good Afternoon";
-        } else if (currentHour >= 17 && currentHour < 20) {
-            greeting = "Good Evening";
-        } else {
-            greeting = "Good Night";
-        }
-
-        // ✅ Motivational Quotes
-        const quotes = [
-            "The great thing in this world is not so much where you stand, as in what direction you are moving. - Oliver Wendell Holmes",
-            "Success is not the key to happiness. Happiness is the key to success. - Albert Schweitzer",
-            "Believe you can and you're halfway there. - Theodore Roosevelt",
-            "Do what you can, with what you have, where you are. - Theodore Roosevelt"
-        ];
-
-        // ✅ Randomly Select a Quote
-        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-
-        res.render('employee/home', { employee, greeting, randomQuote });
-    } catch (error) {
-        console.error("Error fetching employee details:", error);
-        res.status(500).send("Internal Server Error");
+    if (!employee) {
+      return res.status(404).send("Employee not found");
     }
+
+    // ✅ Fetch events (latest first)
+    const events = await pool.query(
+      `SELECT id, title, description, date 
+       FROM public.events 
+       ORDER BY date ASC`
+    );
+
+    // ✅ Get motivational quote
+    const quotes = [
+      "The great thing in this world is not so much where you stand, as in what direction you are moving. - Oliver Wendell Holmes",
+      "Success is not the key to happiness. Happiness is the key to success. - Albert Schweitzer",
+      "Believe you can and you're halfway there. - Theodore Roosevelt",
+      "Do what you can, with what you have, where you are. - Theodore Roosevelt"
+    ];
+
+    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+
+    res.render("employee/home", {
+      employee,
+      randomQuote,
+      events: events.rows,
+    });
+  } catch (error) {
+    console.error("Error fetching employee home:", error);
+    res.status(500).send("Internal Server Error");
+  }
 };
 
                                                                                  
@@ -110,34 +101,39 @@ exports.updateProfile = async (req, res) => {
 
 // Punch In
 // Punch In
+const axios = require('axios');
+
 // Punch In
 exports.punchIn = async (req, res) => {
     try {
         const emp_id = req.user?.emp_id;
-        if (!emp_id) {
-            return res.status(400).json({ message: "Employee ID missing" });
-        }
-     
-        // ✅ Get current date & time in IST (formatted without milliseconds)
+        const { latitude, longitude } = req.body;
+
+        if (!emp_id) return res.status(400).json({ message: "Employee ID missing" });
+        if (!latitude || !longitude)
+            return res.status(400).json({ message: "Location not found. Please allow location access." });
+
+        // ✅ Reverse geocode for human-readable address
+        const geoResponse = await axios.get(`https://nominatim.openstreetmap.org/reverse`, {
+            params: {
+                lat: latitude,
+                lon: longitude,
+                format: 'json'
+            },
+            headers: { 'User-Agent': 'CompanyPunchSystem' }
+        });
+
+        const locationAddress = geoResponse.data?.display_name || "Unknown Location";
         const date = moment().tz('Asia/Kolkata').format('YYYY-MM-DD');
-        const time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss'); // ✅ No milliseconds
-
-        // Check if already punched in
-        const existingPunch = await employeeModel.getTodayPunch(emp_id, date);
-        // if (existingPunch.length > 0) {
-        //     return res.status(400).json({ message: "Already punched in today" });
-        // }
-
 
         const permission = await employeeModel.getActivePermission(emp_id, date);
         if (permission.length > 0) {
             return res.status(400).json({ message: "Active permission exists. Punch-in not required." });
         }
 
+        await employeeModel.punchIn(emp_id, date, latitude, longitude, locationAddress);
 
-        // Punch in
-        await employeeModel.punchIn(emp_id, date, time);
-        res.status(200).json({ message: "Punched in successfully" });
+        res.status(200).json({ message: "Punched in successfully with location captured" });
     } catch (error) {
         console.error("Punch-in error:", error);
         res.status(500).json({ message: "Server error" });
