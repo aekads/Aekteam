@@ -16,6 +16,9 @@
 <!-- SweetAlert -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+
+
+
 <style>
     body {
         font-family: 'Segoe UI', sans-serif;
@@ -93,6 +96,64 @@
     .badge-icon {
         margin-right: 5px;
     }
+/* Truncate long preview text */
+.text-truncate-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Floating popup wrapper */
+.custom-popup {
+  display: none;               /* hidden initially */
+  position: fixed;             /* fixed to viewport */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  justify-content: center;     /* horizontal center */
+  align-items: center;         /* vertical center */
+  z-index: 9999;
+  background: rgba(0,0,0,0.0); /* transparent overlay if needed */
+}
+
+/* Popup content */
+.popup-content {
+  pointer-events: auto;
+  background: #fff;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Header */
+.popup-header {
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Body text */
+.popup-body p {
+  margin-bottom: 1rem;
+}
+
+/* Responsive for small screens */
+@media (max-width: 576px) {
+  .popup-content {
+    width: 95%;
+    padding: 1rem;
+  }
+}
+
+
+
 </style>
 </head>
 
@@ -186,6 +247,112 @@
                         </div>
                     </div>
                 </div>
+
+        <!-- Upcoming Events -->
+<!-- Upcoming Events -->
+<!-- Upcoming Events Section -->
+<div class="col-md-6">
+  <div class="card shadow-sm h-100 border-0">
+    <div class="card-body">
+      <h5 class="card-title d-flex align-items-center mb-3">
+        <i class="bi bi-calendar-event me-2 text-primary"></i>
+        Upcoming Events
+      </h5>
+
+      <% if (!events || events.length === 0) { %>
+        <p class="text-muted">No upcoming events.</p>
+      <% } else { %>
+        <div class="list-group list-group-flush">
+          <% events.forEach((event, index) => { %>
+            <div class="list-group-item border-0 border-bottom px-0 py-3">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1 me-3">
+                  <h6 class="fw-semibold text-primary mb-1">
+                    <%= event.title %>
+                  </h6>
+
+                  <% if (event.description) { %>
+                    <p class="text-muted small mb-2 text-truncate-3">
+                      <%= event.description %>
+                    </p>
+                  <% } %>
+
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-dark border">
+                      <i class="bi bi-clock me-1"></i>
+                      <%= new Date(event.date).toLocaleString("en-GB", {
+                            timeZone: "Asia/Kolkata",
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        }) %>
+                    </span>
+
+                    <% if (event.description && event.description.length > 120) { %>
+                      <button class="btn btn-sm btn-outline-primary open-popup" data-index="<%= index %>">
+                        Read More
+                      </button>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Floating Popup -->
+            <div class="custom-popup" id="popup<%= index %>">
+              <div class="popup-content shadow-lg">
+                <div class="popup-header d-flex justify-content-between align-items-center">
+                  <h5 class="fw-bold"><%= event.title %></h5>
+                  <button class="btn-close close-popup"></button>
+                </div>
+                <div class="popup-body">
+                  <p class="mb-2 text-muted small">
+                    <i class="bi bi-calendar3 me-1"></i>
+                    <strong>Date:</strong>
+                    <%= new Date(event.date).toLocaleString("en-GB", {
+                          timeZone: "Asia/Kolkata",
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit"
+                      }) %>
+                  </p>
+                  <div style="white-space: pre-line; font-size: 15px; line-height: 1.7; color: #333;">
+                    <%= event.description %>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+<script>
+  // Open popup
+  document.querySelectorAll('.open-popup').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const index = btn.dataset.index;
+      const popup = document.getElementById('popup' + index);
+      popup.style.display = 'flex';
+    });
+  });
+
+  // Close popup only via close button
+  document.querySelectorAll('.close-popup').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.closest('.custom-popup').style.display = 'none';
+    });
+  });
+</script>
+
+
+
             </div>
         </div>
     </div>        
@@ -227,24 +394,124 @@
             }
         }
 
-        async function punchIn() {
-            try {
-                const response = await fetch('/dashboard/employee/punch-in', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                const data = await response.json();
-
-                if (response.ok) {
-                    Swal.fire("Success!", data.message, "success").then(() => location.reload());
-                } else {
-                    Swal.fire("Error!", data.message, "error");
-                }
-            } catch (error) {
-                Swal.fire("Server Error!", "Something went wrong.", "error");
-            }
+       function getCurrentLocation() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject("Geolocation not supported by your browser.");
+            return;
         }
 
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                resolve({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                });
+            },
+            (error) => {
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        reject("Location permission denied");
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        reject("Location unavailable");
+                        break;
+                    case error.TIMEOUT:
+                        reject("Location request timed out");
+                        break;
+                    default:
+                        reject("Unable to retrieve location");
+                }
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    });
+}
+
+async function punchIn() {
+    try {
+        // Check permission first
+        const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
+
+        if (permissionStatus.state === 'denied') {
+            return Swal.fire({
+                title: "Location Blocked!",
+                html: `
+                    You have <b>blocked location access</b> for this site.<br><br>
+                    Please enable it manually:
+                    <ul style="text-align:left;margin-top:10px">
+                        <li>🔹 Click the <b>lock icon</b> in the address bar</li>
+                        <li>🔹 Set “Location” to “Allow”</li>
+                        <li>🔹 Then refresh this page</li>
+                    </ul>
+                `,
+                icon: "warning",
+                confirmButtonText: "Got it",
+            });
+        }
+
+        Swal.fire({
+            title: "Getting your location...",
+            text: "Please wait a moment.",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        const location = await getCurrentLocation();
+
+        const response = await fetch('/dashboard/employee/punch-in', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                latitude: location.latitude,
+                longitude: location.longitude
+            })
+        });
+
+        const data = await response.json();
+        Swal.close();
+
+        if (response.ok) {
+            // ✅ Instantly update button before reload
+            const punchButton = document.getElementById("punchButton");
+            punchButton.textContent = "Punch Out";
+            punchButton.onclick = confirmPunchOut;
+
+            // ✅ Show success popup and reload smoothly after 1 second
+            Swal.fire({
+                title: "✅ Success!",
+                text: "You punched in successfully.",
+                icon: "success",
+                showConfirmButton: false,
+                timer: 1200
+            });
+
+            setTimeout(() => {
+                location.reload(); // Auto refresh to fetch new state from backend
+            }, 1300);
+        } else {
+            Swal.fire("Error!", data.message, "error");
+        }
+
+    } catch (error) {
+        Swal.close();
+        if (error.toString().includes("denied")) {
+            Swal.fire({
+                title: "Location Required!",
+                text: "Please allow location access to Punch In.",
+                icon: "warning",
+                confirmButtonText: "Okay, I’ll Allow"
+            });
+        } else {
+            Swal.fire("Location Error", error.toString(), "error");
+        }
+    }
+}
         function confirmPunchOut() {
             Swal.fire({
                 title: "Are you sure?",
@@ -404,6 +671,11 @@
 }
         setInterval(updateDateTime, 1000);
         updateDateTime();
+
+
+
     </script>
+    <!-- At end of body -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
