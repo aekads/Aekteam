@@ -406,11 +406,12 @@ exports.getTodayPunch = async (emp_id, date) => {
 };
 
 // Insert punch-in record
-exports.punchIn = async (emp_id, date) => {
+exports.punchIn = async (emp_id, date, latitude, longitude, address) => {
     await pool.query(
-        `INSERT INTO attendance (emp_id, date, punch_in_time) 
-         VALUES ($1, $2, to_char(NOW() AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD HH24:MI:SS')::timestamp)`,
-        [emp_id, date]
+        `INSERT INTO attendance 
+         (emp_id, date, punch_in_time, punch_in_lat, punch_in_long, punch_in_address)
+         VALUES ($1, $2, to_char(NOW() AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD HH24:MI:SS')::timestamp, $3, $4, $5)`,
+        [emp_id, date, latitude, longitude, address]
     );
 };
 // Check if employee has punched in but not punched out
