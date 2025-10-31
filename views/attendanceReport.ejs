@@ -1,293 +1,144 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Attendance Report</title>
-    <link rel="stylesheet" href="/css/styles.css">
-<style>
-/* Sidebar */
-hrsidebar {
-    position: fixed;
-    width: 280px; /* Sidebar width */
-    height: 100vh;
-    background: #343a40;
-    color: white;
-    padding: 20px;
-}
-
-/* Body */
-body {
-    font-family: "Poppins", sans-serif;
-    margin: 0;
-    background: #f0f2f5;
-    color: #333;
-}
-
-
-/* For screens between 1000px and 1300px */
-@media (min-width: 1000px) and (max-width: 1300px) {
-    .main {
-        margin-left: 330px; /* sidebar width */
-        padding: 20px;
-        width: calc(100% - 330px); /* fill remaining space */
-        max-width: 1300px;       /* restrict max width */
-        min-width: 1000px;       /* prevent shrinking below 1000px */
-        margin-top: 20px;
+  <title>Attendance Report</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f0f2f5;
+      font-family: 'Poppins', sans-serif;
     }
-}
-
-/* For screens above 1300px */
-@media (min-width: 1301px) {
-    .main {
-        margin-left: 330px;
-        padding: 20px;
-        width: 1300px; /* fixed width for large screens */
-        margin-top: 20px;
-    }
-}
-
-/* Optional: For screens below 1000px (tablet/mobile) */
-@media (max-width: 999px) {
-    .main {
-        margin-left: 20px; /* reduce left margin */
-        padding: 20px;
-        width: calc(100% - 40px); /* full width minus margins */
-        margin-top: 20px;
-    }
-}
-
-
-/* Glassmorphism container for table & form */
-.container {
-    background: rgba(255,255,255,0.75);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
-    padding: 25px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-}
-
-/* Page Title */
-h3 {
-    text-align: center;
-    margin-bottom: 25px;
-    font-weight: 600;
-    color: #222;
-}
-
-/* Form styling */
-.attendance-form {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 25px;
-}
-
-.attendance-form select,
-.attendance-form input {
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 15px;
-}
-
-.btn {
-    border-radius: 30px;
-    padding: 10px 18px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn:hover { transform: scale(1.05); }
-
-.btn-success { background: #28a745; color: #fff; }
-.btn-success:hover { background: #218838; }
-
-.btn-primary { background: #007bff; color: #fff; }
-.btn-primary:hover { background: #0056b3; }
-
-/* Table styling */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    background: rgba(255,255,255,0.75);
-    backdrop-filter: blur(8px);
-}
-
-thead th {
-    background: linear-gradient(90deg, #007bff, #0056b3);
-    color: #fff;
-    text-align: center;
-    padding: 14px;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-}
-
-tbody td {
-    text-align: center;
-    padding: 12px;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-    transition: all 0.3s ease;
-}
-
-tbody tr:nth-child(even) { background: rgba(255,255,255,0.5); }
-tbody tr:hover { background: rgba(0,123,255,0.1); }
-
-/* Status Colors */
-.text-success { color: #28a745; font-weight: 600; }
-.text-danger { color: #dc3545; font-weight: 600; }
-
-/* Responsive */
-@media (max-width: 1200px) {
-    .main { margin-left: 20px; margin-right: 20px; }
-    table, .attendance-form { font-size: 14px; }
-}
-
-@media (max-width: 768px) {
-    .attendance-form { flex-direction: column; align-items: center; }
-    table { display: block; overflow-x: auto; white-space: nowrap; }
-}
-</style>
-
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const table = document.getElementById("attendanceTable");
-            if (table && table.dataset.hasData === "true") {
-                table.style.display = "table"; 
-            }
-        });
-
-        // Convert UTC Date to Indian Standard Time (IST)
-        function formatISTDate(dateString) {
-            const date = new Date(dateString);
-            const options = { day: 'numeric', month: 'long' };
-            return date.toLocaleDateString('en-IN', options); // 3 March
-        }
-
-        function getDayName(dateString) {
-            const date = new Date(dateString);
-            const options = { weekday: 'long' };
-            return date.toLocaleDateString('en-IN', options); // Tuesday
-        }
-
-        function formatISTTime(utcTime) {
-            if (!utcTime) return "-"; // Handle null time
-            const date = new Date(utcTime);
-            const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' };
-            return date.toLocaleTimeString('en-IN', options); // 10:30 AM
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            document.querySelectorAll(".date-cell").forEach(cell => {
-                cell.innerText = formatISTDate(cell.dataset.date);
-            });
-
-            document.querySelectorAll(".day-cell").forEach(cell => {
-                cell.innerText = getDayName(cell.dataset.date);
-            });
-
-            document.querySelectorAll(".time-cell").forEach(cell => {
-                cell.innerText = formatISTTime(cell.dataset.time);
-            });
-        });
-
-          // Show table only if it has data
-          document.addEventListener("DOMContentLoaded", function() {
-            let table = document.getElementById("attendanceTable");
-            if (table.getAttribute("data-has-data") === "true") {
-                table.style.display = "table";
-            }
-        });
-
-
-
-
-        document.addEventListener("DOMContentLoaded", function () {
-    const exportBtn = document.getElementById("exportExcel");
-    
-    if (exportBtn) {
-        exportBtn.addEventListener("click", function () {
-            const empId = document.getElementById("emp_id").value;
-            const startDate = document.querySelector("input[name='start_date']").value;
-            const endDate = document.querySelector("input[name='end_date']").value;
-
-            const url = `/dashboard/hr/exportAttendance?emp_id=${empId}&start_date=${startDate}&end_date=${endDate}`;
-            window.location.href = url; // Redirect to server-side route for Excel export
-        });
-    } else {
-        console.error("Export button not found!");
-    }
-});
-
-    </script>
+  </style>
 </head>
 <body>
+  <%- include('./partials/hrsidebar') %>
 
-    <%- include('./partials/hrsidebar') %> 
-    <div class="main">                                                                                
-    <h3>attendance report</h3>
+  <div class="main p-6 ml-80">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Attendance Report</h2>
 
-    <form method="GET" action="/dashboard/hr/attendanceReport" class="attendance-form">            
-        <div class="form-row">
-            <select name="emp_id" id="emp_id">
-                <option value="" disabled selected>Select Employee</option> <!-- Default Selection -->
-                <option value="all" <%= filters.emp_id === 'all' ? 'selected' : '' %>>All Employees</option> 
-                <% if (Array.isArray(employees) && employees.length > 0) { %>
-                    <% employees.forEach(emp => { %>
-                        <option value="<%= emp.emp_id %>" <%= filters.emp_id == emp.emp_id ? 'selected' : '' %> >
-                            <%= emp.name %>
-                        </option>
-                    <% }); %>
-                <% } else { %>                                                  
-                    <option value="">No employees found</option>
-                <% } %>
-            </select>
-    
-            <input type="date" name="start_date" value="<%= filters.start_date || '' %>">
-            <input type="date" name="end_date" value="<%= filters.end_date || '' %>">
-    
-            <button type="submit" class="btn">Show Report</button>
-            <button type="button" class="btn btn-success" id="exportExcel">Export to Excel</button>
-        </div>
-    </form>
-    
-    
-
-    <table id="attendanceTable" data-has-data="<%= attendanceData.length > 0 %>" style="<%= attendanceData.length > 0 ? '' : 'display:none;' %>">
-  <thead>
-  <tr>
-    <th>Employee ID</th>
-    <th>Employee Name</th>
-    <th>Date</th>
-    <th>Day</th>
-    <th>Punch In</th>
-    <th>Punch Out</th>
-    <th>Status</th>
-  </tr>
-</thead>
-<tbody>
-  <% attendanceData.forEach(record => { %>
-    <tr>
-      <td><%= record.emp_id %></td>
-      <td><%= record.name %></td>
-      <td><%= new Date(record.date).toLocaleDateString('en-IN') %></td>
-      <td><%= record.day %></td>
-      <td><%= record.punch_in_time ? new Date(record.punch_in_time).toLocaleTimeString('en-IN') : '-' %></td>
-      <td><%= record.punch_out_time ? new Date(record.punch_out_time).toLocaleTimeString('en-IN') : '-' %></td>
-      <td class="<%= record.status === 'Present' ? 'text-success' : record.status === 'Official Leave' ? 'text-info' : 'text-danger' %>">
-        <%= record.status %>
-      </td>
-    </tr>
-  <% }) %>
-</tbody>
-</table>
-
+    <!-- Tabs -->
+    <div class="flex justify-center mb-4 space-x-4">
+      <a href="?tab=particular" class="px-5 py-2 rounded-md text-white font-medium <%= filters.emp_id !== 'all' ? 'bg-blue-600' : 'bg-gray-400' %>">Particular Employee</a>
+      <a href="?emp_id=all&start_date=<%= filters.start_date || '' %>&end_date=<%= filters.end_date || '' %>" class="px-5 py-2 rounded-md text-white font-medium <%= filters.emp_id === 'all' ? 'bg-blue-600' : 'bg-gray-400' %>">All Employees</a>
     </div>
-</body>                                                                         
+
+    <!-- Filter Form -->
+    <form method="GET" action="/dashboard/hr/attendanceReport" class="flex flex-wrap justify-center gap-4 bg-white p-4 rounded-lg shadow-md mb-6">
+      <div>
+        <select name="emp_id" id="emp_id" class="border border-gray-300 rounded-md p-2">
+          <option value="" disabled selected>Select Employee</option>
+          <option value="all" <%= filters.emp_id === 'all' ? 'selected' : '' %>>All Employees</option>
+          <% employees.forEach(emp => { %>
+            <option value="<%= emp.emp_id %>" <%= filters.emp_id == emp.emp_id ? 'selected' : '' %>><%= emp.name %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div>
+        <input type="date" name="start_date" value="<%= filters.start_date || '' %>" class="border border-gray-300 rounded-md p-2">
+      </div>
+      <div>
+        <input type="date" name="end_date" value="<%= filters.end_date || '' %>" class="border border-gray-300 rounded-md p-2">
+      </div>
+      <button type="submit" class="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700">Show Report</button>
+      <button type="button" id="exportExcel" class="bg-green-600 text-white px-5 py-2 rounded-md hover:bg-green-700">Export Excel</button>
+    </form>
+
+    <% if (!isAllEmployees && summary) { %>
+      <!-- Particular Employee Summary -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-green-100 text-green-700 p-4 rounded-lg shadow text-center">
+          <p>Total Days</p>
+          <h2 class="text-2xl font-bold"><%= summary.totalDays %></h2>
+        </div>
+        <div class="bg-blue-100 text-blue-700 p-4 rounded-lg shadow text-center">
+          <p>Present</p>
+          <h2 class="text-2xl font-bold"><%= summary.totalPresent %></h2>
+        </div>
+        <div class="bg-red-100 text-red-700 p-4 rounded-lg shadow text-center">
+          <p>Absent</p>
+          <h2 class="text-2xl font-bold"><%= summary.totalAbsent %></h2>
+        </div>
+        <div class="bg-yellow-100 text-yellow-700 p-4 rounded-lg shadow text-center">
+          <p>Official Leaves</p>
+          <h2 class="text-2xl font-bold"><%= summary.totalLeaves %></h2>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (!isAllEmployees && attendanceData.length > 0) { %>
+      <!-- Table: Particular Employee -->
+      <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+        <table class="w-full border border-gray-200">
+          <thead class="bg-blue-600 text-white">
+            <tr>
+              <th class="py-3 px-4">Date</th>
+              <th class="py-3 px-4">Day</th>
+              <th class="py-3 px-4">Punch In</th>
+              <th class="py-3 px-4">Punch Out</th>
+              <th class="py-3 px-4">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% attendanceData.forEach(rec => { %>
+              <tr class="text-center hover:bg-gray-100">
+                <td class="py-2 px-3"><%= new Date(rec.date).toLocaleDateString('en-IN') %></td>
+                <td class="py-2 px-3"><%= rec.day %></td>
+                <td class="py-2 px-3"><%= rec.punch_in_time ? new Date(rec.punch_in_time).toLocaleTimeString('en-IN') : '-' %></td>
+                <td class="py-2 px-3"><%= rec.punch_out_time ? new Date(rec.punch_out_time).toLocaleTimeString('en-IN') : '-' %></td>
+                <td class="py-2 px-3 font-semibold 
+                    <%= rec.status === 'Present' ? 'text-green-600' 
+                      : rec.status === 'Official Leave' ? 'text-yellow-600' 
+                      : rec.status === 'Festival Leave' ? 'text-purple-600'
+                      : 'text-red-600' %>">
+                  <%= rec.status %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+
+    <% if (isAllEmployees && summary && summary.length > 0) { %>
+      <!-- Table: All Employees Summary -->
+      <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+        <table class="w-full border border-gray-200">
+          <thead class="bg-indigo-700 text-white">
+            <tr>
+              <th class="py-3 px-4">Employee Name</th>
+              <th class="py-3 px-4">Present</th>
+              <th class="py-3 px-4">Absent</th>
+              <th class="py-3 px-4">Official Leave</th>
+              <th class="py-3 px-4">Festival Leave</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% summary.forEach(s => { %>
+              <tr class="text-center hover:bg-gray-100">
+                <td class="py-2 px-3 font-medium"><%= s.name %></td>
+                <td class="py-2 px-3 text-green-600 font-semibold"><%= s.totalPresent %></td>
+                <td class="py-2 px-3 text-red-600 font-semibold"><%= s.totalAbsent %></td>
+                <td class="py-2 px-3 text-yellow-600 font-semibold"><%= s.totalLeaves %></td>
+                <td class="py-2 px-3 text-purple-600 font-semibold"><%= s.totalFestival %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+
+  <script>
+    document.getElementById("exportExcel")?.addEventListener("click", function () {
+      const empId = document.getElementById("emp_id").value;
+      const start = document.querySelector("[name='start_date']").value;
+      const end = document.querySelector("[name='end_date']").value;
+      if (!empId || !start || !end) {
+        alert("Please select employee and date range!");
+        return;
+      }
+      window.location.href = `/dashboard/hr/exportAttendance?emp_id=${empId}&start_date=${start}&end_date=${end}`;
+    });
+  </script>
+</body>
 </html>
