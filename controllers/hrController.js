@@ -342,8 +342,10 @@ exports.exportAttendanceReport = async (req, res) => {
 // Show Festival Leave List Page
 exports.showFestivalLeaves = async (req, res) => {
   try {
+     const emp_id = req.user.emp_id;
+        const employee = await employeeModel.findEmployee(emp_id);
     const result = await pool.query("SELECT * FROM festival_leaves ORDER BY leave_date ASC");
-    res.render("festivalLeaves", { leaves: result.rows });
+    res.render("festivalLeaves", { leaves: result.rows ,employee});
   } catch (error) {
     console.error("Error loading festival leaves:", error);
     res.status(500).send("Internal Server Error");
