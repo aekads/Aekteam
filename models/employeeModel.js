@@ -296,7 +296,6 @@ exports.findEmployees = async () => {
 const moment = require("moment");
 exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
   try {
-    // Generate all dates for the selected range
     const allDates = [];
     let currentDate = moment(start_date);
     while (currentDate.isSameOrBefore(moment(end_date))) {
@@ -306,19 +305,13 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
 
     const dateArray = allDates.length > 0 ? allDates : ["1900-01-01"];
 
-    // ✅ Fetch employee role (if emp_id provided)
-    let role = null;
-    if (emp_id && emp_id !== "all") {
-      const roleRes = await pool.query(
-        "SELECT role FROM employees WHERE emp_id = $1",
-        [emp_id]
-      );
-      if (roleRes.rows.length > 0) {
-        role = roleRes.rows[0].role;
-      }
-    }
+    // Fetch all festival leave dates
+    const festResult = await pool.query(
+      "SELECT leave_date FROM festival_leaves WHERE leave_date BETWEEN $1 AND $2",
+      [start_date, end_date]
+    );
+    const festivalDates = festResult.rows.map((r) => r.leave_date.toISOString().split("T")[0]);
 
-    // ✅ Fetch all attendance data
     const query = `
       SELECT 
           dates.date,
@@ -340,34 +333,29 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
     const result = await pool.query(query, [dateArray, emp_id || null]);
     const rows = result.rows;
 
-    // ✅ Apply weekend logic
     const finalData = rows.map((record) => {
-      const dayName = moment(record.date).format("dddd"); // e.g., Sunday
+      const dayName = moment(record.date).format("dddd");
       const roleName = (record.role || "").toLowerCase();
 
       let isWeekend = false;
       if (["it_team", "graphic_team"].includes(roleName)) {
         isWeekend = ["Saturday", "Sunday"].includes(dayName);
-      } else if (
-        ["sales", "acquisition", "maintenance"].includes(roleName)
-      ) {
+      } else if (["sales", "acquisition", "maintenance"].includes(roleName)) {
         isWeekend = dayName === "Sunday";
       }
 
       let status;
       if (record.punch_in_time && record.punch_out_time) {
         status = "Present";
+      } else if (festivalDates.includes(record.date.toISOString().split("T")[0])) {
+        status = "Festival Leave";
       } else if (isWeekend) {
         status = "Official Leave";
       } else {
         status = "Absent";
       }
 
-      return {
-        ...record,
-        status,
-        day: dayName,
-      };
+      return { ...record, status, day: dayName };
     });
 
     return finalData;
@@ -376,6 +364,7 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
     throw error;
   }
 };
+
 exports.findEmployeee = async (emp_id = null) => {
     let query = `SELECT emp_id, name FROM employees`;
     const params = [];
