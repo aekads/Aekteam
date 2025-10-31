@@ -305,15 +305,18 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
 
     const dateArray = allDates.length > 0 ? allDates : ["1900-01-01"];
 
-    // Fetch all festival leave dates
+    // ✅ Fetch all festival leave dates between start and end
     const festResult = await pool.query(
       "SELECT leave_date FROM festival_leaves WHERE leave_date BETWEEN $1 AND $2",
       [start_date, end_date]
     );
-    const festivalDates = festResult.rows.map((r) => r.leave_date.toISOString().split("T")[0]);
+    const festivalDates = festResult.rows.map((r) =>
+      moment(r.leave_date).format("YYYY-MM-DD")
+    );
 
+    // ✅ Use DISTINCT ON to avoid duplicates per emp/date
     const query = `
-      SELECT 
+      SELECT DISTINCT ON (dates.date, e.emp_id)
           dates.date,
           e.emp_id,
           e.name,
@@ -325,9 +328,10 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
       ) AS dates
       CROSS JOIN employees e
       LEFT JOIN attendance a 
-        ON e.emp_id = a.emp_id AND dates.date = a.date
+        ON e.emp_id = a.emp_id 
+        AND dates.date = a.date
       WHERE ($2::TEXT IS NULL OR $2::TEXT = 'all' OR e.emp_id = $2::TEXT)
-      ORDER BY e.emp_id, dates.date;
+      ORDER BY e.emp_id, dates.date, a.punch_in_time ASC;
     `;
 
     const result = await pool.query(query, [dateArray, emp_id || null]);
@@ -336,7 +340,9 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
     const finalData = rows.map((record) => {
       const dayName = moment(record.date).format("dddd");
       const roleName = (record.role || "").toLowerCase();
+      const formattedDate = moment(record.date).format("YYYY-MM-DD");
 
+      // ✅ Check weekend logic by role
       let isWeekend = false;
       if (["it_team", "graphic_team"].includes(roleName)) {
         isWeekend = ["Saturday", "Sunday"].includes(dayName);
@@ -344,18 +350,23 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
         isWeekend = dayName === "Sunday";
       }
 
+      // ✅ Determine status
       let status;
-      if (record.punch_in_time && record.punch_out_time) {
-        status = "Present";
-      } else if (festivalDates.includes(record.date.toISOString().split("T")[0])) {
+      if (festivalDates.includes(formattedDate)) {
         status = "Festival Leave";
+      } else if (record.punch_in_time && record.punch_out_time) {
+        status = "Present";
       } else if (isWeekend) {
         status = "Official Leave";
       } else {
         status = "Absent";
       }
 
-      return { ...record, status, day: dayName };
+      return {
+        ...record,
+        status,
+        day: dayName,
+      };
     });
 
     return finalData;
@@ -364,6 +375,7 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
     throw error;
   }
 };
+
 
 exports.findEmployeee = async (emp_id = null) => {
     let query = `SELECT emp_id, name FROM employees`;
