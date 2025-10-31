@@ -344,7 +344,7 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
 
       // ✅ Check weekend logic by role
       let isWeekend = false;
-      if (["it_team", "graphic_team"].includes(roleName)) {
+      if (["it_team", "graphic_team", "accountant"].includes(roleName)) {
         isWeekend = ["Saturday", "Sunday"].includes(dayName);
       } else if (["sales", "acquisition", "maintenance"].includes(roleName)) {
         isWeekend = dayName === "Sunday";
