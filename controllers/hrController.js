@@ -1,9 +1,10 @@
 const employeeModel = require('../models/employeeModel');
 // const { addEmployee } = require('../models/employeeModel');
 const { addEmployee, getEmployees  } = require('../models/employeeModel');
-const { pool } = require('pg');
+// const { pool } = require('pg');
 const ExcelJS = require("exceljs");
 const leaveModel = require("../models/leaveModel");
+const pool = require('../config/db');
 
 
 
@@ -333,6 +334,55 @@ exports.exportAttendanceReport = async (req, res) => {
     }
 };
 
+
+// ==============================
+// 🎉 FESTIVAL LEAVES MANAGEMENT
+// ==============================
+
+// Show Festival Leave List Page
+exports.showFestivalLeaves = async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM festival_leaves ORDER BY leave_date ASC");
+    res.render("festivalLeaves", { leaves: result.rows });
+  } catch (error) {
+    console.error("Error loading festival leaves:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+// Add Festival Leave
+exports.addFestivalLeave = async (req, res) => {
+  try {
+    const { leave_date, name } = req.body;
+
+    if (!leave_date || !name)
+      return res.status(400).send("Date and Name are required");
+
+    await pool.query(
+      "INSERT INTO festival_leaves (leave_date, name) VALUES ($1, $2)",
+      [leave_date, name]
+    );
+
+    res.redirect("/dashboard/hr/festival-leaves");
+  } catch (error) {
+    console.error("Error adding festival leave:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+// Delete Festival Leave
+exports.deleteFestivalLeave = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query("DELETE FROM festival_leaves WHERE id = $1", [id]);
+    res.redirect("/dashboard/hr/festival-leaves");
+  } catch (error) {
+    console.error("Error deleting festival leave:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+
 //for Hr can see Leave list
 exports.leaveHistory = async (req, res) => {
     try {
@@ -456,4 +506,40 @@ exports.rejectPermission = async (req, res) => {
         console.error("Rejection error:", error);
         res.status(500).json({ message: "Server error" });
     }
+};
+// models/employeeModel.js
+
+
+// Show Add Event Form + List
+exports.showAddEvent = async (req, res) => {
+  try {
+    const emp_id = req.user.emp_id;
+      const employee = await employeeModel.findEmployee(emp_id);
+    const events = await pool.query(
+      `SELECT id, title, description, date
+       FROM events
+       ORDER BY date DESC`
+    );
+    res.render('addEvent', { events: events.rows,employee });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error loading events');
+  }
+};
+
+// Add Event
+exports.addEvent = async (req, res) => {
+  const { title, description, date } = req.body;
+  try {
+    await pool.query(
+      'INSERT INTO events (title, description, date) VALUES ($1, $2, $3)',
+      [title, description, date]
+    );
+
+    // After adding, redirect to same page to refresh list
+    res.redirect('/dashboard/hr/events/add');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error adding event');
+  }
 };
