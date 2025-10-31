@@ -257,81 +257,253 @@ exports.renderEmployeeProfile = async (req, res) => {
 
 
 
-// for HR roll
+// =========================
+// HR: Attendance Report
+// =========================
+// Attendance Report Controller
 exports.attendanceReport = async (req, res) => {
-    try {
-        const { emp_id, start_date, end_date } = req.query;
+  try {
+    const { emp_id, start_date, end_date } = req.query;
 
-        // Fetch employees list
-        const employees = await employeeModel.findEmployees();
-        const employee = await employeeModel.findEmployee(req.user.emp_id);
+    const employees = await employeeModel.findEmployees();
+    const employee = req.user ? await employeeModel.findEmployee(req.user.emp_id) : null;
 
-        let attendanceData = [];
+    let attendanceData = [];
+    let summary = null;
+    let isAllEmployees = emp_id === "all";
 
-        // Only fetch data if employee + dates selected
-        if (emp_id && start_date && end_date) {
-            attendanceData = await employeeModel.getAttendanceReport({ emp_id, start_date, end_date });
-        }
+    if (emp_id && start_date && end_date) {
+      // Fetch attendance
+      attendanceData = await employeeModel.getAttendanceReport({ emp_id, start_date, end_date });
 
-        res.render("attendanceReport", {
-            employees,
-            attendanceData,
-            employee,
-            filters: { emp_id, start_date, end_date }
+      if (isAllEmployees) {
+        // Summary per employee
+        const empMap = {};
+
+        attendanceData.forEach((rec) => {
+          if (!empMap[rec.emp_id]) {
+            empMap[rec.emp_id] = {
+              name: rec.name,
+              totalPresent: 0,
+              totalAbsent: 0,
+              totalLeaves: 0,
+              totalFestival: 0,
+            };
+          }
+
+          if (rec.status === "Present") empMap[rec.emp_id].totalPresent++;
+          else if (rec.status === "Absent") empMap[rec.emp_id].totalAbsent++;
+          else if (rec.status === "Official Leave") empMap[rec.emp_id].totalLeaves++;
+          else if (rec.status === "Festival Leave") empMap[rec.emp_id].totalFestival++;
         });
-    } catch (error) {
-        console.error("Error fetching attendance report:", error);
-        res.status(500).send("Internal Server Error");
+
+        summary = Object.values(empMap);
+      } else {
+        // Single employee summary
+        summary = {
+          totalDays: attendanceData.length,
+          totalPresent: attendanceData.filter((r) => r.status === "Present").length,
+          totalAbsent: attendanceData.filter((r) => r.status === "Absent").length,
+          totalLeaves: attendanceData.filter((r) => r.status === "Official Leave").length,
+          totalFestival: attendanceData.filter((r) => r.status === "Festival Leave").length,
+        };
+      }
     }
+
+    res.render("attendanceReport", {
+      employees,
+      attendanceData,
+      employee,
+      summary,
+      filters: { emp_id, start_date, end_date },
+      isAllEmployees,
+    });
+  } catch (error) {
+    console.error("Error fetching attendance report:", error);
+    res.status(500).send("Internal Server Error");
+  }
 };
 
-//excel data export attendece
+// =========================
+// HR: Export Attendance to Excel
+// =========================
+
+
+// ===============================
+// Export Attendance Report
+// ===============================
 exports.exportAttendanceReport = async (req, res) => {
-    try {
-        const { emp_id, start_date, end_date } = req.query;
+  try {
+    const { emp_id, start_date, end_date } = req.query;
 
-        if (!emp_id || !start_date || !end_date) {
-            return res.status(400).send("Please select employee and date range before exporting.");
-        }
-
-        const attendanceData = await employeeModel.getAttendanceReport({ emp_id, start_date, end_date });
-
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet("Attendance Report");
-
-        worksheet.columns = [
-            { header: "Employee ID", key: "emp_id", width: 15 },
-            { header: "Employee Name", key: "name", width: 20 },
-            { header: "Date", key: "date", width: 15 },
-            { header: "Punch In", key: "punch_in_time", width: 15 },
-            { header: "Punch Out", key: "punch_out_time", width: 15 },
-            { header: "Status", key: "status", width: 15 },
-        ];
-
-        attendanceData.forEach(record => {
-            worksheet.addRow({
-                emp_id: record.emp_id,
-                name: record.name,
-                date: new Date(record.date).toLocaleDateString("en-IN"),
-                punch_in_time: record.punch_in_time
-                    ? new Date(record.punch_in_time).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-                    : "-",
-                punch_out_time: record.punch_out_time
-                    ? new Date(record.punch_out_time).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-                    : "-",
-                status: record.status,
-            });
-        });
-
-        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        res.setHeader("Content-Disposition", "attachment; filename=Attendance_Report.xlsx");
-
-        await workbook.xlsx.write(res);
-        res.end();
-    } catch (error) {
-        console.error("Error exporting attendance report:", error);
-        res.status(500).send("Error generating Excel file");
+    if (!start_date || !end_date) {
+      return res
+        .status(400)
+        .send("Please select date range before exporting.");
     }
+
+    const attendanceData = await employeeModel.getAttendanceReport({
+      emp_id,
+      start_date,
+      end_date,
+    });
+
+    // Create new workbook
+    const workbook = new ExcelJS.Workbook();
+
+    // If specific employee selected → full daily report
+    if (emp_id && emp_id !== "all") {
+      const worksheet = workbook.addWorksheet("Employee Attendance");
+
+      worksheet.columns = [
+        { header: "Employee ID", key: "emp_id", width: 15 },
+        { header: "Employee Name", key: "name", width: 22 },
+        { header: "Date", key: "date", width: 15 },
+        { header: "Day", key: "day", width: 15 },
+        { header: "Punch In", key: "punch_in_time", width: 15 },
+        { header: "Punch Out", key: "punch_out_time", width: 15 },
+        { header: "Status", key: "status", width: 18 },
+      ];
+
+      // Add attendance rows (no duplicates)
+      const uniqueRecords = [];
+      const seen = new Set();
+
+      attendanceData.forEach((r) => {
+        const key = `${r.emp_id}-${r.date}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueRecords.push(r);
+        }
+      });
+
+      uniqueRecords.forEach((record) => {
+        worksheet.addRow({
+          emp_id: record.emp_id,
+          name: record.name,
+          date: new Date(record.date).toLocaleDateString("en-IN"),
+          day: record.day,
+          punch_in_time: record.punch_in_time
+            ? new Date(record.punch_in_time).toLocaleTimeString("en-IN", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "-",
+          punch_out_time: record.punch_out_time
+            ? new Date(record.punch_out_time).toLocaleTimeString("en-IN", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "-",
+          status: record.status,
+        });
+      });
+
+      // Summary
+      const totalDays = uniqueRecords.length;
+      const totalPresent = uniqueRecords.filter(
+        (r) => r.status === "Present"
+      ).length;
+      const totalAbsent = uniqueRecords.filter(
+        (r) => r.status === "Absent"
+      ).length;
+      const totalLeaves = uniqueRecords.filter(
+        (r) =>
+          r.status === "Official Leave" || r.status === "Festival Leave"
+      ).length;
+
+      worksheet.addRow({});
+      worksheet.addRow(["Summary"]);
+      worksheet.addRow(["Total Days", totalDays]);
+      worksheet.addRow(["Present", totalPresent]);
+      worksheet.addRow(["Absent", totalAbsent]);
+      worksheet.addRow(["Leaves", totalLeaves]);
+
+      // Style header
+      worksheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FF007BFF" },
+        };
+      });
+    }
+
+    // If "all employees" selected → summary only
+    else {
+      const worksheet = workbook.addWorksheet("All Employees Summary");
+
+      worksheet.columns = [
+        { header: "Employee ID", key: "emp_id", width: 15 },
+        { header: "Employee Name", key: "name", width: 22 },
+        { header: "Total Days", key: "total_days", width: 15 },
+        { header: "Present", key: "present", width: 15 },
+        { header: "Absent", key: "absent", width: 15 },
+        { header: "Leaves", key: "leaves", width: 15 },
+      ];
+
+      // Group by employee
+      const summaryMap = {};
+      attendanceData.forEach((r) => {
+        if (!summaryMap[r.emp_id]) {
+          summaryMap[r.emp_id] = {
+            emp_id: r.emp_id,
+            name: r.name,
+            total_days: 0,
+            present: 0,
+            absent: 0,
+            leaves: 0,
+          };
+        }
+        summaryMap[r.emp_id].total_days++;
+        if (r.status === "Present") summaryMap[r.emp_id].present++;
+        else if (r.status === "Absent") summaryMap[r.emp_id].absent++;
+        else if (
+          r.status === "Official Leave" ||
+          r.status === "Festival Leave"
+        )
+          summaryMap[r.emp_id].leaves++;
+      });
+
+      // Add rows
+      Object.values(summaryMap).forEach((emp) => worksheet.addRow(emp));
+
+      // Style header
+      worksheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FF007BFF" },
+        };
+      });
+
+      worksheet.addRow({});
+      worksheet.addRow([
+        "Report Duration",
+        `${new Date(start_date).toLocaleDateString("en-IN")} → ${new Date(
+          end_date
+        ).toLocaleDateString("en-IN")}`,
+      ]);
+    }
+
+    // Response setup
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=Attendance_Report_${Date.now()}.xlsx`
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error("Error exporting attendance report:", error);
+    res.status(500).send("Error generating Excel file");
+  }
 };
 
 
