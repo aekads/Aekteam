@@ -91,6 +91,18 @@ router.post("/rejectPermission/:id", verifyToken, requireHR, hrController.reject
 
 router.get("/leaveHistory",verifyToken, requireHR, hrController.leaveHistory);
 
+// Show Add Event form + All Events on the same page
+router.get('/events/add', verifyToken, requireHR, hrController.showAddEvent);
+
+// Submit Event (same page form)
+router.post('/events/add', verifyToken, requireHR, hrController.addEvent);
+// Festival Leave routes
+router.get("/festival-leaves", verifyToken, requireHR, hrController.showFestivalLeaves);
+router.post("/festival-leaves/add", verifyToken, requireHR, hrController.addFestivalLeave);
+router.post("/festival-leaves/delete/:id", verifyToken, requireHR, hrController.deleteFestivalLeave);
+
+
+
 
 module.exports = router;
   
