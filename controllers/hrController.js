@@ -337,9 +337,7 @@ exports.exportAttendanceReport = async (req, res) => {
     const { emp_id, start_date, end_date } = req.query;
 
     if (!start_date || !end_date) {
-      return res
-        .status(400)
-        .send("Please select date range before exporting.");
+      return res.status(400).send("Please select date range before exporting.");
     }
 
     const attendanceData = await employeeModel.getAttendanceReport({
@@ -348,10 +346,11 @@ exports.exportAttendanceReport = async (req, res) => {
       end_date,
     });
 
-    // Create new workbook
     const workbook = new ExcelJS.Workbook();
 
-    // If specific employee selected → full daily report
+    // =========================================================
+    // SINGLE EMPLOYEE EXPORT (Full Daily Data)
+    // =========================================================
     if (emp_id && emp_id !== "all") {
       const worksheet = workbook.addWorksheet("Employee Attendance");
 
@@ -362,12 +361,12 @@ exports.exportAttendanceReport = async (req, res) => {
         { header: "Day", key: "day", width: 15 },
         { header: "Punch In", key: "punch_in_time", width: 15 },
         { header: "Punch Out", key: "punch_out_time", width: 15 },
-        { header: "Status", key: "status", width: 18 },
+        { header: "Status", key: "status", width: 20 },
       ];
 
-      // Add attendance rows (no duplicates)
-      const uniqueRecords = [];
+      // Remove duplicates
       const seen = new Set();
+      const uniqueRecords = [];
 
       attendanceData.forEach((r) => {
         const key = `${r.emp_id}-${r.date}`;
@@ -377,6 +376,7 @@ exports.exportAttendanceReport = async (req, res) => {
         }
       });
 
+      // Add rows
       uniqueRecords.forEach((record) => {
         worksheet.addRow({
           emp_id: record.emp_id,
@@ -399,25 +399,29 @@ exports.exportAttendanceReport = async (req, res) => {
         });
       });
 
-      // Summary
+      // =========================================================
+      // ✅ SUMMARY WITH HALF-DAY COUNT AS 0.5
+      // =========================================================
       const totalDays = uniqueRecords.length;
-      const totalPresent = uniqueRecords.filter(
-        (r) => r.status === "Present"
+      const totalPresent = uniqueRecords.filter((r) => r.status === "Present").length;
+      const totalAbsent = uniqueRecords.filter((r) => r.status === "Absent").length;
+      const totalFestival = uniqueRecords.filter((r) => r.status === "Festival Leave").length;
+      const totalFullLeave = uniqueRecords.filter((r) => r.status === "Official Leave").length;
+      const totalHalfDay = uniqueRecords.filter((r) =>
+        r.status.includes("Half Day")
       ).length;
-      const totalAbsent = uniqueRecords.filter(
-        (r) => r.status === "Absent"
-      ).length;
-      const totalLeaves = uniqueRecords.filter(
-        (r) =>
-          r.status === "Official Leave" || r.status === "Festival Leave"
-      ).length;
+
+      const totalLeaves = totalFullLeave + totalFestival + totalHalfDay * 0.5;
 
       worksheet.addRow({});
       worksheet.addRow(["Summary"]);
       worksheet.addRow(["Total Days", totalDays]);
       worksheet.addRow(["Present", totalPresent]);
       worksheet.addRow(["Absent", totalAbsent]);
-      worksheet.addRow(["Leaves", totalLeaves]);
+      worksheet.addRow(["Weekend day / Official Leave Leaves", totalFullLeave]);
+      worksheet.addRow(["Half-Day Leaves (0.5 each)", totalHalfDay * 0.5]);
+      worksheet.addRow(["Festival Leave", totalFestival]);
+      worksheet.addRow(["Total Leave Count", totalLeaves]);
 
       // Style header
       worksheet.getRow(1).eachCell((cell) => {
@@ -430,7 +434,9 @@ exports.exportAttendanceReport = async (req, res) => {
       });
     }
 
-    // If "all employees" selected → summary only
+    // =========================================================
+    // ALL EMPLOYEES EXPORT (Summary per Employee)
+    // =========================================================
     else {
       const worksheet = workbook.addWorksheet("All Employees Summary");
 
@@ -440,11 +446,14 @@ exports.exportAttendanceReport = async (req, res) => {
         { header: "Total Days", key: "total_days", width: 15 },
         { header: "Present", key: "present", width: 15 },
         { header: "Absent", key: "absent", width: 15 },
-        { header: "Leaves", key: "leaves", width: 15 },
+        { header: "Weekend day / Official Leave Leaves", key: "full_leave", width: 18 },
+        { header: "Half-Day Leaves (0.5)", key: "half_leave", width: 20 },
+        { header: "Festival Leave", key: "festival", width: 18 },
+        { header: "Total Leave Count", key: "total_leave_count", width: 18 },
       ];
 
-      // Group by employee
       const summaryMap = {};
+
       attendanceData.forEach((r) => {
         if (!summaryMap[r.emp_id]) {
           summaryMap[r.emp_id] = {
@@ -453,20 +462,25 @@ exports.exportAttendanceReport = async (req, res) => {
             total_days: 0,
             present: 0,
             absent: 0,
-            leaves: 0,
+            full_leave: 0,
+            half_leave: 0,
+            festival: 0,
+            total_leave_count: 0,
           };
         }
-        summaryMap[r.emp_id].total_days++;
-        if (r.status === "Present") summaryMap[r.emp_id].present++;
-        else if (r.status === "Absent") summaryMap[r.emp_id].absent++;
-        else if (
-          r.status === "Official Leave" ||
-          r.status === "Festival Leave"
-        )
-          summaryMap[r.emp_id].leaves++;
+
+        const emp = summaryMap[r.emp_id];
+        emp.total_days++;
+
+        if (r.status === "Present") emp.present++;
+        else if (r.status === "Absent") emp.absent++;
+        else if (r.status === "Official Leave") emp.full_leave++;
+        else if (r.status.includes("Half Day")) emp.half_leave += 0.5;
+        else if (r.status === "Festival Leave") emp.festival++;
+
+        emp.total_leave_count = emp.full_leave + emp.half_leave + emp.festival;
       });
 
-      // Add rows
       Object.values(summaryMap).forEach((emp) => worksheet.addRow(emp));
 
       // Style header
@@ -488,7 +502,9 @@ exports.exportAttendanceReport = async (req, res) => {
       ]);
     }
 
-    // Response setup
+    // =========================================================
+    // RESPONSE
+    // =========================================================
     res.setHeader(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -505,6 +521,7 @@ exports.exportAttendanceReport = async (req, res) => {
     res.status(500).send("Error generating Excel file");
   }
 };
+
 
 
 // ==============================
@@ -595,6 +612,22 @@ const employee = await employeeModel.findEmployee(req.user.emp_id);
     }
 };
 
+exports.getLeaves = async (req, res) => {
+  try {
+    const { emp_id } = req.query;
+    const result = await pool.query(
+      `SELECT start_date, end_date, leave_type, half_day, reason, status 
+       FROM leaves 
+       WHERE emp_id = $1 
+       ORDER BY start_date DESC`,
+      [emp_id]
+    );
+    res.json({ status: true, leaves: result.rows });
+  } catch (error) {
+    console.error("Error fetching leaves:", error);
+    res.json({ status: false, leaves: [] });
+  }
+};
 
 
 // ✅ Get all pending permissions
