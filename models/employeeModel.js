@@ -305,7 +305,7 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
 
     const dateArray = allDates.length > 0 ? allDates : ["1900-01-01"];
 
-    // ✅ Fetch all festival leave dates between start and end
+    // ✅ Fetch all festival leave dates
     const festResult = await pool.query(
       "SELECT leave_date FROM festival_leaves WHERE leave_date BETWEEN $1 AND $2",
       [start_date, end_date]
@@ -314,7 +314,38 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
       moment(r.leave_date).format("YYYY-MM-DD")
     );
 
-    // ✅ Use DISTINCT ON to avoid duplicates per emp/date
+    // ✅ Fetch all approved leaves (full + half)
+    const leaveResult = await pool.query(
+      `SELECT emp_id, start_date, end_date, half_day, status 
+       FROM leaves 
+       WHERE status = 'approved'
+       AND (
+         (start_date BETWEEN $1 AND $2)
+         OR (end_date BETWEEN $1 AND $2)
+         OR (start_date <= $1 AND end_date >= $2)
+       )`,
+      [start_date, end_date]
+    );
+
+    // ✅ Map leaves by emp_id and date
+    const leaveMap = {}; // { emp_id: { 'YYYY-MM-DD': { type, half_day } } }
+    leaveResult.rows.forEach((lv) => {
+      const start = moment(lv.start_date);
+      const end = moment(lv.end_date);
+      let loop = moment(start);
+
+      while (loop.isSameOrBefore(end)) {
+        const d = loop.format("YYYY-MM-DD");
+        if (!leaveMap[lv.emp_id]) leaveMap[lv.emp_id] = {};
+        leaveMap[lv.emp_id][d] = {
+          type: lv.half_day ? "half" : "full",
+          half_day: lv.half_day ? lv.half_day.toLowerCase() : null, // “1st half” or “2nd half”
+        };
+        loop.add(1, "day");
+      }
+    });
+
+    // ✅ Fetch attendance data (distinct per emp/date)
     const query = `
       SELECT DISTINCT ON (dates.date, e.emp_id)
           dates.date,
@@ -337,12 +368,13 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
     const result = await pool.query(query, [dateArray, emp_id || null]);
     const rows = result.rows;
 
+    // ✅ Build final output with clean logic
     const finalData = rows.map((record) => {
       const dayName = moment(record.date).format("dddd");
       const roleName = (record.role || "").toLowerCase();
       const formattedDate = moment(record.date).format("YYYY-MM-DD");
 
-      // ✅ Check weekend logic by role
+      // ✅ Weekend logic
       let isWeekend = false;
       if (["it_team", "graphic_team", "accountant"].includes(roleName)) {
         isWeekend = ["Saturday", "Sunday"].includes(dayName);
@@ -350,16 +382,38 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
         isWeekend = dayName === "Sunday";
       }
 
-      // ✅ Determine status
-      let status;
+      let status = "Absent"; // default
+
+      // ✅ Priority 1: Festival Leave
       if (festivalDates.includes(formattedDate)) {
         status = "Festival Leave";
-      } else if (record.punch_in_time && record.punch_out_time) {
+      }
+
+      // ✅ Priority 2: Approved Leave (Full/Half)
+      else if (
+        leaveMap[record.emp_id] &&
+        leaveMap[record.emp_id][formattedDate]
+      ) {
+        const leaveInfo = leaveMap[record.emp_id][formattedDate];
+
+        if (leaveInfo.type === "full") {
+          status = "Official Leave";
+        } else if (leaveInfo.type === "half") {
+          status =
+            leaveInfo.half_day === "1st half"
+              ? "Half Day (1st Half)"
+              : "Half Day (2nd Half)";
+        }
+      }
+
+      // ✅ Priority 3: Present (only if not on any type of leave)
+      else if (record.punch_in_time && record.punch_out_time) {
         status = "Present";
-      } else if (isWeekend) {
+      }
+
+      // ✅ Priority 4: Weekend (if no attendance or leave)
+      else if (isWeekend) {
         status = "Official Leave";
-      } else {
-        status = "Absent";
       }
 
       return {
