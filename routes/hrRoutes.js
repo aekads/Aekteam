@@ -6,6 +6,7 @@ const { verifyToken,requireHR  } = require('../config/middleware');
 const { upload } = require('../config/cloudinary');
 const leaveController = require("../controllers/leaveController");
 require("dotenv").config();
+const pool = require('../config/db');
 
 
 // const upload = require("multer")({
@@ -80,6 +81,27 @@ router.get("/attendanceReport", verifyToken, requireHR, hrController.attendanceR
 router.get("/exportAttendance", verifyToken, requireHR, hrController.exportAttendanceReport);
 // Page to view and approve permissions
 router.get("/approvePermission", verifyToken, requireHR, hrController.getPendingPermissions);
+
+router.get("/getLeaves",verifyToken, requireHR, hrController.getLeaves);
+
+router.get('/employeeLeaves', async (req, res) => {
+  const { emp_id } = req.query;
+  try {
+    const query = `
+      SELECT 
+        emp_id, 
+        generate_series(start_date, end_date, '1 day')::date AS date, 
+        half_day 
+      FROM leaves 
+      WHERE emp_id = $1 AND status = 'approved'
+      ORDER BY date DESC`;
+    const result = await pool.query(query, [emp_id]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.json([]);
+  } 
+});
 
 // Approve permission
 router.post("/approvePermission/:id", verifyToken, requireHR, hrController.approvePermission);
