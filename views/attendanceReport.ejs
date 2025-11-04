@@ -8,6 +8,12 @@
       background-color: #f0f2f5;
       font-family: 'Poppins', sans-serif;
     }
+    .modal {
+      display: none;
+    }
+    .modal.active {
+      display: flex;
+    }
   </style>
 </head>
 <body>
@@ -59,7 +65,7 @@
           <h2 class="text-2xl font-bold"><%= summary.totalAbsent %></h2>
         </div>
         <div class="bg-yellow-100 text-yellow-700 p-4 rounded-lg shadow text-center">
-          <p>Official Leaves</p>
+          <p>Official/Festival/Half Leave</p>
           <h2 class="text-2xl font-bold"><%= summary.totalLeaves %></h2>
         </div>
       </div>
@@ -86,10 +92,11 @@
                 <td class="py-2 px-3"><%= rec.punch_in_time ? new Date(rec.punch_in_time).toLocaleTimeString('en-IN') : '-' %></td>
                 <td class="py-2 px-3"><%= rec.punch_out_time ? new Date(rec.punch_out_time).toLocaleTimeString('en-IN') : '-' %></td>
                 <td class="py-2 px-3 font-semibold 
-                    <%= rec.status === 'Present' ? 'text-green-600' 
-                      : rec.status === 'Official Leave' ? 'text-yellow-600' 
-                      : rec.status === 'Festival Leave' ? 'text-purple-600'
-                      : 'text-red-600' %>">
+                    <%= rec.status.includes('Half Day') ? 'text-orange-500' :
+                        rec.status === 'Present' ? 'text-green-600' :
+                        rec.status === 'Official Leave' ? 'text-yellow-600' :
+                        rec.status === 'Festival Leave' ? 'text-purple-600' :
+                        'text-red-600' %>">
                   <%= rec.status %>
                 </td>
               </tr>
@@ -103,32 +110,54 @@
       <!-- Table: All Employees Summary -->
       <div class="overflow-x-auto bg-white rounded-lg shadow-md">
         <table class="w-full border border-gray-200">
-          <thead class="bg-indigo-700 text-white">
-            <tr>
-              <th class="py-3 px-4">Employee Name</th>
-              <th class="py-3 px-4">Present</th>
-              <th class="py-3 px-4">Absent</th>
-              <th class="py-3 px-4">Official Leave</th>
-              <th class="py-3 px-4">Festival Leave</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% summary.forEach(s => { %>
-              <tr class="text-center hover:bg-gray-100">
-                <td class="py-2 px-3 font-medium"><%= s.name %></td>
-                <td class="py-2 px-3 text-green-600 font-semibold"><%= s.totalPresent %></td>
-                <td class="py-2 px-3 text-red-600 font-semibold"><%= s.totalAbsent %></td>
-                <td class="py-2 px-3 text-yellow-600 font-semibold"><%= s.totalLeaves %></td>
-                <td class="py-2 px-3 text-purple-600 font-semibold"><%= s.totalFestival %></td>
-              </tr>
-            <% }) %>
-          </tbody>
+        <thead class="bg-indigo-700 text-white">
+  <tr>
+    <th class="py-3 px-4">Employee Name</th>
+    <th class="py-3 px-4">Present</th>
+    <th class="py-3 px-4">Absent</th>
+    <th class="py-3 px-4">Official Leave</th>
+    <th class="py-3 px-4">Festival Leave</th>
+   
+  </tr>
+</thead>
+<tbody>
+  <% summary.forEach(s => { %>
+    <tr class="text-center hover:bg-gray-100">
+      <td class="py-2 px-3 font-medium text-blue-600 cursor-pointer emp-name" data-empid="<%= s.emp_id %>">
+        <%= s.name %>
+      </td>
+      <td class="py-2 px-3 text-green-600 font-semibold"><%= s.totalPresent || 0 %></td>
+      <td class="py-2 px-3 text-red-600 font-semibold"><%= s.totalAbsent || 0 %></td>
+      <td class="py-2 px-3 text-yellow-600 font-semibold"><%= s.totalLeaves || 0 %></td>
+      <td class="py-2 px-3 text-purple-600 font-semibold"><%= s.totalFestival || 0 %></td>
+   
+    </tr>
+  <% }) %>
+</tbody>
         </table>
       </div>
     <% } %>
   </div>
 
+  <!-- Modal -->
+  <div id="leaveModal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 justify-center items-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+      <h3 class="text-xl font-semibold mb-3 text-center text-blue-700">Employee Leave Details</h3>
+      <table class="w-full border border-gray-300 rounded-md mb-4">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="py-2 px-3 border">Date</th>
+            <th class="py-2 px-3 border">Type</th>
+          </tr>
+        </thead>
+        <tbody id="leaveTableBody"></tbody>
+      </table>
+      <button id="closeModal" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 w-full">Close</button>
+    </div>
+  </div>
+
   <script>
+    // ✅ Export Excel
     document.getElementById("exportExcel")?.addEventListener("click", function () {
       const empId = document.getElementById("emp_id").value;
       const start = document.querySelector("[name='start_date']").value;
@@ -139,6 +168,31 @@
       }
       window.location.href = `/dashboard/hr/exportAttendance?emp_id=${empId}&start_date=${start}&end_date=${end}`;
     });
+
+    // ✅ Modal for leave details
+    const modal = document.getElementById("leaveModal");
+    const modalBody = document.getElementById("leaveTableBody");
+    const closeModal = document.getElementById("closeModal");
+
+    document.querySelectorAll(".emp-name").forEach(el => {
+      el.addEventListener("click", async () => {
+        const empId = el.getAttribute("data-empid");
+        const res = await fetch(`/dashboard/hr/employeeLeaves?emp_id=${empId}`);
+        const data = await res.json();
+        modalBody.innerHTML = "";
+        if (data.length === 0) {
+          modalBody.innerHTML = "<tr><td colspan='2' class='text-center py-2'>No Leave Records</td></tr>";
+        } else {
+          data.forEach(lv => {
+            const type = lv.half_day ? `Half Day (${lv.half_day})` : "Full Day";
+            modalBody.innerHTML += `<tr><td class='border py-2 px-3 text-center'>${new Date(lv.date).toLocaleDateString('en-IN')}</td><td class='border py-2 px-3 text-center'>${type}</td></tr>`;
+          });
+        }
+        modal.classList.add("active");
+      });
+    });
+
+    closeModal.addEventListener("click", () => modal.classList.remove("active"));
   </script>
 </body>
 </html>
