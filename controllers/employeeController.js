@@ -139,7 +139,7 @@ exports.punchIn = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
-
+       
 exports.punchOut = async (req, res) => {
     try {
         const emp_id = req.user?.emp_id;
