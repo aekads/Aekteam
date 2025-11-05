@@ -14,7 +14,7 @@ const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');   
 
 
-dotenv.config(); // Load environment variables
+dotenv.config(); // Load environment variables          
 
 const app = express();
 
@@ -132,9 +132,9 @@ app.get("/test-cookies", (req, res) => {
         service: 'gmail',
         auth: {
          user: 'aekads.otp@gmail.com',
-          pass: "cyns hdye yfwg bezn",
+          pass: "nait yiag ebyg cxwk",
         },
-      }); 
+      });  
 
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
