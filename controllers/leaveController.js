@@ -1,32 +1,38 @@
 const leaveModel = require("../models/leaveModel");
 const employeeModel = require('../models/employeeModel');
+const { sendLeaveAppliedMail } = require("../utils/sendMail");
+
 // ✅ Apply for Leave
+
 exports.applyLeave = async (req, res) => {
     try {
-        const emp_id = req.user.emp_id; // Get from token
-        const { start_date, end_date, leave_type, half_day, reason, cc } = req.body;
+        const emp_id = req.user.emp_id;
+        const { start_date, end_date, leave_type, half_day, reason } = req.body;
 
+        // Save leave in DB
         const leave = await leaveModel.applyLeave({
             emp_id,
             start_date,
             end_date,
             leave_type,
             half_day,
-            reason,
-            cc // Pass CC recipients to the model
+            reason
         });
 
-        // Send notification emails to CC recipients
-        // if (cc && cc.length > 0) {
-        //     await sendCCNotificationEmails(cc, leave);
-        // }
+        // Get employee details for email
+        const employee = await employeeModel.findEmployee(emp_id);
 
-        res.json({ success: true, message: "Leave applied successfully", leave });
+        // Send Email to HR
+        await sendLeaveAppliedMail(employee, leave);
+
+        res.json({ success: true, message: "Leave applied successfully, HR notified!", leave });
+
     } catch (error) {
         console.error("Error applying leave:", error);
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
+
 exports.cancelLeave = async (req, res) => {
     try {
         console.log("Received cancel leave request:", req.body); // Debug log
