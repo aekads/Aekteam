@@ -1,4 +1,5 @@
 <%- include('./partials/hrsidebar') %>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -73,7 +74,7 @@
   /* Grid Layout for Desktop */
   .dashboard-grid {
     display: grid;
-    grid-template-columns: 1fr 1.5fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 25px;
   }
 
@@ -92,69 +93,6 @@
     box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12);
   }
 
-  /* Punch Card Styles */
-  .punch-card {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    color: var(--white);
-    padding: 30px 20px;
-    position: relative;
-    overflow: hidden;
-    height: 100%;
-  }
-
-  .punch-card::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: rgba(255, 255, 255, 0.1);
-    transform: rotate(45deg);
-    z-index: 1;
-  }
-
-  .punch-card > * {
-    position: relative;
-    z-index: 2;
-  }
-
-  .punch-card h2 {
-    margin-bottom: 15px;
-    font-weight: 600;
-    font-size: 22px;
-  }
-
-  .punch-card p {
-    margin: 8px 0;
-    font-size: 15px;
-  }
-
-  .punch-card button {
-    padding: 12px 25px;
-    background: var(--white);
-    color: var(--primary);
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 600;
-    border-radius: 50px;
-    margin-top: 20px;
-    transition: var(--transition);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  }
-
-  .punch-card button:hover {
-    background: rgba(255, 255, 255, 0.9);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-  }
-
   /* Stats Grid */
   .dashboard-stats {
     display: grid;
@@ -168,6 +106,7 @@
     border-radius: var(--border-radius);
     background: var(--white);
     border-top: 4px solid transparent;
+    cursor: pointer;
   }
 
   .stat-box h3 {
@@ -198,6 +137,34 @@
   .present i { color: #4CAF50; }
   .absent i { color: #F44336; }
 
+  /* Welcome Card */
+  .welcome-card {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: var(--white);
+    padding: 30px;
+    border-radius: var(--border-radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--box-shadow);
+  }
+
+  .welcome-text h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .welcome-text p {
+    font-size: 16px;
+    opacity: 0.9;
+  }
+
+  .welcome-icon {
+    font-size: 60px;
+    opacity: 0.8;
+  }
+
   /* Chart Styling */
   canvas {
     max-width: 100%;
@@ -227,17 +194,11 @@
       grid-template-columns: repeat(2, 1fr);
     }
     
-    .punch-card {
-    position: static; /* relative => static */
-    z-index: 0;       /* sidebar ke neeche aayega */
-  }
-
-  .sidebar {
-    position: fixed; 
-    left: 0; 
-    top: 0;
-    z-index: 10;      /* punch-card se upar */
-  }
+    .welcome-card {
+      flex-direction: column;
+      text-align: center;
+      gap: 20px;
+    }
   }
 
   /* Mobile Layout (up to 767px) */
@@ -264,17 +225,21 @@
       font-size: 24px;
     }
     
-.punch-card {
-    position: static; /* relative => static */
-    z-index: 0;       /* sidebar ke neeche aayega */
-  }
-
-  .sidebar {
-    position: fixed; 
-    left: 0; 
-    top: 0;
-    z-index: 10;      /* punch-card se upar */
-  }
+    .welcome-card {
+      flex-direction: column;
+      text-align: center;
+      gap: 20px;
+      padding: 20px;
+    }
+    
+    .welcome-text h2 {
+      font-size: 20px;
+    }
+    
+    .welcome-icon {
+      font-size: 50px;
+    }
+    
     .stat-box {
       padding: 15px 10px;
     }
@@ -291,7 +256,7 @@
     }
     
     .dashboard-grid {
-      grid-template-columns: 1fr 2fr;
+      grid-template-columns: repeat(2, 1fr);
       gap: 30px;
     }
     
@@ -301,80 +266,177 @@
     }
   }
   </style>
+</head>
+<body>
+  <!-- Employee Modal -->
+  <div id="employeeModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle"></h2>
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <ul id="employeeList" class="employee-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-container">
+    <div class="dashboard-header">
+      <h2>Welcome, <%= user.name %></h2>
+      <p>HR Dashboard - Manage Employees</p>
+    </div>
+
+    <!-- Grid Layout -->
+    <div class="dashboard-grid">
+      <!-- Welcome Card -->
+      <div class="welcome-card">
+        <div class="welcome-text">
+          <h2>HR Management Dashboard</h2>
+          <p>Monitor employee statistics and manage your workforce efficiently</p>
+        </div>
+        <div class="welcome-icon">
+          <i class="fas fa-users-cog"></i>
+        </div>
+      </div>
+
+      <!-- Stats Section -->
+      <div class="dashboard-stats">
+        <div class="stat-box total-employees">
+          <i class="fas fa-users"></i>
+          <h3>Total Employees</h3>
+          <p><%= totalEmployees %></p>
+        </div>
+        <div class="stat-box leave" onclick="showEmployees('leave')">
+          <i class="fas fa-umbrella-beach"></i>
+          <h3>On Leave</h3>
+          <p><%= leaveData %></p>
+        </div>
+        <div class="stat-box present" onclick="showEmployees('present')">
+          <i class="fas fa-user-check"></i>
+          <h3>Present Today</h3>
+          <p><%= attendanceData.present || 0 %></p>
+        </div>
+        <div class="stat-box absent" onclick="showEmployees('absent')">
+          <i class="fas fa-user-times"></i>
+          <h3>Absent Today</h3>
+          <p><%= attendanceData.absent || 0 %></p>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
-      function formatISTTime(utcTime) {
-    const date = new Date(utcTime);
-    return date.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-}
+    // Modal Styles
+    const modalStyles = `
+      /* Modal Background */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
 
-        document.addEventListener("DOMContentLoaded", async () => {
-            await checkPunchStatus();
-        })
-        async function checkPunchStatus() {
-            try {
-                const response = await fetch('/dashboard/employee/punch-status', { method: 'GET', credentials: 'include' });
-                const data = await response.json();
+      /* Modal Box */
+      .modal-content {
+        background: #fff;
+        border-radius: 12px;
+        width: 450px;
+        max-width: 95%;
+        max-height: 80%;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        animation: fadeIn 0.3s ease-in-out;
+        display: flex;
+        flex-direction: column;
+      }
 
-                const punchButton = document.getElementById("punchButton");
+      /* Header */
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
+        background: #f8f9fa;
+      }
 
-                if (data.punchedIn) {
-                    punchButton.textContent = "Punch Out"  ;
-                    punchButton.setAttribute("onclick", "punchOut()");
-                } else {
-                    punchButton.textContent = "Punch In" ;
-                    punchButton.setAttribute("onclick", "punchIn()");
-                }
-            } catch (error) {
-                console.error("Error checking punch status:", error);
-            }
-        }
-                                           
-  async function punchIn() {
-    const response = await fetch('/dashboard/employee/punch-in', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-    });
-    const data = await response.json();
-    alert(data.message);
-    location.reload(); // ✅ reload after alert
-}
+      .modal-header h2 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+      }
 
-async function punchOut() {
-    const response = await fetch('/dashboard/employee/punch-out', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-    });
-    const data = await response.json();
-    alert(data.message);
-    location.reload(); // ✅ reload after alert
-}
+      .close-btn {
+        font-size: 22px;
+        cursor: pointer;
+        color: #666;
+        transition: color 0.2s;
+      }
+      .close-btn:hover {
+        color: #000;
+      }
 
-        //time for puchin out btn card
-        function updateDateTime() {
-    const now = new Date();
+      /* Body */
+      .modal-body {
+        padding: 15px 20px;
+        overflow-y: auto;
+        flex: 1;
+      }
 
-    // Format date: "4 March 2025"
-    const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-    const formattedDate = now.toLocaleDateString('en-GB', dateOptions);
+      /* Employee List */
+      .employee-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
 
-    // Format time: "Tuesday | 10:00 AM To 7:00 PM"
-    const timeOptions = { weekday: 'long', hour: '2-digit', minute: '2-digit', hour12: true };
-    const formattedTime = now.toLocaleDateString('en-GB', { weekday: 'long' }) + 
-                          " | 10:00 AM To 7:00 PM";
+      .employee-list h4 {
+        margin: 15px 0 8px 0;
+        color: var(--primary);
+        font-size: 16px;
+        font-weight: 600;
+      }
 
-    // Format seconds time: "11 : 59:10"
-    const formattedSeconds = now.getHours().toString().padStart(2, '0') + " : " + 
-                             now.getMinutes().toString().padStart(2, '0') + ":" + 
-                             now.getSeconds().toString().padStart(2, '0');
+      .employee-list ul {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 15px 0;
+      }
 
-    // Set values in HTML
-    document.getElementById("dateDisplay").textContent = formattedDate;
-    document.getElementById("timeDisplay").textContent = formattedTime + " | " + formattedSeconds;
-}
+      .employee-list li {
+        background: #f9f9f9;
+        padding: 12px 15px;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        font-size: 15px;
+        transition: transform 0.2s, background 0.2s;
+      }
 
-async function showEmployees(status) {
-    try {
+      .employee-list li:hover {
+        background: #eef3ff;
+        transform: translateX(4px);
+      }
+
+      /* Small animation */
+      @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to   { opacity: 1; transform: scale(1); }
+      }
+    `;
+
+    // Inject modal styles
+    const styleSheet = document.createElement("style");
+    styleSheet.textContent = modalStyles;
+    document.head.appendChild(styleSheet);
+
+    // Employee list modal functionality
+    async function showEmployees(status) {
+      try {
         const today = new Date().toISOString().split("T")[0];
         const res = await fetch(`/dashboard/hr/employee-status?status=${status}&date=${today}`);
         const data = await res.json();
@@ -386,202 +448,58 @@ async function showEmployees(status) {
         list.innerHTML = "";
 
         if (data.success && data.employees.length > 0) {
-            title.textContent = 
-                status === "present" ? "Present Today" :
-                status === "absent" ? "Absent Today" : "On Leave";
+          title.textContent = 
+            status === "present" ? "Present Today" :
+            status === "absent" ? "Absent Today" : "On Leave";
 
-            // Group employees by role
-            const grouped = {};
-            data.employees.forEach(emp => {
-                if (!grouped[emp.role]) grouped[emp.role] = [];
-                grouped[emp.role].push(emp.name);
+          // Group employees by role
+          const grouped = {};
+          data.employees.forEach(emp => {
+            if (!grouped[emp.role]) grouped[emp.role] = [];
+            grouped[emp.role].push(emp.name);
+          });
+
+          // Render grouped roles
+          Object.keys(grouped).forEach(role => {
+            const roleHeader = document.createElement("h4");
+            roleHeader.textContent = role;
+            list.appendChild(roleHeader);
+
+            const ul = document.createElement("ul");
+            grouped[role].forEach(name => {
+              const li = document.createElement("li");
+              li.textContent = name;
+              ul.appendChild(li);
             });
-
-            // Render grouped roles
-            Object.keys(grouped).forEach(role => {
-                const roleHeader = document.createElement("h4");
-                roleHeader.textContent = role;
-                list.appendChild(roleHeader);
-
-                const ul = document.createElement("ul");
-                grouped[role].forEach(name => {
-                    const li = document.createElement("li");
-                    li.textContent = name;
-                    ul.appendChild(li);
-                });
-                list.appendChild(ul);
-            });
+            list.appendChild(ul);
+          });
         } else {
-            title.textContent = "No Employees Found";
+          title.textContent = "No Employees Found";
+          const noData = document.createElement("p");
+          noData.textContent = "No employees match this status.";
+          noData.style.textAlign = "center";
+          noData.style.padding = "20px";
+          noData.style.color = "#666";
+          list.appendChild(noData);
         }
 
         modal.style.display = "flex";
-    } catch (err) {
+      } catch (err) {
         console.error("Error fetching employee list:", err);
+      }
     }
-}
 
+    function closeModal() {
+      document.getElementById("employeeModal").style.display = "none";
+    }
 
-function closeModal() {
-    document.getElementById("employeeModal").style.display = "none";
-}
-
-
-// Update time every second
-setInterval(updateDateTime, 1000);
-updateDateTime();
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById("employeeModal");
+      if (event.target === modal) {
+        closeModal();
+      }
+    }
   </script>
-</head>
-<body>
-<!-- Popup Modal -->
-<!-- Employee Modal -->
-<div id="employeeModal" class="modal hidden">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2 id="modalTitle"></h2>
-      <span class="close-btn" onclick="closeModal()">&times;</span>
-    </div>
-    <div class="modal-body">
-      <ul id="employeeList" class="employee-list"></ul>
-    </div>
-  </div>
-</div>
-
-
-<style>
-/* Modal Background */
-.modal {
-  display: none; /* hidden by default */
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-/* Modal Box */
-.modal-content {
-  background: #fff;
-  border-radius: 12px;
-  width: 450px;
-  max-width: 95%;
-  max-height: 80%;
-  overflow: hidden;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-  animation: fadeIn 0.3s ease-in-out;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Header */
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-  background: #f8f9fa;
-}
-
-.modal-header h2 {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0;
-}
-
-.close-btn {
-  font-size: 22px;
-  cursor: pointer;
-  color: #666;
-  transition: color 0.2s;
-}
-.close-btn:hover {
-  color: #000;
-}
-
-/* Body */
-.modal-body {
-  padding: 15px 20px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-/* Employee List */
-.employee-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.employee-list li {
-  background: #f9f9f9;
-  padding: 12px 15px;
-  margin-bottom: 8px;
-  border-radius: 8px;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: transform 0.2s, background 0.2s;
-}
-
-.employee-list li:hover {
-  background: #eef3ff;
-  transform: translateX(4px);
-}
-
-/* Small animation */
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to   { opacity: 1; transform: scale(1); }
-}
-</style>
-
-  <div class="dashboard-container">
-    <div class="dashboard-header">
-      <h2>Welcome, <%= user.name %></h2>
-      <p>HR Dashboard - Manage Employees</p>
-    </div>
-
-    <!-- Grid Layout -->
-    <div class="dashboard-grid"> 
-      
-      <!-- Attendance -->
-      <div class="dashboard-box punch-card">
-        <h2>Attendance System</h2>
-        <p id="dateDisplay"></p>
-        <p id="timeDisplay"></p>
-        <button id="punchButton" onclick="handlePunch()">Punch In</button>
-      </div>
-
-      <!-- Stats Section -->
-      <div class="dashboard-stats">
-        <div class="stat-box total-employees">
-          <i class="fas fa-users"></i>
-          <h3>Total Employees</h3>
-          <p><%= totalEmployees %></p>
-        </div>
-        <div class="stat-box leave" onclick="showEmployees('leave')">
-  <i class="fas fa-umbrella-beach"></i>
-  <h3>On Leave</h3>
-  <p><%= leaveData %></p>
-</div>
-       <div class="stat-box present" onclick="showEmployees('present')">
-  <i class="fas fa-user-check"></i>
-  <h3>Present Today</h3>
-  <p><%= attendanceData.present || 0 %></p>
-</div>
-        <div class="stat-box absent" onclick="showEmployees('absent')">
-  <i class="fas fa-user-times"></i>
-  <h3>Absent Today</h3>
-  <p><%= attendanceData.absent || 0 %></p>
-</div>
-
-      </div>
-    </div>
-  </div>
-
 </body>
 </html>
