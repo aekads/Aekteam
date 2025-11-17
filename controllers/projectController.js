@@ -161,12 +161,17 @@ exports.updateTimeEntry = async (req, res) => {
 // Render the Summary Report Page
 exports.renderSummaryReport = async (req, res) => {
     const emp_id = req.user.emp_id; 
+    
     // const employee = await projectModel.findEmployee(emp_id);
     const employee = await projectModel.findEmployee(emp_id);
                 
     const projects = await projectModel.getAllProjectsForReport();
     
-    res.render("projects/summaryReport", {employee,projects});
+    res.render("projects/summaryReport", {
+    employee,
+    projects,
+    role: req.user.role
+}); 
 };
 
 // Get Employees
