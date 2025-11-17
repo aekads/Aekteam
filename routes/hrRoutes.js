@@ -123,7 +123,9 @@ router.get("/festival-leaves", verifyToken, requireHR, hrController.showFestival
 router.post("/festival-leaves/add", verifyToken, requireHR, hrController.addFestivalLeave);
 router.post("/festival-leaves/delete/:id", verifyToken, requireHR, hrController.deleteFestivalLeave);
 
-
+const projectController = require("../controllers/projectController");
+// Render Summary Report Page
+router.get("/summary-reportHR",verifyToken, projectController.renderSummaryReport);
 
 
 module.exports = router;
