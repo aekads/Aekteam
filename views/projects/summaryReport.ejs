@@ -262,10 +262,15 @@
     <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
     
     <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
+<div class="sidebar" id="sidebar">
+    <% if (role === 'hr') { %>
+        <%- include('../partials/hrsidebar') %>
+    <% } else { %>
         <%- include('../partials/sidebar') %>
-    </div>
-    
+    <% } %>
+</div>
+
+
     <!-- Main Content -->
     <div class="main-content" id="mainContent">
         <div class="container">
@@ -284,7 +289,8 @@
                         <option value="">All Projects</option>
                         <% if (projects && projects.length > 0) { %>
                             <% projects.forEach(proj => { %>
-                                <option value="<%= proj.project_id %>"><%= proj.project_name %></option>
+                              <option value="<%= proj.project_name %>"><%= proj.project_name %></option>
+
                             <% }); %>
                         <% } else { %>
                             <option value="" disabled>No projects available</option>
