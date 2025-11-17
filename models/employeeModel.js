@@ -346,6 +346,7 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
     });
 
     // ✅ Fetch attendance data (distinct per emp/date)
+      // ✅ Main attendance query with isdeleted filter added
     const query = `
       SELECT DISTINCT ON (dates.date, e.emp_id)
           dates.date,
@@ -361,7 +362,9 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
       LEFT JOIN attendance a 
         ON e.emp_id = a.emp_id 
         AND dates.date = a.date
-      WHERE ($2::TEXT IS NULL OR $2::TEXT = 'all' OR e.emp_id = $2::TEXT)
+      WHERE 
+        e.isdeleted = 0              -- 🔥 Added this line (only change)
+        AND ($2::TEXT IS NULL OR $2::TEXT = 'all' OR e.emp_id = $2::TEXT)
       ORDER BY e.emp_id, dates.date, a.punch_in_time ASC;
     `;
 
