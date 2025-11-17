@@ -1,4 +1,5 @@
 <!-- Sidebar -->
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 <div class="sidebar" id="sidebar">
     <!-- Company Logo -->
     <div class="logo">
@@ -18,6 +19,13 @@
         <li><a href="/dashboard/hr/">🏠 Home</a></li>
         <li><a href="/dashboard/hr/employees/list">📅 employees</a></li>
         <li><a href="/dashboard/hr/approval">💰 leave</a></li>
+
+
+
+        <% if (["emp_43", "emp_32", "emp_33", "emp_47"].includes(employee.emp_id)) { %>
+      
+        <li><a href="/dashboard/hr/summary-reportHR"><i class="fas fa-chart-line"></i> Report</a></li>
+      <% } %>
        
 
         <ul class="sidebar-menu">
