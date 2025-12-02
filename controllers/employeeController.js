@@ -104,26 +104,35 @@ exports.updateProfile = async (req, res) => {
 const axios = require('axios');
 
 // Punch In
+// Punch In
 exports.punchIn = async (req, res) => {
     try {
         const emp_id = req.user?.emp_id;
-        const { latitude, longitude } = req.body;
+        let { latitude, longitude } = req.body;
 
         if (!emp_id) return res.status(400).json({ message: "Employee ID missing" });
-        if (!latitude || !longitude)
-            return res.status(400).json({ message: "Location not found. Please allow location access." });
 
-        // ✅ Reverse geocode for human-readable address
-        const geoResponse = await axios.get(`https://nominatim.openstreetmap.org/reverse`, {
-            params: {
-                lat: latitude,
-                lon: longitude,
-                format: 'json'
-            },
-            headers: { 'User-Agent': 'CompanyPunchSystem' }
-        });
+        // If location missing → Allow punch-in with fallback
+        const locationMissing = (!latitude || !longitude);
+        if (locationMissing) {
+            latitude = null;
+            longitude = null;
+        }
 
-        const locationAddress = geoResponse.data?.display_name || "Unknown Location";
+        // Reverse Geocode if location available
+        let locationAddress = "Unknown Location";
+        if (!locationMissing) {
+            try {
+                const geoResponse = await axios.get(`https://nominatim.openstreetmap.org/reverse`, {
+                    params: { lat: latitude, lon: longitude, format: 'json' },
+                    headers: { 'User-Agent': 'CompanyPunchSystem' }
+                });
+                locationAddress = geoResponse.data?.display_name || "Unknown Location";
+            } catch (err) {
+                locationAddress = "Unknown Location";
+            }
+        }
+
         const date = moment().tz('Asia/Kolkata').format('YYYY-MM-DD');
 
         const permission = await employeeModel.getActivePermission(emp_id, date);
@@ -133,12 +142,18 @@ exports.punchIn = async (req, res) => {
 
         await employeeModel.punchIn(emp_id, date, latitude, longitude, locationAddress);
 
-        res.status(200).json({ message: "Punched in successfully with location captured" });
+        res.status(200).json({
+            message: locationMissing 
+                ? "Punched in successfully " 
+                : "Punched in successfully"
+        });
+
     } catch (error) {
         console.error("Punch-in error:", error);
         res.status(500).json({ message: "Server error" });
     }
 };
+
        
 exports.punchOut = async (req, res) => {
     try {
