@@ -312,24 +312,24 @@
             }
         }
 
-       function getCurrentLocation() {
+        function getCurrentLocation() {
     return new Promise((resolve, reject) => {
+
         if (!navigator.geolocation) {
-            reject("Geolocation not supported by your browser.");
-            return;
+            return reject("Geolocation not supported.");
         }
 
         navigator.geolocation.getCurrentPosition(
-            (position) => {
+            (pos) => {
                 resolve({
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude
+                    latitude: pos.coords.latitude,
+                    longitude: pos.coords.longitude
                 });
             },
             (error) => {
                 switch (error.code) {
                     case error.PERMISSION_DENIED:
-                        reject("Location permission denied");
+                        reject("Permission denied");
                         break;
                     case error.POSITION_UNAVAILABLE:
                         reject("Location unavailable");
@@ -338,12 +338,13 @@
                         reject("Location request timed out");
                         break;
                     default:
-                        reject("Unable to retrieve location");
+                        reject("Unknown location error");
                 }
             },
             {
-                enableHighAccuracy: true,
-                timeout: 10000,
+                // ⚠ SAFARI FIX → keep it simple
+                enableHighAccuracy: false,
+                timeout: 5000,
                 maximumAge: 0
             }
         );
@@ -352,26 +353,6 @@
 
 async function punchIn() {
     try {
-        // Check permission first
-        const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
-
-        if (permissionStatus.state === 'denied') {
-            return Swal.fire({
-                title: "Location Blocked!",
-                html: `
-                    You have <b>blocked location access</b> for this site.<br><br>
-                    Please enable it manually:
-                    <ul style="text-align:left;margin-top:10px">
-                        <li>🔹 Click the <b>lock icon</b> in the address bar</li>
-                        <li>🔹 Set “Location” to “Allow”</li>
-                        <li>🔹 Then refresh this page</li>
-                    </ul>
-                `,
-                icon: "warning",
-                confirmButtonText: "Got it",
-            });
-        }
-
         Swal.fire({
             title: "Getting your location...",
             text: "Please wait a moment.",
@@ -379,15 +360,23 @@ async function punchIn() {
             didOpen: () => Swal.showLoading()
         });
 
-        const location = await getCurrentLocation();
+        let location = null;
+
+        try {
+            location = await getCurrentLocation();
+        } catch (locError) {
+            // ❗ Location failed but we still continue punch-in
+            console.warn("Location failed:", locError);
+            location = null;
+        }
 
         const response = await fetch('/dashboard/employee/punch-in', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({
-                latitude: location.latitude,
-                longitude: location.longitude
+                latitude: location?.latitude || null,
+                longitude: location?.longitude || null
             })
         });
 
@@ -395,41 +384,27 @@ async function punchIn() {
         Swal.close();
 
         if (response.ok) {
-            // ✅ Instantly update button before reload
-            const punchButton = document.getElementById("punchButton");
-            punchButton.textContent = "Punch Out";
-            punchButton.onclick = confirmPunchOut;
+    Swal.fire({
+        title: "✅ Success!",
+        text: data.message,
+        icon: "success",
+        timer: 1200,
+        showConfirmButton: false
+    }).then(() => {
+        // Reload AFTER popup finishes
+        window.location.reload();
+    });
+}
+ else {
+                Swal.fire("Error!", data.message, "error");
+            }
 
-            // ✅ Show success popup and reload smoothly after 1 second
-            Swal.fire({
-                title: "✅ Success!",
-                text: "You punched in successfully.",
-                icon: "success",
-                showConfirmButton: false,
-                timer: 1200
-            });
-
-            setTimeout(() => {
-                location.reload(); // Auto refresh to fetch new state from backend
-            }, 1300);
-        } else {
-            Swal.fire("Error!", data.message, "error");
-        }
-
-    } catch (error) {
+    } catch (err) {
         Swal.close();
-        if (error.toString().includes("denied")) {
-            Swal.fire({
-                title: "Location Required!",
-                text: "Please allow location access to Punch In.",
-                icon: "warning",
-                confirmButtonText: "Okay, I’ll Allow"
-            });
-        } else {
-            Swal.fire("Location Error", error.toString(), "error");
-        }
+        Swal.fire("Error", "Something went wrong.", "error");
     }
 }
+
         function confirmPunchOut() {
             Swal.fire({
                 title: "Are you sure?",
@@ -452,8 +427,17 @@ async function punchIn() {
                 const data = await response.json();
 
                 if (response.ok) {
-                    Swal.fire("Success!", data.message, "success").then(() => location.reload());
-                } else {
+    Swal.fire({
+        title: "Success!",
+        text: data.message,
+        icon: "success",
+        timer: 1200,
+        showConfirmButton: false
+    }).then(() => {
+        window.location.reload();
+    });
+}
+ else {
                     Swal.fire("Error!", data.message, "error");
                 }
             } catch (error) {
