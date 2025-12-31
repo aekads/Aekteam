@@ -377,22 +377,38 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
       const roleName = (record.role || "").toLowerCase();
       const formattedDate = moment(record.date).format("YYYY-MM-DD");
 
-      // ✅ Weekend logic
+      // ✅ Weekend logic: 
+      // IT_Team, accountant, graphic_team → Saturday + Sunday (8 weekend days/month)
+      // sales, maintenance, acquisition → Sunday only (4 weekend days/month)
       let isWeekend = false;
-      if (["it_team", "graphic_team", "accountant"].includes(roleName)) {
+      const twoDayWeekendRoles = ["it_team", "graphic_team", "accountant"];
+      const oneDayWeekendRoles = ["sales", "maintenance", "acquisition"];
+      
+      if (twoDayWeekendRoles.includes(roleName)) {
+        // Saturday + Sunday off (8 days per month)
         isWeekend = ["Saturday", "Sunday"].includes(dayName);
-      } else if (["sales", "acquisition", "maintenance"].includes(roleName)) {
+      } else if (oneDayWeekendRoles.includes(roleName)) {
+        // Sunday only off (4 days per month)
+        isWeekend = dayName === "Sunday";
+      } else {
+        // Default: Sunday only for other roles
         isWeekend = dayName === "Sunday";
       }
 
       let status = "Absent"; // default
 
-      // ✅ Priority 1: Festival Leave
+      // ✅ Priority 1: Festival Leave (highest priority)
       if (festivalDates.includes(formattedDate)) {
         status = "Festival Leave";
       }
 
-      // ✅ Priority 2: Approved Leave (Full/Half)
+      // ✅ Priority 2: Weekend → Always Official Leave (even if employee punched in)
+      // Weekends should never be counted as Present, even if they worked
+      else if (isWeekend) {
+        status = "Official Leave";
+      }
+
+      // ✅ Priority 3: Approved Leave (Full/Half) - only if not weekend
       else if (
         leaveMap[record.emp_id] &&
         leaveMap[record.emp_id][formattedDate]
@@ -409,14 +425,9 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
         }
       }
 
-      // ✅ Priority 3: Present (only if not on any type of leave)
+      // ✅ Priority 4: Present (only if not weekend and has punch in/out)
       else if (record.punch_in_time && record.punch_out_time) {
         status = "Present";
-      }
-
-      // ✅ Priority 4: Weekend (if no attendance or leave)
-      else if (isWeekend) {
-        status = "Official Leave";
       }
 
       return {
