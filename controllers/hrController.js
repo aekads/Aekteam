@@ -283,29 +283,50 @@ exports.attendanceReport = async (req, res) => {
         attendanceData.forEach((rec) => {
           if (!empMap[rec.emp_id]) {
             empMap[rec.emp_id] = {
+              emp_id: rec.emp_id,
               name: rec.name,
               totalPresent: 0,
               totalAbsent: 0,
               totalLeaves: 0,
+              totalHalfDays: 0,
               totalFestival: 0,
             };
           }
 
-          if (rec.status === "Present") empMap[rec.emp_id].totalPresent++;
-          else if (rec.status === "Absent") empMap[rec.emp_id].totalAbsent++;
-          else if (rec.status === "Official Leave") empMap[rec.emp_id].totalLeaves++;
-          else if (rec.status === "Festival Leave") empMap[rec.emp_id].totalFestival++;
+          if (rec.status === "Present") {
+            empMap[rec.emp_id].totalPresent++;
+          } else if (rec.status === "Absent") {
+            empMap[rec.emp_id].totalAbsent++;
+          } else if (rec.status === "Official Leave") {
+            empMap[rec.emp_id].totalLeaves++;
+          } else if (rec.status.includes("Half Day")) {
+            empMap[rec.emp_id].totalHalfDays += 0.5;
+          } else if (rec.status === "Festival Leave") {
+            empMap[rec.emp_id].totalFestival++;
+          }
         });
 
-        summary = Object.values(empMap);
+        // Calculate total leave count for each employee
+        summary = Object.values(empMap).map(emp => ({
+          ...emp,
+          totalLeaveCount: emp.totalLeaves + emp.totalHalfDays + emp.totalFestival
+        }));
       } else {
         // Single employee summary
+        const totalPresent = attendanceData.filter((r) => r.status === "Present").length;
+        const totalAbsent = attendanceData.filter((r) => r.status === "Absent").length;
+        const totalLeaves = attendanceData.filter((r) => r.status === "Official Leave").length;
+        const totalHalfDays = attendanceData.filter((r) => r.status.includes("Half Day")).length * 0.5;
+        const totalFestival = attendanceData.filter((r) => r.status === "Festival Leave").length;
+        
         summary = {
           totalDays: attendanceData.length,
-          totalPresent: attendanceData.filter((r) => r.status === "Present").length,
-          totalAbsent: attendanceData.filter((r) => r.status === "Absent").length,
-          totalLeaves: attendanceData.filter((r) => r.status === "Official Leave").length,
-          totalFestival: attendanceData.filter((r) => r.status === "Festival Leave").length,
+          totalPresent,
+          totalAbsent,
+          totalLeaves,
+          totalHalfDays,
+          totalFestival,
+          totalLeaveCount: totalLeaves + totalHalfDays + totalFestival,
         };
       }
     }
@@ -418,7 +439,7 @@ exports.exportAttendanceReport = async (req, res) => {
       worksheet.addRow(["Total Days", totalDays]);
       worksheet.addRow(["Present", totalPresent]);
       worksheet.addRow(["Absent", totalAbsent]);
-      worksheet.addRow(["Weekend day / Official Leave Leaves", totalFullLeave]);
+      worksheet.addRow(["Official Leave", totalFullLeave]);
       worksheet.addRow(["Half-Day Leaves (0.5 each)", totalHalfDay * 0.5]);
       worksheet.addRow(["Festival Leave", totalFestival]);
       worksheet.addRow(["Total Leave Count", totalLeaves]);
@@ -446,7 +467,7 @@ exports.exportAttendanceReport = async (req, res) => {
         { header: "Total Days", key: "total_days", width: 15 },
         { header: "Present", key: "present", width: 15 },
         { header: "Absent", key: "absent", width: 15 },
-        { header: "Weekend day / Official Leave Leaves", key: "full_leave", width: 18 },
+        { header: "Official Leave", key: "full_leave", width: 18 },
         { header: "Half-Day Leaves (0.5)", key: "half_leave", width: 20 },
         { header: "Festival Leave", key: "festival", width: 18 },
         { header: "Total Leave Count", key: "total_leave_count", width: 18 },
