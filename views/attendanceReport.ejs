@@ -20,7 +20,8 @@
   <%- include('./partials/hrsidebar') %>
 
   <div class="main p-6 ml-80">
-    <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Attendance Report</h2>
+    <h2 class="text-3xl font-bold text-gray-800 mb-2 text-center">Attendance Report</h2>
+    <p class="text-center text-gray-600 mb-6">View and analyze employee attendance data</p>
 
     <!-- Tabs -->
     <div class="flex justify-center mb-4 space-x-4">
@@ -29,74 +30,92 @@
     </div>
 
     <!-- Filter Form -->
-    <form method="GET" action="/dashboard/hr/attendanceReport" class="flex flex-wrap justify-center gap-4 bg-white p-4 rounded-lg shadow-md mb-6">
-      <div>
-        <select name="emp_id" id="emp_id" class="border border-gray-300 rounded-md p-2">
-          <option value="" disabled selected>Select Employee</option>
-          <option value="all" <%= filters.emp_id === 'all' ? 'selected' : '' %>>All Employees</option>
-          <% employees.forEach(emp => { %>
-            <option value="<%= emp.emp_id %>" <%= filters.emp_id == emp.emp_id ? 'selected' : '' %>><%= emp.name %></option>
-          <% }); %>
-        </select>
+    <form method="GET" action="/dashboard/hr/attendanceReport" class="bg-white p-6 rounded-lg shadow-lg mb-6 border border-gray-200">
+      <div class="flex flex-wrap justify-center gap-4 items-end">
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-gray-700 mb-1">Employee</label>
+          <select name="emp_id" id="emp_id" class="border border-gray-300 rounded-md p-2.5 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="" disabled selected>Select Employee</option>
+            <option value="all" <%= filters.emp_id === 'all' ? 'selected' : '' %>>All Employees</option>
+            <% employees.forEach(emp => { %>
+              <option value="<%= emp.emp_id %>" <%= filters.emp_id == emp.emp_id ? 'selected' : '' %>><%= emp.name %></option>
+            <% }); %>
+          </select>
+        </div>
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-gray-700 mb-1">Start Date</label>
+          <input type="date" name="start_date" value="<%= filters.start_date || '' %>" class="border border-gray-300 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div class="flex flex-col">
+          <label class="text-sm font-medium text-gray-700 mb-1">End Date</label>
+          <input type="date" name="end_date" value="<%= filters.end_date || '' %>" class="border border-gray-300 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-md hover:bg-blue-700 transition-colors font-medium shadow-md">Show Report</button>
+        <button type="button" id="exportExcel" class="bg-green-600 text-white px-6 py-2.5 rounded-md hover:bg-green-700 transition-colors font-medium shadow-md">Export Excel</button>
       </div>
-      <div>
-        <input type="date" name="start_date" value="<%= filters.start_date || '' %>" class="border border-gray-300 rounded-md p-2">
-      </div>
-      <div>
-        <input type="date" name="end_date" value="<%= filters.end_date || '' %>" class="border border-gray-300 rounded-md p-2">
-      </div>
-      <button type="submit" class="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700">Show Report</button>
-      <button type="button" id="exportExcel" class="bg-green-600 text-white px-5 py-2 rounded-md hover:bg-green-700">Export Excel</button>
     </form>
 
     <% if (!isAllEmployees && summary) { %>
       <!-- Particular Employee Summary -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-green-100 text-green-700 p-4 rounded-lg shadow text-center">
-          <p>Total Days</p>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        <div class="bg-gradient-to-br from-gray-100 to-gray-200 text-gray-800 p-4 rounded-lg shadow-md text-center border border-gray-300">
+          <p class="text-sm font-medium mb-1">Total Days</p>
           <h2 class="text-2xl font-bold"><%= summary.totalDays %></h2>
         </div>
-        <div class="bg-blue-100 text-blue-700 p-4 rounded-lg shadow text-center">
-          <p>Present</p>
+        <div class="bg-gradient-to-br from-green-100 to-green-200 text-green-800 p-4 rounded-lg shadow-md text-center border border-green-300">
+          <p class="text-sm font-medium mb-1">Present</p>
           <h2 class="text-2xl font-bold"><%= summary.totalPresent %></h2>
         </div>
-        <div class="bg-red-100 text-red-700 p-4 rounded-lg shadow text-center">
-          <p>Absent</p>
+        <div class="bg-gradient-to-br from-red-100 to-red-200 text-red-800 p-4 rounded-lg shadow-md text-center border border-red-300">
+          <p class="text-sm font-medium mb-1">Absent</p>
           <h2 class="text-2xl font-bold"><%= summary.totalAbsent %></h2>
         </div>
-        <div class="bg-yellow-100 text-yellow-700 p-4 rounded-lg shadow text-center">
-          <p>Official/Festival/Half Leave</p>
+        <div class="bg-gradient-to-br from-yellow-100 to-yellow-200 text-yellow-800 p-4 rounded-lg shadow-md text-center border border-yellow-300">
+          <p class="text-sm font-medium mb-1">Official Leave</p>
           <h2 class="text-2xl font-bold"><%= summary.totalLeaves %></h2>
         </div>
+        <div class="bg-gradient-to-br from-orange-100 to-orange-200 text-orange-800 p-4 rounded-lg shadow-md text-center border border-orange-300">
+          <p class="text-sm font-medium mb-1">Half Days</p>
+          <h2 class="text-2xl font-bold"><%= summary.totalHalfDays || 0 %></h2>
+        </div>
+        <div class="bg-gradient-to-br from-purple-100 to-purple-200 text-purple-800 p-4 rounded-lg shadow-md text-center border border-purple-300">
+          <p class="text-sm font-medium mb-1">Festival Leave</p>
+          <h2 class="text-2xl font-bold"><%= summary.totalFestival || 0 %></h2>
+        </div>
+      </div>
+      <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded mb-6">
+        <p class="text-lg font-semibold text-blue-800">
+          Total Leave Count: <span class="text-2xl"><%= summary.totalLeaveCount || 0 %></span>
+        </p>
       </div>
     <% } %>
 
     <% if (!isAllEmployees && attendanceData.length > 0) { %>
       <!-- Table: Particular Employee -->
-      <div class="overflow-x-auto bg-white rounded-lg shadow-md">
-        <table class="w-full border border-gray-200">
-          <thead class="bg-blue-600 text-white">
+      <div class="overflow-x-auto bg-white rounded-lg shadow-lg border border-gray-200">
+        <table class="w-full border-collapse">
+          <thead class="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
             <tr>
-              <th class="py-3 px-4">Date</th>
-              <th class="py-3 px-4">Day</th>
-              <th class="py-3 px-4">Punch In</th>
-              <th class="py-3 px-4">Punch Out</th>
-              <th class="py-3 px-4">Status</th>
+              <th class="py-4 px-4 text-left font-semibold">Date</th>
+              <th class="py-4 px-4 text-center font-semibold">Day</th>
+              <th class="py-4 px-4 text-center font-semibold">Punch In</th>
+              <th class="py-4 px-4 text-center font-semibold">Punch Out</th>
+              <th class="py-4 px-4 text-center font-semibold">Status</th>
             </tr>
           </thead>
           <tbody>
-            <% attendanceData.forEach(rec => { %>
-              <tr class="text-center hover:bg-gray-100">
-                <td class="py-2 px-3"><%= new Date(rec.date).toLocaleDateString('en-IN') %></td>
-                <td class="py-2 px-3"><%= rec.day %></td>
-                <td class="py-2 px-3"><%= rec.punch_in_time ? new Date(rec.punch_in_time).toLocaleTimeString('en-IN') : '-' %></td>
-                <td class="py-2 px-3"><%= rec.punch_out_time ? new Date(rec.punch_out_time).toLocaleTimeString('en-IN') : '-' %></td>
-                <td class="py-2 px-3 font-semibold 
-                    <%= rec.status.includes('Half Day') ? 'text-orange-500' :
-                        rec.status === 'Present' ? 'text-green-600' :
-                        rec.status === 'Official Leave' ? 'text-yellow-600' :
-                        rec.status === 'Festival Leave' ? 'text-purple-600' :
-                        'text-red-600' %>">
+            <% attendanceData.forEach((rec, index) => { %>
+              <tr class="<%= index % 2 === 0 ? 'bg-white' : 'bg-gray-50' %> hover:bg-blue-50 transition-colors">
+                <td class="py-3 px-4 text-gray-800"><%= new Date(rec.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) %></td>
+                <td class="py-3 px-4 text-center text-gray-700 font-medium"><%= rec.day %></td>
+                <td class="py-3 px-4 text-center text-gray-600"><%= rec.punch_in_time ? new Date(rec.punch_in_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '-' %></td>
+                <td class="py-3 px-4 text-center text-gray-600"><%= rec.punch_out_time ? new Date(rec.punch_out_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '-' %></td>
+                <td class="py-3 px-4 text-center font-semibold 
+                    <%= rec.status.includes('Half Day') ? 'text-orange-600 bg-orange-50' :
+                        rec.status === 'Present' ? 'text-green-700 bg-green-50' :
+                        rec.status === 'Official Leave' ? 'text-yellow-700 bg-yellow-50' :
+                        rec.status === 'Festival Leave' ? 'text-purple-700 bg-purple-50' :
+                        'text-red-700 bg-red-50' %> rounded-full px-3 py-1 inline-block">
                   <%= rec.status %>
                 </td>
               </tr>
@@ -108,29 +127,31 @@
 
     <% if (isAllEmployees && summary && summary.length > 0) { %>
       <!-- Table: All Employees Summary -->
-      <div class="overflow-x-auto bg-white rounded-lg shadow-md">
-        <table class="w-full border border-gray-200">
-        <thead class="bg-indigo-700 text-white">
+      <div class="overflow-x-auto bg-white rounded-lg shadow-lg border border-gray-200">
+        <table class="w-full border-collapse">
+        <thead class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white">
   <tr>
-    <th class="py-3 px-4">Employee Name</th>
-    <th class="py-3 px-4">Present</th>
-    <th class="py-3 px-4">Absent</th>
-    <th class="py-3 px-4">Official Leave</th>
-    <th class="py-3 px-4">Festival Leave</th>
-   
+    <th class="py-4 px-4 text-left font-semibold">Employee Name</th>
+    <th class="py-4 px-4 text-center font-semibold">Present</th>
+    <th class="py-4 px-4 text-center font-semibold">Absent</th>
+    <th class="py-4 px-4 text-center font-semibold">Official Leave</th>
+    <th class="py-4 px-4 text-center font-semibold">Half Days</th>
+    <th class="py-4 px-4 text-center font-semibold">Festival Leave</th>
+    <th class="py-4 px-4 text-center font-semibold">Total Leave Count</th>
   </tr>
 </thead>
 <tbody>
-  <% summary.forEach(s => { %>
-    <tr class="text-center hover:bg-gray-100">
-      <td class="py-2 px-3 font-medium text-blue-600 cursor-pointer emp-name" data-empid="<%= s.emp_id %>">
+  <% summary.forEach((s, index) => { %>
+    <tr class="<%= index % 2 === 0 ? 'bg-white' : 'bg-gray-50' %> hover:bg-blue-50 transition-colors">
+      <td class="py-3 px-4 font-medium text-blue-600 cursor-pointer emp-name hover:text-blue-800 hover:underline" data-empid="<%= s.emp_id %>">
         <%= s.name %>
       </td>
-      <td class="py-2 px-3 text-green-600 font-semibold"><%= s.totalPresent || 0 %></td>
-      <td class="py-2 px-3 text-red-600 font-semibold"><%= s.totalAbsent || 0 %></td>
-      <td class="py-2 px-3 text-yellow-600 font-semibold"><%= s.totalLeaves || 0 %></td>
-      <td class="py-2 px-3 text-purple-600 font-semibold"><%= s.totalFestival || 0 %></td>
-   
+      <td class="py-3 px-4 text-center text-green-600 font-semibold"><%= s.totalPresent || 0 %></td>
+      <td class="py-3 px-4 text-center text-red-600 font-semibold"><%= s.totalAbsent || 0 %></td>
+      <td class="py-3 px-4 text-center text-yellow-600 font-semibold"><%= s.totalLeaves || 0 %></td>
+      <td class="py-3 px-4 text-center text-orange-600 font-semibold"><%= s.totalHalfDays || 0 %></td>
+      <td class="py-3 px-4 text-center text-purple-600 font-semibold"><%= s.totalFestival || 0 %></td>
+      <td class="py-3 px-4 text-center text-indigo-600 font-bold text-lg"><%= (s.totalLeaveCount || 0).toFixed(1) %></td>
     </tr>
   <% }) %>
 </tbody>
