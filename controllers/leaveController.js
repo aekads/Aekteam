@@ -1,6 +1,6 @@
 const leaveModel = require("../models/leaveModel");
 const employeeModel = require('../models/employeeModel');
-const { sendLeaveAppliedMail } = require("../utils/sendMail");
+const { sendLeaveAppliedMail, sendLeaveCanceledMail } = require("../utils/sendMail");
 
 // ✅ Apply for Leave
 
@@ -48,13 +48,25 @@ exports.cancelLeave = async (req, res) => {
             return res.status(400).json({ success: false, message: "Leave not found or already processed" });
         }
 
+        // Get employee details for email before canceling
+        const emp_id = req.user.emp_id;
+        const employee = await employeeModel.findEmployee(emp_id);
+
         // Cancel leave (update status)
         const isCanceled = await leaveModel.cancelLeaveById(leaveId);
         if (!isCanceled) {
             return res.status(400).json({ success: false, message: "Failed to cancel leave" });
         }
 
-        return res.json({ success: true, message: "Leave request canceled successfully" });
+        // Send Email to HR about cancellation
+        try {
+            await sendLeaveCanceledMail(employee, leave);
+        } catch (emailError) {
+            console.error("Error sending cancellation email:", emailError);
+            // Don't fail the request if email fails
+        }
+
+        return res.json({ success: true, message: "Leave request canceled successfully, HR notified!" });
 
     } catch (error) {
         console.error("Error canceling leave:", error);
