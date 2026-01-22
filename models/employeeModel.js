@@ -409,6 +409,7 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
       }
 
       // ✅ Priority 3: Approved Leave (Full/Half) - only if not weekend
+      // Approved leaves should be "Taken Leave" not "Official Leave"
       else if (
         leaveMap[record.emp_id] &&
         leaveMap[record.emp_id][formattedDate]
@@ -416,7 +417,7 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
         const leaveInfo = leaveMap[record.emp_id][formattedDate];
 
         if (leaveInfo.type === "full") {
-          status = "Official Leave";
+          status = "Taken Leave"; // Full day approved leave
         } else if (leaveInfo.type === "half") {
           status =
             leaveInfo.half_day === "1st half"
@@ -503,6 +504,23 @@ exports.punchOut = async (emp_id, date) => {
     );
 };
 
+exports.getAttendanceByDateRange = async (emp_id, startDate, endDate) => {
+    try {
+        const result = await pool.query(
+            `SELECT punch_in_time, punch_out_time 
+             FROM attendance 
+             WHERE emp_id = $1 
+             AND DATE(punch_in_time) BETWEEN $2 AND $3
+             AND punch_in_time IS NOT NULL
+             ORDER BY punch_in_time ASC`,
+            [emp_id, startDate, endDate]
+        );
+        return result.rows;
+    } catch (error) {
+        console.error("Database Error (getAttendanceByDateRange):", error);
+        throw error;
+    }
+};
 
 // exports.getAttendance = async (emp_id, date) => {
 //     const result = await pool.query(
@@ -550,15 +568,32 @@ exports.getActivePermission = async (emp_id, date) => {
 
 
 // ✅ Get all pending permissions
+// ✅ Get all pending permissions with employee name
 exports.getPendingPermissions = async () => {
     try {
-        const result = await pool.query("SELECT * FROM permissions WHERE status = 'Pending'");
-        return result.rows;
+      const result = await pool.query(`
+        SELECT 
+          p.id,
+          p.emp_id,
+          e.name,
+          p.type,
+          p.from_time,
+          p.to_time,
+          p.reason,
+          p.status
+        FROM permissions p
+        JOIN employees e ON p.emp_id = e.emp_id
+        WHERE p.status = 'Pending'
+        ORDER BY p.from_time DESC
+      `);
+  
+      return result.rows;
     } catch (error) {
-        console.error("Database Error:", error);
-        throw error;
+      console.error("Error fetching pending permissions:", error);
+      throw error;
     }
-};
+  };
+  
 
 
 exports.getPendingEmp = async (emp_id) => {
