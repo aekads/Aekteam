@@ -507,7 +507,7 @@
                     <div class="leave-balance-card">
                         <h3><i class="fas fa-calendar-minus"></i> Leave Taken</h3>
                         <p>
-                            <%= employeeData.leave_taken %>
+                            <%= parseFloat(employeeData.leave_taken || 0).toFixed(1) %>
                         </p>
                         <small>days used</small>
                     </div>
