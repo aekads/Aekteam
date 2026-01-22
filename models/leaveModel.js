@@ -192,6 +192,7 @@ exports.getPendingLeaves = async () => {
             l.leave_type,
             l.start_date,
             l.end_date,
+            l.reason,
             l.status,
             e.name AS employee_name
         FROM 
@@ -238,13 +239,25 @@ exports.addMonthlyLeaveBonus = async () => {
 
 exports.getEmployeeLeaveData = async (emp_id) => {
     const query = `
-        SELECT e.emp_id, e.name, e.leave_balance,
-            (SELECT COALESCE(SUM(l.days), 0) 
-             FROM leaves l 
-             WHERE l.emp_id = e.emp_id AND l.status = 'approved') AS leave_taken
-        FROM employees e
-        WHERE e.emp_id = $1;
-    `;
+    SELECT 
+    e.emp_id,
+    e.name,
+    e.leave_balance,
+    COALESCE(SUM(
+        CASE 
+            WHEN l.half_day IN ('1st half', '2nd half') THEN 0.5
+            ELSE (l.end_date - l.start_date + 1)
+        END
+    ), 0) AS leave_taken
+FROM employees e
+LEFT JOIN leaves l 
+    ON l.emp_id = e.emp_id 
+   AND l.status = 'approved'
+WHERE e.emp_id = $1
+GROUP BY e.emp_id, e.name, e.leave_balance;
+
+
+`;
     const result = await pool.query(query, [emp_id]);
     return result.rows[0];
 };
