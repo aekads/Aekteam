@@ -2,583 +2,932 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Employee Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="https://res.cloudinary.com/dqfnwh89v/image/upload/v1724408615/qxvvfcf7ftgklhl2k03v.png"
         type="image/png">
+    <title>Leave Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-light: #eef2ff;
+            --secondary-color: #3f37c9;
+            --accent-color: #4cc9f0;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --text-color: #2b2d42;
+            --text-light: #6c757d;
+            --light-gray: #f8f9fa;
+            --medium-gray: #e9ecef;
+            --white: #ffffff;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
 
-    <!-- Bootstrap CSS + Icons -->
-    <!-- Bootstrap CSS + Icons -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<!-- SweetAlert -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-color);
+            background-color: var(--light-gray);
+            line-height: 1.6;
+        }
 
+        .container {
+            /* margin-left: 270px; */
+            /* padding: 20px; */
+            transition: margin-left 0.3s ease;
+        }
 
-
-
-<style>
-    body {
-        font-family: 'Segoe UI', sans-serif;
-        background-color: #f7f7f7;
-        color: #3b4452;
-    }
-
-    .dashboard-container {
-        transition: margin-left 0.3s ease-in-out;
-    }
-
-    .main-content {
-        margin-left: 270px;
-        height: 100vh;
-        padding: 20px;
-        transition: margin-left 0.3s ease;
-    }
-
-    @media (max-width: 1000px) {
         .main-content {
-            margin-left: 0;
-        }
-    }
-
-    .card {
-        border-radius: 12px;
-        transition: all 0.3s ease-in-out;
-    }
-
-    .card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
-    }
-
-    .fade-in {
-        opacity: 0;
-        animation: fadeIn 0.8s ease-in forwards;
-    }
-
-    @keyframes fadeIn {
-        to {
-            opacity: 1;
-        }
-    }
-
-    @media screen and (max-width: 1024px) {
-        .dashboard-container {
-            margin-left: 0;
+            margin-left: 270px;
+            /* height: 100vh; */
             padding: 20px;
+            transition: margin-left 0.3s ease;
         }
-    }
 
-    .leave-badge {
-        background-color: #e3f2fd;
-        color: #1976d2;
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        margin-right: 5px;
-        margin-bottom: 5px;
-        display: inline-block;
-    }
+        @media (max-width: 1000px) {
+            .main-content {
+                margin-left: 0;
+            }
+        }
 
-    .birthday-badge {
-        background-color: #fff8e1;
-        color: #ff8f00;
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        margin-right: 5px;
-        margin-bottom: 5px;
-        display: inline-block;
-    }
+        /* Header */
+        .dashboard-header {
+            margin-bottom: 2rem;
+        }
 
-    .badge-icon {
-        margin-right: 5px;
-    }
-/* Truncate long preview text */
-.text-truncate-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+        .dashboard-header h2 {
+            font-size: 2rem;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+            position: relative;
+            display: inline-block;
+        }
 
-/* Floating popup wrapper */
-.custom-popup {
-  display: none;               /* hidden initially */
-  position: fixed;             /* fixed to viewport */
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  justify-content: center;     /* horizontal center */
-  align-items: center;         /* vertical center */
-  z-index: 9999;
-  background: rgba(0,0,0,0.0); /* transparent overlay if needed */
-}
+        .dashboard-header h2::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: 2px;
+        }
 
-/* Popup content */
-.popup-content {
-  pointer-events: auto;
-  background: #fff;
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-  width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
+        /* Leave Balance Cards */
+        .leave-balance-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
 
-/* Header */
-.popup-header {
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 0.5rem;
-  margin-bottom: 0.75rem;
-}
+        .leave-balance-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            text-align: center;
+            transition: var(--transition);
+            border-top: 4px solid var(--primary-color);
+        }
 
-/* Body text */
-.popup-body p {
-  margin-bottom: 1rem;
-}
+        .leave-balance-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
 
-/* Responsive for small screens */
-@media (max-width: 576px) {
-  .popup-content {
-    width: 95%;
-    padding: 1rem;
-  }
-}
+        .leave-balance-card h3 {
+            margin-bottom: 1rem;
+            color: var(--text-light);
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
 
+        .leave-balance-card p {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0.5rem 0;
+        }
 
+        /* Navigation Tabs */
+        .tab-nav {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--medium-gray);
+            padding-bottom: 0.5rem;
+        }
 
-</style>
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-radius: 6px 6px 0 0;
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-color);
+            background: var(--primary-light);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--primary-color);
+            border-radius: 3px 3px 0 0;
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: var(--light-gray);
+            color: var(--text-color);
+        }
+
+        /* Form Styling */
+        .form-container {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            /* margin-bottom: 2rem; */
+            border: 1px solid var(--medium-gray);
+        }
+
+        .form-container h3 {
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-container h3 i {
+            margin-right: 0.8rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border: 1px solid var(--medium-gray);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: var(--transition);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        /* Multi-select Dropdown */
+        .selectBox {
+            position: relative;
+            width: 100%;
+        }
+
+        .selectBox select {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border: 1px solid var(--medium-gray);
+            border-radius: 8px;
+            background-color: var(--white);
+            font-size: 1rem;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1rem;
+        }
+
+        .checkbox-list {
+            display: none;
+            position: absolute;
+            width: 100%;
+            max-height: 250px;
+            overflow-y: auto;
+            background: var(--white);
+            border: 1px solid var(--medium-gray);
+            border-radius: 0 0 8px 8px;
+            box-shadow: var(--shadow-md);
+            z-index: 10;
+            margin-top: -8px;
+            padding: 0.5rem;
+        }
+
+        .checkbox-list.show {
+            display: block;
+        }
+
+        .checkbox-list label {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border-radius: 4px;
+        }
+
+        .checkbox-list label:hover {
+            background: var(--light-gray);
+        }
+
+        .checkbox-list input {
+            margin-right: 0.75rem;
+            cursor: pointer;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.85rem 1.75rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--white);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: var(--white);
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Table Styling */
+        .table-container {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            border: 1px solid var(--medium-gray);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--medium-gray);
+        }
+
+        th {
+            background: var(--primary-color);
+            color: var(--white);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background: var(--light-gray);
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .badge-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-cancelled {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 1200px) {
+            .container {
+                margin-left: 0;
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .leave-balance-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .tab-nav {
+                overflow-x: auto;
+                padding-bottom: 0;
+                scrollbar-width: none;
+            }
+
+            .tab-nav::-webkit-scrollbar {
+                display: none;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            .form-container {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .dashboard-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .leave-balance-card {
+                padding: 1.25rem;
+            }
+
+            .tab-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .btn {
+                padding: 0.75rem 1.25rem;
+                width: 100%;
+            }
+
+            th,
+            td {
+                padding: 0.75rem;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section {
+            animation: fadeIn 0.4s ease-out;
+        }
+    </style>
 </head>
 
 <body>
-
-    <!-- ✅ Sidebar Include -->
     <%- include('../partials/sidebar') %>
-    <div class="main-content">
-        <div class="dashboard-container fade-in">
-            <h1 class="h3 fw-bold mb-2">Hello, <%= employee.name %>!</h1>
-            <p class="text-muted mb-4">Employee ID: <%= employee.emp_id %></p>
 
-            <!-- ✅ Motivational Quote Box -->
-            <div class="alert alert-primary d-flex align-items-center shadow-sm" role="alert">
-                <i class="bi bi-chat-quote me-2 fs-4"></i>
-                <em><%= randomQuote %></em>
-            </div>
+        <div class="main-content">
 
-            <!-- ✅ Grid Section -->
-            <div class="row g-3 mb-4">
-                <!-- Profile Card -->
-                <div class="col-md-6 col-xl-3">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body">
-                            <h5 class="card-title mb-1"><%= employee.name %></h5>
-                            <p class="text-muted mb-0">Role: <%= employee.role %></p>
-                        </div>
+            <div class="container">
+                <div class="dashboard-header">
+                    <h2>Leave Management Dashboard</h2>
+                </div>
+
+                <!-- Leave Balance Cards -->
+                <div class="leave-balance-cards">
+                    <div class="leave-balance-card">
+                        <h3><i class="fas fa-calendar-check"></i> Total Accrued Leave</h3>
+                        <p>
+                            <%= employeeData.leave_balance %>
+                        </p>
+                        <small>days available</small>
+                    </div>
+                    <div class="leave-balance-card">
+                        <h3><i class="fas fa-calendar-minus"></i> Leave Taken</h3>
+                        <p>
+                            <%= parseFloat(employeeData.leave_taken || 0).toFixed(1) %>
+                        </p>
+                        <small>days used</small>
+                    </div>
+                    <div class="leave-balance-card">
+                        <h3><i class="fas fa-calendar-alt"></i> Remaining Leave</h3>
+                        <p>
+                            <%= employeeData.leave_balance %>
+                        </p>
+                        <small>days remaining</small>
                     </div>
                 </div>
 
-                <!-- Punch In/Out Card -->
-                <div class="col-md-6 col-xl-3">
-                    <div class="card text-center shadow-sm h-100">
-                        <div class="card-body">
-                            <p id="dateDisplay" class="fw-semibold text-secondary"></p>
-                            <p id="timeDisplay" class="text-muted mb-3 small"></p>
-                            <button id="punchButton" class="btn btn-primary w-100">Loading...</button>
-                        </div>
-                    </div>
+                <!-- Navigation Tabs -->
+                <div class="tab-nav">
+                    <button class="tab-btn active" onclick="showSection('applySection')">
+                        <i class="fas fa-plus-circle"></i> Apply Leave
+                    </button>
+                    <button class="tab-btn" onclick="showSection('pendingSection')">
+                        <i class="fas fa-clock"></i> Pending Requests
+                    </button>
+                    <button class="tab-btn" onclick="showSection('historySection')">
+                        <i class="fas fa-history"></i> Leave History
+                    </button>
                 </div>
 
-                <!-- Contact Info Card -->
-                <div class="col-md-6 col-xl-3">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body">
-                            <h6 class="card-title"><i class="bi bi-telephone me-1"></i>Contact Info</h6>
-                            <p class="mb-1">Email: <%= employee.email %></p>
-                            <p class="mb-0">Phone: <%= employee.emp_number %></p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Work Info Card -->
-                <div class="col-md-6 col-xl-3">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body">
-                            <h6 class="card-title"><i class="bi bi-person-badge me-1"></i>Work Details</h6>
-                            <p class="mb-1">Designation: <%= employee.designation %></p>
-                            <p class="mb-0">Joining Date: <%= employee.joining_date %></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ✅ Additional Information Section -->
-            <div class="row g-3">
-                <!-- Employees on Leave Today -->
-                <div class="col-md-6" style="display: none;">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body">
-                            <h5 class="card-title d-flex align-items-center">
-                                <i class="bi bi-calendar-x me-2"></i>Employees on Leave Today
-                            </h5>
-                            <div id="onLeaveContainer">
-                                <p class="text-muted">Loading employees on leave...</p>
+                <!-- Leave Application Form -->
+                <div id="applySection" class="section form-container">
+                    <h3><i class="fas fa-file-alt"></i> Leave Application Form</h3>
+                    <form id="leaveForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="start_date"><i class="fas fa-calendar-day"></i> Start Date</label>
+                                <input type="date" class="form-control" id="start_date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="end_date"><i class="fas fa-calendar-day"></i> End Date</label>
+                                <input type="date" class="form-control" id="end_date" required>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Upcoming Birthdays -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body">
-                            <h5 class="card-title d-flex align-items-center">
-                                <i class="bi bi-gift me-2"></i>Upcoming Birthdays
-                            </h5>
-                            <div id="birthdaysContainer">
-                                <p class="text-muted">Loading upcoming birthdays...</p>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="leave_type"><i class="fas fa-tag"></i> Leave Type</label>
+                                <select class="form-control" id="leave_type">
+                                    <option value="Sick">Sick Leave</option>
+                                    <option value="Casual">Casual Leave</option>
+                                    <option value="Paid">Paid Leave</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="half_day"><i class="fas fa-clock"></i> Duration</label>
+                                <select class="form-control" id="half_day">
+                                    <option value="">Full Day</option>
+                                    <option value="1st half">First Half</option>
+                                    <option value="2nd half">Second Half</option>
+                                </select>
                             </div>
                         </div>
+
+                        <div class="form-group">
+                            <label for="remark"><i class="fas fa-comment-alt"></i> Reason</label>
+                            <input type="text" class="form-control" id="remark" placeholder="Brief reason for leave">
+                        </div>
+
+                        <div class="form-group" style="display: none;">
+    <label><i class="fas fa-users"></i> CC to (Optional)</label>
+    <div class="selectBox">
+        <select id="ccSelect">
+            <option>Select employees to notify</option>
+        </select>
+        <div id="checkboxes" class="checkbox-list"></div>
+    </div>
+</div>
+
+
+                        <div class="form-group" style="margin-top: 2rem;">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Submit Application
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Pending Leaves Section -->
+                <div id="pendingSection" class="section" style="display: none;">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date Range</th>
+                                    <th>Type</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingList"></tbody>
+                        </table>
                     </div>
                 </div>
 
-        <!-- Upcoming Events -->
-<!-- Upcoming Events -->
-
-<script>
-  // Open popup
-  document.querySelectorAll('.open-popup').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const index = btn.dataset.index;
-      const popup = document.getElementById('popup' + index);
-      popup.style.display = 'flex';
-    });
-  });
-
-  // Close popup only via close button
-  document.querySelectorAll('.close-popup').forEach(btn => {
-    btn.addEventListener('click', () => {
-      btn.closest('.custom-popup').style.display = 'none';
-    });
-  });
-</script>
-
-
-
+                <!-- Leave History Section -->
+                <div id="historySection" class="section" style="display: none;">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date Range</th>
+                                    <th>Type</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaveList"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
+
         </div>
-    </div>        
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', async () => {
+                // Initialize the CC dropdown
+                await initCCDropdown();
 
-    <!-- ✅ Punch Logic & Clock -->
-    <script>
-        function formatISTTime(utcTime) {
-            const date = new Date(utcTime);
-            return date.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-        }
+                // Load initial data
+                fetchLeaveHistory();
 
-        document.addEventListener("DOMContentLoaded", async () => {
-            await checkPunchStatus();
-            fetchEmployeesOnLeave();
-            fetchUpcomingBirthdays();
-        });
-
-        async function checkPunchStatus() {
-            try {
-                const response = await fetch('/dashboard/employee/punch-status', {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                const punchButton = document.getElementById("punchButton");
-
-                if (data.punchedIn) {
-                    punchButton.textContent = "Punch Out";
-                    punchButton.onclick = confirmPunchOut;
-                } else {
-                    punchButton.textContent = "Punch In";
-                    punchButton.onclick = punchIn;
-                }
-            } catch (error) {
-                console.error("Error checking punch status:", error);
-            }
-        }
-
-        function getCurrentLocation() {
-    return new Promise((resolve, reject) => {
-
-        if (!navigator.geolocation) {
-            return reject("Geolocation not supported.");
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                resolve({
-                    latitude: pos.coords.latitude,
-                    longitude: pos.coords.longitude
-                });
-            },
-            (error) => {
-                switch (error.code) {
-                    case error.PERMISSION_DENIED:
-                        reject("Permission denied");
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        reject("Location unavailable");
-                        break;
-                    case error.TIMEOUT:
-                        reject("Location request timed out");
-                        break;
-                    default:
-                        reject("Unknown location error");
-                }
-            },
-            {
-                // ⚠ SAFARI FIX → keep it simple
-                enableHighAccuracy: false,
-                timeout: 5000,
-                maximumAge: 0
-            }
-        );
-    });
-}
-
-async function punchIn() {
-    try {
-        Swal.fire({
-            title: "Getting your location...",
-            text: "Please wait a moment.",
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
-        });
-
-        let location = null;
-
-        try {
-            location = await getCurrentLocation();
-        } catch (locError) {
-            // ❗ Location failed but we still continue punch-in
-            console.warn("Location failed:", locError);
-            location = null;
-        }
-
-        const response = await fetch('/dashboard/employee/punch-in', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-                latitude: location?.latitude || null,
-                longitude: location?.longitude || null
-            })
-        });
-
-        const data = await response.json();
-        Swal.close();
-
-        if (response.ok) {
-    Swal.fire({
-        title: "✅ Success!",
-        text: data.message,
-        icon: "success",
-        timer: 1200,
-        showConfirmButton: false
-    }).then(() => {
-        // Reload AFTER popup finishes
-        window.location.reload();
-    });
-}
- else {
-                Swal.fire("Error!", data.message, "error");
-            }
-
-    } catch (err) {
-        Swal.close();
-        Swal.fire("Error", "Something went wrong.", "error");
-    }
-}
-
-        function confirmPunchOut() {
-            Swal.fire({
-                title: "Are you sure?",
-                text: "Do you want to Punch Out?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Yes, Punch Out!",
-                cancelButtonText: "Cancel"
-            }).then(result => {
-                if (result.isConfirmed) punchOut();
+                // Set up form submission
+                setupLeaveForm();
             });
-        }
 
-        async function punchOut() {
-            try {
-                const response = await fetch('/dashboard/employee/punch-out', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                const data = await response.json();
+            async function initCCDropdown() {
+                const checkboxes = document.getElementById('checkboxes');
 
-                if (response.ok) {
-    Swal.fire({
-        title: "Success!",
-        text: data.message,
-        icon: "success",
-        timer: 1200,
-        showConfirmButton: false
-    }).then(() => {
-        window.location.reload();
-    });
-}
- else {
-                    Swal.fire("Error!", data.message, "error");
-                }
-            } catch (error) {
-                Swal.fire("Server Error!", "Something went wrong.", "error");
-            }
-        }
+                try {
+                    const response = await fetch('/dashboard/employee/cc', { credentials: 'include' });
+                    const result = await response.json();
 
-        function updateDateTime() {
-            const now = new Date();
-            const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-            const formattedDate = now.toLocaleDateString('en-GB', dateOptions);
-            const formattedTime = now.toLocaleDateString('en-GB', { weekday: 'long' }) +
-                " | 10:00 AM To 7:00 PM";
-            const formattedSeconds = now.getHours().toString().padStart(2, '0') + " : " +
-                now.getMinutes().toString().padStart(2, '0') + ":" +
-                now.getSeconds().toString().padStart(2, '0');
-
-            document.getElementById("dateDisplay").textContent = formattedDate;
-            document.getElementById("timeDisplay").textContent = formattedTime + " | " + formattedSeconds;
-        }
-
-        // Fetch employees on leave
-        async function fetchEmployeesOnLeave() {
-            try {
-                const response = await fetch('/dashboard/employee/leave/list?status=approved', {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                
-                if (data.success && data.leaves.length > 0) {
-                    const today = new Date().toISOString().split('T')[0];
-                   const onLeaveToday = data.leaves.filter(leave => {
-    if (!leave.from_date || !leave.to_date) return false;
-
-    const from = new Date(leave.from_date);
-    const to = new Date(leave.to_date);
-    const today = new Date();
-
-    // If parsing failed, skip this leave
-    if (isNaN(from) || isNaN(to)) return false;
-
-    // Compare dates only (ignore time)
-    const todayStr = today.toISOString().split('T')[0];
-    const fromStr = from.toISOString().split('T')[0];
-    const toStr = to.toISOString().split('T')[0];
-
-    return fromStr <= todayStr && toStr >= todayStr;
-});
-                    const container = document.getElementById('onLeaveContainer');
-                    if (onLeaveToday.length > 0) {
-                        let html = '<div>';
-                        onLeaveToday.forEach(leave => {
-                            html += `
-                                <span class="leave-badge">
-                                    <i class="bi bi-person-x badge-icon"></i>
-                                    ${leave.employee_name} (${leave.leave_type})
-                                </span>
-                            `;
+                    if (result.success) {
+                        result.employees.forEach(employee => {
+                            const label = document.createElement('label');
+                            const input = document.createElement('input');
+                            input.type = 'checkbox';
+                            input.value = employee.emp_id;
+                            input.onclick = updateSelectedOptions;
+                            label.appendChild(input);
+                            label.appendChild(document.createTextNode(employee.name));
+                            checkboxes.appendChild(label);
                         });
-                        html += '</div>';
-                        container.innerHTML = html;
                     } else {
-                        container.innerHTML = '<p class="text-muted">No employees on leave today</p>';
+                        console.error('Failed to fetch employees:', result.message);
                     }
-                } else {
-                    document.getElementById('onLeaveContainer').innerHTML = 
-                        '<p class="text-muted">No employees on leave today</p>';
+                } catch (error) {
+                    console.error('Error fetching employees:', error);
                 }
-            } catch (error) {
-                console.error("Error fetching employees on leave:", error);
-                document.getElementById('onLeaveContainer').innerHTML = 
-                    '<p class="text-danger">Error loading leave data</p>';
-            }
-        }
 
-        // Fetch upcoming birthdays
-   async function fetchUpcomingBirthdays() {
+                // Toggle dropdown when clicking the select box
+                document.querySelector('.selectBox select').addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    document.getElementById('checkboxes').classList.toggle('show');
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function () {
+                    document.getElementById('checkboxes').classList.remove('show');
+                });
+            }
+
+            function updateSelectedOptions() {
+                const checkboxes = document.querySelectorAll('#checkboxes input[type=checkbox]');
+                const selectedNames = [];
+
+                checkboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        selectedNames.push(checkbox.nextSibling.nodeValue.trim());
+                    }
+                });
+
+                const ccSelect = document.getElementById('ccSelect');
+                ccSelect.options[0].text = selectedNames.length > 0
+                    ? selectedNames.join(', ')
+                    : 'Select employees to notify';
+            }
+
+            function setupLeaveForm() {
+                document.getElementById("leaveForm").addEventListener("submit", async function (event) {
+                    event.preventDefault();
+
+                    const { isConfirmed } = await Swal.fire({
+                        title: "Confirm Leave Application",
+                        text: "Are you sure you want to submit this leave request?",
+                        icon: "question",
+                        showCancelButton: true,
+                        confirmButtonColor: "#4361ee",
+                        cancelButtonColor: "#6c757d",
+                        confirmButtonText: "Yes, submit!",
+                        cancelButtonText: "Review",
+                        reverseButtons: true
+                    });
+
+                    if (!isConfirmed) return;
+
+                    const selectedCC = [];
+                    document.querySelectorAll('#checkboxes input[type="checkbox"]:checked').forEach(checkbox => {
+                        selectedCC.push(checkbox.value);
+                    });
+
+                    const data = {
+                        start_date: document.getElementById("start_date").value,
+                        end_date: document.getElementById("end_date").value,
+                        leave_type: document.getElementById("leave_type").value,
+                        half_day: document.getElementById("half_day").value,
+                        reason: document.getElementById("remark").value,
+                        cc: selectedCC
+                    };
+
+                    try {
+                        const response = await fetch("/dashboard/employee/leave/apply", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(data),
+                            credentials: "include"
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            await Swal.fire({
+                                title: "Success!",
+                                text: result.message,
+                                icon: "success",
+                                confirmButtonColor: "#4361ee"
+                            });
+                            location.reload();
+                        } else {
+                            throw new Error(result.message || "Failed to submit leave request");
+                        }
+                    } catch (error) {
+                        Swal.fire({
+                            title: "Error!",
+                            text: error.message,
+                            icon: "error",
+                            confirmButtonColor: "#dc3545"
+                        });
+                    }
+                });
+            }
+
+            function showSection(sectionId) {
+                // Hide all sections
+                document.querySelectorAll('.section').forEach(section => {
+                    section.style.display = 'none';
+                });
+
+                // Show selected section
+                document.getElementById(sectionId).style.display = 'block';
+
+                // Update active tab
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.currentTarget.classList.add('active');
+
+                // Load data if needed
+                if (sectionId === 'pendingSection') {
+                    fetchPendingLeaves();
+                } else if (sectionId === 'historySection') {
+                    fetchLeaveHistory();
+                }
+            }
+
+            async function fetchPendingLeaves() {
+                try {
+                    const response = await fetch('/dashboard/employee/leave/list?status=pending', {
+                        credentials: 'include'
+                    });
+                    const result = await response.json();
+                    const pendingList = document.getElementById('pendingList');
+
+                    if (!response.ok) throw new Error(result.message || "Failed to fetch pending leaves");
+
+                    pendingList.innerHTML = result.leaves.map(leave => {
+                        const startDate = formatDate(leave.start_date);
+                        const endDate = formatDate(leave.end_date);
+                        const statusBadge = getStatusBadge(leave.status);
+
+                        return `
+                        <tr>
+                            <td>${startDate} - ${endDate}</td>
+                            <td>${leave.leave_type}</td>
+                            <td>${leave.half_day || "Full Day"}</td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <button class="btn btn-danger" onclick="cancelLeave(${leave.id})">
+                                    <i class="fas fa-times"></i> Withdraw
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    }).join('') || '<tr><td colspan="5" style="text-align: center;">No pending leave requests</td></tr>';
+                } catch (error) {
+                    console.error("Error fetching pending leaves:", error);
+                    pendingList.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #dc3545;">Error loading data</td></tr>';
+                }
+            }
+
+           async function fetchLeaveHistory() {
     try {
-        const response = await fetch('/dashboard/employee/birthdays', {
-            method: 'GET',
+        // Remove the status filter to get ALL leaves
+        const response = await fetch('/dashboard/employee/leave/list', {
             credentials: 'include'
         });
-        
-        if (response.ok) {
-            const data = await response.json();
-            const container = document.getElementById('birthdaysContainer');
-            
-            if (data.success && data.birthdays.length > 0) {
-                let html = '<div class="d-flex flex-wrap gap-2">';
-                
-                data.birthdays.forEach(emp => {
-                    // Determine badge class based on days until
-                    let badgeClass = "birthday-badge";
-                    if (emp.days_until === 0) {
-                        badgeClass = "birthday-badge-today";
-                    } else if (emp.days_until <= 7) {
-                        badgeClass = "birthday-badge-soon";
-                    }
-                    
-                    html += `
-                        <span class="${badgeClass}">
-                            <i class="bi bi-balloon-fill badge-icon"></i>
-                            ${emp.name} - ${emp.formatted_date}
-                            ${emp.days_until === 0 ? ' (Today!)' : 
-                              emp.days_until <= 7 ? ` (in ${emp.days_until} days)` : ''}
-                        </span>
-                    `;
-                });
-                
-                html += '</div>';
-                container.innerHTML = html;
-            } else {
-                container.innerHTML = `
-                    <div class="text-center py-3">
-                        <i class="bi bi-calendar-x fs-1 text-muted"></i>
-                        <p class="text-muted mt-2">No IT Team birthdays in the next 30 days</p>
-                    </div>
-                `;
-            }
-        } else {
-            throw new Error('Failed to fetch birthdays');
-        }
+        const result = await response.json();
+        const leaveList = document.getElementById('leaveList');
+
+        if (!response.ok) throw new Error(result.message || "Failed to fetch leave history");
+
+        leaveList.innerHTML = result.leaves.map(leave => {
+            const startDate = formatDate(leave.start_date);
+            const endDate = formatDate(leave.end_date);
+            const statusBadge = getStatusBadge(leave.status);
+
+            return `
+                <tr>
+                    <td>${startDate} - ${endDate}</td>
+                    <td>${leave.leave_type}</td>
+                    <td>${leave.half_day || "Full Day"}</td>
+                    <td>${statusBadge}</td>
+                </tr>
+            `;
+        }).join('') || '<tr><td colspan="4" style="text-align: center;">No leave history found</td></tr>';
     } catch (error) {
-        console.error("Error fetching upcoming birthdays:", error);
-        document.getElementById('birthdaysContainer').innerHTML = `
-            <div class="alert alert-danger">
-                <i class="bi bi-exclamation-triangle-fill"></i> 
-                Error loading birthday data
-            </div>
-        `;
+        console.error("Error fetching leave history:", error);
+        leaveList.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #dc3545;">Error loading data</td></tr>';
     }
 }
-        setInterval(updateDateTime, 1000);
-        updateDateTime();
 
+            async function cancelLeave(leaveId) {
+                if (!leaveId) {
+                    await Swal.fire({
+                        title: "Error!",
+                        text: "Invalid leave ID",
+                        icon: "error",
+                        confirmButtonColor: "#dc3545"
+                    });
+                    return;
+                }
 
+                const { isConfirmed } = await Swal.fire({
+                    title: "Confirm Withdrawal",
+                    text: "Are you sure you want to withdraw this leave request?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#dc3545",
+                    cancelButtonColor: "#6c757d",
+                    confirmButtonText: "Yes, withdraw!",
+                    cancelButtonText: "Cancel",
+                    reverseButtons: true
+                });
 
-    </script>
-    <!-- At end of body -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+                if (!isConfirmed) return;
+
+                try {
+                    const response = await fetch('/dashboard/employee/leave/cancel', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ leaveId: leaveId }),
+                        credentials: 'include'
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        await Swal.fire({
+                            title: "Success!",
+                            text: result.message,
+                            icon: "success",
+                            confirmButtonColor: "#4361ee"
+                        });
+                        fetchPendingLeaves();
+                    } else {
+                        throw new Error(result.message || "Failed to cancel leave");
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        title: "Error!",
+                        text: error.message,
+                        icon: "error",
+                        confirmButtonColor: "#dc3545"
+                    });
+                }
+            }
+
+            function formatDate(dateString) {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            }
+
+            function getStatusBadge(status) {
+                switch (status.toLowerCase()) {
+                    case 'pending':
+                        return '<span class="badge badge-pending"><i class="fas fa-clock"></i> Pending</span>';
+                    case 'approved':
+                        return '<span class="badge badge-approved"><i class="fas fa-check"></i> Approved</span>';
+                    case 'rejected':
+                        return '<span class="badge badge-rejected"><i class="fas fa-times"></i> Rejected</span>';
+                    case 'cancelled':
+                        return '<span class="badge badge-cancelled"><i class="fas fa-ban"></i> Cancelled</span>';
+                    default:
+                        return `<span class="badge">${status}</span>`;
+                }
+            }
+        </script>
 </body>
+
 </html>
-                                                                             
