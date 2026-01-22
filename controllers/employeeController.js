@@ -221,7 +221,116 @@ exports.applyPermission = async (req, res) => {
     }
 };
 
+exports.getWorkingHoursSummary = async (req, res) => {
+    try {
+        const emp_id = req.user?.emp_id;
+        const { start_date, end_date } = req.query;
 
+        if (!emp_id) {
+            return res.status(400).json({ success: false, message: "Employee ID missing" });
+        }
+
+        // Default to 1st of current month to today if dates not provided
+        const defaultStart = moment().startOf('month').format('YYYY-MM-DD');
+        const defaultEnd = moment().format('YYYY-MM-DD');
+        
+        const startDate = start_date || defaultStart;
+        const endDate = end_date || defaultEnd;
+
+        // Get attendance data for the date range
+        const attendanceData = await employeeModel.getAttendanceByDateRange(emp_id, startDate, endDate);
+        
+        // Calculate working days and hours
+        let totalWorkingMinutes = 0;
+        let workingDaysCount = 0;
+        const dailyDetails = [];
+
+        // Group by date
+        const attendanceByDate = {};
+        attendanceData.forEach(entry => {
+            if (entry.punch_in_time) {
+                const date = moment(entry.punch_in_time).format('YYYY-MM-DD');
+                if (!attendanceByDate[date]) {
+                    attendanceByDate[date] = [];
+                }
+                attendanceByDate[date].push(entry);
+            }
+        });
+
+        // Calculate for each date
+        for (const date in attendanceByDate) {
+            let dayWorkingMinutes = 0;
+            let punchEntries = [];
+
+            const entries = attendanceByDate[date];
+            
+            for (let i = 0; i < entries.length; i++) {
+                const entry = entries[i];
+                
+                if (entry.punch_in_time && entry.punch_out_time) {
+                    const punchInTime = moment(entry.punch_in_time);
+                    const punchOutTime = moment(entry.punch_out_time);
+                    const sessionMinutes = punchOutTime.diff(punchInTime, 'minutes');
+                    dayWorkingMinutes += sessionMinutes;
+
+                    punchEntries.push({
+                        punch_in: moment(entry.punch_in_time).format('HH:mm:ss'),
+                        punch_out: entry.punch_out_time ? moment(entry.punch_out_time).format('HH:mm:ss') : '--:--:--',
+                        session_hours: `${Math.floor(sessionMinutes / 60)}h ${sessionMinutes % 60}m`
+                    });
+                }
+            }
+
+            // Check if it's a weekend (Saturday=6, Sunday=0)
+            const dayOfWeek = moment(date).day();
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+            if (dayWorkingMinutes > 0 && !isWeekend) {
+                workingDaysCount++;
+            }
+
+            const dayTotalHours = dayWorkingMinutes > 0 ? 
+                `${Math.floor(dayWorkingMinutes / 60)}h ${dayWorkingMinutes % 60}m` : "0h 0m";
+            
+            totalWorkingMinutes += dayWorkingMinutes;
+
+            dailyDetails.push({
+                date: moment(date).format('DD-MM-YYYY'),
+                day_of_week: moment(date).format('dddd'),
+                is_weekend: isWeekend,
+                total_hours: dayTotalHours,
+                punch_entries: punchEntries,
+                working_day: (dayWorkingMinutes > 0 && !isWeekend)
+            });
+        }
+
+        // Calculate totals
+        const totalWorkingHours = Math.floor(totalWorkingMinutes / 60);
+        const totalWorkingMinutesRemainder = totalWorkingMinutes % 60;
+        const averageDailyHours = workingDaysCount > 0 ? 
+            Math.floor(totalWorkingMinutes / workingDaysCount / 60) : 0;
+        const averageDailyMinutes = workingDaysCount > 0 ? 
+            Math.floor((totalWorkingMinutes / workingDaysCount) % 60) : 0;
+
+        res.json({
+            success: true,
+            summary: {
+                start_date: startDate,
+                end_date: endDate,
+                total_days_in_range: moment(endDate).diff(moment(startDate), 'days') + 1,
+                working_days_count: workingDaysCount,
+                total_working_hours: `${totalWorkingHours}h ${totalWorkingMinutesRemainder}m`,
+                average_daily_hours: `${averageDailyHours}h ${averageDailyMinutes}m`,
+                total_working_minutes: totalWorkingMinutes
+            },
+            daily_details: dailyDetails
+        });
+
+    } catch (error) {
+        console.error("Error getting working hours summary:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
 exports.getPunchStatus = async (req, res) => {
     try {
         const emp_id = req.user?.emp_id;
