@@ -320,12 +320,14 @@ router.post('/employee-location',verifyToken, async (req, res) => {
     })
     
 
- router.get("/auto-punch-out", async (req, res) => {
+    router.get("/auto-punch-out", async (req, res) => {
         try {
             const date = moment().tz(TIMEZONE).format("YYYY-MM-DD");
-            const punchOutTime = moment().tz(TIMEZONE).set({ hour: 21, minute: 1, second: 0 }).format("YYYY-MM-DD HH:mm:ss");
+            const punchOutTime = moment()
+                .tz(TIMEZONE)
+                .set({ hour: 19, minute: 0, second: 0 }) // ✅ 7:00 PM
+                .format("YYYY-MM-DD HH:mm:ss");
     
-            // Find employees who forgot to punch out
             const result = await pool.query(
                 `SELECT id FROM attendance WHERE punch_out_time IS NULL AND date = $1`,
                 [date]
@@ -333,73 +335,72 @@ router.post('/employee-location',verifyToken, async (req, res) => {
     
             if (result.rows.length === 0) {
                 return res.json({ message: "✅ No pending punch-outs found." });
-                console.log('no pending punch')
             }
     
-            // Update punch-out time
             const idsToUpdate = result.rows.map(row => row.id);
             await pool.query(
                 `UPDATE attendance SET punch_out_time = $1 WHERE id = ANY($2::int[])`,
                 [punchOutTime, idsToUpdate]
             );
-
     
             res.json({ success: true, updated: idsToUpdate.length });
-            console.log("success fully punch out",idsToUpdate.length)
         } catch (error) {
             console.error("❌ Error in Auto Punch-Out Task:", error);
-            res.status(500).json({ success: false, error: error.message });
+            res.status(500).json({ success: false });
         }
     });
+    
 
 
-          function scheduleAutoPunchOut() {
-    const now = moment().tz(TIMEZONE);
-    let targetTime = moment().tz(TIMEZONE).set({ hour: 21, minute: 0, second: 0 }); 
-
-    if (now.isAfter(targetTime)) {
-        targetTime.add(1, "day"); // Schedule for the next day if time has passed
-    }
-
-    const timeUntilNextRun = targetTime.diff(now);
-
-    console.log(`Next auto punch-out scheduled in ${timeUntilNextRun / 1000 / 60} minutes.`);
-
-    setTimeout(() => {
-        autoPunchOutTask();
-
-        // Ensure it repeats every 24 hours
-        setInterval(autoPunchOutTask, 24 * 60 * 60 * 1000);
-    }, timeUntilNextRun);
-}
-
-async function autoPunchOutTask() {
-    try {
-        const date = moment().tz(TIMEZONE).format("YYYY-MM-DD");
-        const punchOutTime = moment().tz(TIMEZONE).set({ hour: 21, minute: 0, second: 0 }).format("YYYY-MM-DD HH:mm:ss"); // 9:00 PM
-
-        const result = await pool.query(
-            `SELECT id FROM attendance WHERE punch_out_time IS NULL AND date = $1`,
-            [date]
-        );
-
-        if (result.rows.length === 0) {
-            console.log("✅ No pending punch-outs found.");
-            return;
+    function scheduleAutoPunchOut() {
+        const now = moment().tz(TIMEZONE);
+        let targetTime = moment()
+            .tz(TIMEZONE)
+            .set({ hour: 19, minute: 0, second: 0 }); // ✅ 7:00 PM
+    
+        if (now.isAfter(targetTime)) {
+            targetTime.add(1, "day");
         }
-
-        const idsToUpdate = result.rows.map(row => row.id);
-        await pool.query(
-            `UPDATE attendance SET punch_out_time = $1 WHERE id = ANY($2::int[])`,
-            [punchOutTime, idsToUpdate]
-        );
-
-        console.log(`✅ Successfully punched out ${idsToUpdate.length} employees.`);
-    } catch (error) {
-        console.error("❌ Error in Auto Punch-Out Task:", error);
+    
+        const timeUntilNextRun = targetTime.diff(now);
+        console.log(`Next auto punch-out scheduled in ${timeUntilNextRun / 1000 / 60} minutes.`);
+    
+        setTimeout(() => {
+            autoPunchOutTask();
+            setInterval(autoPunchOutTask, 24 * 60 * 60 * 1000);
+        }, timeUntilNextRun);
     }
-}
-
+    
+    async function autoPunchOutTask() {
+        try {
+            const date = moment().tz(TIMEZONE).format("YYYY-MM-DD");
+            const punchOutTime = moment()
+                .tz(TIMEZONE)
+                .set({ hour: 19, minute: 0, second: 0 }) // ✅ 7:00 PM
+                .format("YYYY-MM-DD HH:mm:ss");
+    
+            const result = await pool.query(
+                `SELECT id FROM attendance WHERE punch_out_time IS NULL AND date = $1`,
+                [date]
+            );
+    
+            if (result.rows.length === 0) {
+                console.log("✅ No pending punch-outs found.");
+                return;
+            }
+    
+            const idsToUpdate = result.rows.map(row => row.id);
+            await pool.query(
+                `UPDATE attendance SET punch_out_time = $1 WHERE id = ANY($2::int[])`,
+                [punchOutTime, idsToUpdate]
+            );
+    
+            console.log(`✅ Successfully punched out ${idsToUpdate.length} employees.`);
+        } catch (error) {
+            console.error("❌ Error in Auto Punch-Out Task:", error);
+        }
+    }
+    
 // Start the scheduling function when the server runs
 scheduleAutoPunchOut();
 
