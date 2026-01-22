@@ -21,6 +21,7 @@
                     <thead class="thead-dark">
                         <tr>
                             <th>Employee ID</th>
+                            <th>Employee Name</th>
                             <th>Permission Type</th>
                             <th>From Time</th>
                             <th>To Time</th>
@@ -33,6 +34,7 @@
                         <% pendingPermissions.forEach(permission => { %>
                             <tr>
                                 <td><%= permission.emp_id %></td>
+                                <td><%= permission.name %></td>     
                                 <td><%= permission.type %></td>
                                 <td><%= new Date(permission.from_time).toLocaleDateString('en-GB').replace(/\//g, '-') %></td>
                                 <td><%= new Date(permission.to_time).toLocaleDateString('en-GB').replace(/\//g, '-') %></td>
