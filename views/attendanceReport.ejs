@@ -57,7 +57,7 @@
 
     <% if (!isAllEmployees && summary) { %>
       <!-- Particular Employee Summary -->
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-6">
         <div class="bg-gradient-to-br from-gray-100 to-gray-200 text-gray-800 p-4 rounded-lg shadow-md text-center border border-gray-300">
           <p class="text-sm font-medium mb-1">Total Days</p>
           <h2 class="text-2xl font-bold"><%= summary.totalDays %></h2>
@@ -72,7 +72,13 @@
         </div>
         <div class="bg-gradient-to-br from-yellow-100 to-yellow-200 text-yellow-800 p-4 rounded-lg shadow-md text-center border border-yellow-300">
           <p class="text-sm font-medium mb-1">Official Leave</p>
-          <h2 class="text-2xl font-bold"><%= summary.totalLeaves %></h2>
+          <p class="text-xs text-gray-600 mb-1">(Weekends)</p>
+          <h2 class="text-2xl font-bold"><%= summary.totalOfficialLeave || 0 %></h2>
+        </div>
+        <div class="bg-gradient-to-br from-blue-100 to-blue-200 text-blue-800 p-4 rounded-lg shadow-md text-center border border-blue-300">
+          <p class="text-sm font-medium mb-1">Taken Leave</p>
+          <p class="text-xs text-gray-600 mb-1">(Full Day)</p>
+          <h2 class="text-2xl font-bold"><%= summary.totalTakenLeave || 0 %></h2>
         </div>
         <div class="bg-gradient-to-br from-orange-100 to-orange-200 text-orange-800 p-4 rounded-lg shadow-md text-center border border-orange-300">
           <p class="text-sm font-medium mb-1">Half Days</p>
@@ -85,7 +91,8 @@
       </div>
       <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded mb-6">
         <p class="text-lg font-semibold text-blue-800">
-          Total Leave Count: <span class="text-2xl"><%= summary.totalLeaveCount || 0 %></span>
+          Total Leave Count: <span class="text-2xl"><%= (summary.totalLeaveCount || 0).toFixed(1) %></span>
+          <span class="text-sm text-gray-600 ml-2">(Taken Leave + Half Days + Festival Leave)</span>
         </p>
       </div>
     <% } %>
@@ -114,6 +121,7 @@
                     <%= rec.status.includes('Half Day') ? 'text-orange-600 bg-orange-50' :
                         rec.status === 'Present' ? 'text-green-700 bg-green-50' :
                         rec.status === 'Official Leave' ? 'text-yellow-700 bg-yellow-50' :
+                        rec.status === 'Taken Leave' ? 'text-blue-700 bg-blue-50' :
                         rec.status === 'Festival Leave' ? 'text-purple-700 bg-purple-50' :
                         'text-red-700 bg-red-50' %> rounded-full px-3 py-1 inline-block">
                   <%= rec.status %>
@@ -134,7 +142,8 @@
     <th class="py-4 px-4 text-left font-semibold">Employee Name</th>
     <th class="py-4 px-4 text-center font-semibold">Present</th>
     <th class="py-4 px-4 text-center font-semibold">Absent</th>
-    <th class="py-4 px-4 text-center font-semibold">Official Leave</th>
+    <th class="py-4 px-4 text-center font-semibold">Official Leave<br><span class="text-xs font-normal">(Weekends)</span></th>
+    <th class="py-4 px-4 text-center font-semibold">Taken Leave<br><span class="text-xs font-normal">(Full Day)</span></th>
     <th class="py-4 px-4 text-center font-semibold">Half Days</th>
     <th class="py-4 px-4 text-center font-semibold">Festival Leave</th>
     <th class="py-4 px-4 text-center font-semibold">Total Leave Count</th>
@@ -148,7 +157,8 @@
       </td>
       <td class="py-3 px-4 text-center text-green-600 font-semibold"><%= s.totalPresent || 0 %></td>
       <td class="py-3 px-4 text-center text-red-600 font-semibold"><%= s.totalAbsent || 0 %></td>
-      <td class="py-3 px-4 text-center text-yellow-600 font-semibold"><%= s.totalLeaves || 0 %></td>
+      <td class="py-3 px-4 text-center text-yellow-600 font-semibold"><%= s.totalOfficialLeave || 0 %></td>
+      <td class="py-3 px-4 text-center text-blue-600 font-semibold"><%= s.totalTakenLeave || 0 %></td>
       <td class="py-3 px-4 text-center text-orange-600 font-semibold"><%= s.totalHalfDays || 0 %></td>
       <td class="py-3 px-4 text-center text-purple-600 font-semibold"><%= s.totalFestival || 0 %></td>
       <td class="py-3 px-4 text-center text-indigo-600 font-bold text-lg"><%= (s.totalLeaveCount || 0).toFixed(1) %></td>
