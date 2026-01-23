@@ -125,26 +125,38 @@ exports.getLeaves = async (filters) => {
 
 
 // ✅ HR Approves/Rejects Leave
+// ✅ HR Approves / Rejects Leave
 exports.updateLeaveStatus = async (leave_id, status, hr_id) => {
-    // Fetch leave details before updating
-    const leaveQuery = `SELECT emp_id, days, status FROM leaves WHERE id = $1;`;
+    // 🔹 Fetch leave details
+    const leaveQuery = `
+        SELECT emp_id, days, status, leave_type
+        FROM leaves
+        WHERE id = $1;
+    `;
     const leaveResult = await pool.query(leaveQuery, [leave_id]);
 
     if (leaveResult.rows.length === 0) {
         throw new Error("Leave request not found");
     }
 
-    const { emp_id, days, status: currentStatus } = leaveResult.rows[0];
+    const {
+        emp_id,
+        days,
+        status: currentStatus,
+        leave_type
+    } = leaveResult.rows[0];
 
-    // Prevent duplicate processing
-    if (currentStatus !== 'pending') {
+    // 🔒 Prevent duplicate processing
+    if (currentStatus !== "pending") {
         throw new Error("Leave has already been processed");
     }
 
-    // Update leave status and add HR reviewer details
+    // 🔹 Update leave status
     const updateLeaveQuery = `
         UPDATE leaves
-        SET status = $1, reviewed_by = $2, reviewed_at = NOW()
+        SET status = $1,
+            reviewed_by = $2,
+            reviewed_at = NOW()
         WHERE id = $3
         RETURNING *;
     `;
@@ -152,29 +164,36 @@ exports.updateLeaveStatus = async (leave_id, status, hr_id) => {
     const leaveUpdateResult = await pool.query(updateLeaveQuery, values);
     const updatedLeave = leaveUpdateResult.rows[0];
 
-    // If HR approves, deduct leave balance
-    if (status.toLowerCase() === 'approved') {
-        const balanceQuery = `SELECT leave_balance FROM employees WHERE emp_id = $1;`;
+    // 🔹 Deduct leave balance ONLY IF:
+    // ✅ status = approved
+    // ✅ leave_type is NOT Paid
+    if (
+        status.toLowerCase() === "approved" &&
+        leave_type.toLowerCase() !== "paid"
+    ) {
+        const balanceQuery = `
+            SELECT leave_balance
+            FROM employees
+            WHERE emp_id = $1;
+        `;
         const balanceResult = await pool.query(balanceQuery, [emp_id]);
 
         if (balanceResult.rows.length === 0) {
             throw new Error("Employee not found");
         }
 
-        let currentBalance = parseFloat(balanceResult.rows[0].leave_balance);
-        let newBalance = currentBalance - days;
+        const currentBalance = parseFloat(balanceResult.rows[0].leave_balance);
+        const newBalance = currentBalance - days;
 
-        // Optional: Prevent balance from going negative (remove this check if negative balance is allowed)
+        // ⚠️ Optional warning if negative
         if (newBalance < 0) {
-            console.warn("Warning: Leave balance will go negative");
+            console.warn(`⚠️ Leave balance negative for emp_id: ${emp_id}`);
         }
 
-        // Deduct leave balance
         const deductQuery = `
             UPDATE employees
             SET leave_balance = $1
-            WHERE emp_id = $2
-            RETURNING leave_balance;
+            WHERE emp_id = $2;
         `;
         await pool.query(deductQuery, [newBalance, emp_id]);
     }
