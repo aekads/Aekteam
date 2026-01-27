@@ -62,6 +62,10 @@
                             <p class="font-medium"><%= employee.email %></p>
                         </div>
                         <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-500">password</p>
+                            <p class="font-medium"><%= employee.pin %></p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
                             <p class="text-sm text-gray-500">Date of Birth</p>
                             <p class="font-medium"><%= employee.dob ? new Date(employee.dob).toLocaleDateString('en-GB') : "N/A" %></p>
                         </div>
