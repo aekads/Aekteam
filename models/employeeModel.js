@@ -48,79 +48,149 @@ exports.getLastEmployeeId = async () => {
 };
 
 // Generate new employee ID
+// Generate new employee ID - FIXED VERSION
 const generateEmpId = async () => {
-    const result = await pool.query("SELECT emp_id FROM employees ORDER BY emp_id DESC LIMIT 1");
-    
-    if (result.rows.length > 0) {
-        const lastEmpId = result.rows[0].emp_id; // Example: "emp_73"
-        const lastNumber = parseInt(lastEmpId.split('_')[1]); // Extract number (73)
-        return `emp_${lastNumber + 1}`; // Increment to "emp_74"
-    }
-    return 'emp_73'; // Default if no employees exist
+  try {
+      const result = await pool.query(
+          "SELECT emp_id FROM employees ORDER BY created_at DESC LIMIT 1"
+      );
+      
+      if (result.rows.length > 0) {
+          const lastEmpId = result.rows[0].emp_id; // Example: "emp_99"
+          
+          // Extract number safely
+          const match = lastEmpId.match(/emp_(\d+)/);
+          if (match && match[1]) {
+              const lastNumber = parseInt(match[1]);
+              // Find the next available ID
+              let nextNumber = lastNumber + 1;
+              
+              // Check if this ID already exists (in case of gaps)
+              const checkQuery = "SELECT emp_id FROM employees WHERE emp_id = $1";
+              const checkResult = await pool.query(checkQuery, [`emp_${nextNumber}`]);
+              
+              // If exists, keep incrementing until we find a free one
+              while (checkResult.rows.length > 0) {
+                  nextNumber++;
+                  const recheckResult = await pool.query(checkQuery, [`emp_${nextNumber}`]);
+                  if (recheckResult.rows.length === 0) break;
+              }
+              
+              return `emp_${nextNumber}`;
+          }
+      }
+      // Start from emp_73 if table is empty or format doesn't match
+      return 'emp_73';
+  } catch (error) {
+      console.error("Error generating emp_id:", error);
+      // Fallback: generate based on timestamp
+      const timestamp = Date.now();
+      return `emp_${timestamp.toString().slice(-6)}`;
+  }
 };
-
-// Generate a random 4-digit PIN
-const generatePin = () => Math.floor(1000 + Math.random() * 9000);
-
+const generatePin = async () => {
+  let pin;
+  let attempts = 0;
+  const maxAttempts = 100;
+  
+  do {
+      pin = Math.floor(1000 + Math.random() * 9000).toString();
+      const result = await pool.query(
+          "SELECT emp_id FROM employees WHERE pin = $1 LIMIT 1", 
+          [pin]
+      );
+      
+      // If pin doesn't exist, use it
+      if (result.rows.length === 0) {
+          return pin;
+      }
+      
+      attempts++;
+  } while (attempts < maxAttempts);
+  
+  // Fallback: timestamp based PIN
+  return Math.floor(1000 + Date.now() % 9000).toString();
+};
 // Add new employee
 exports.addEmployee = async (employeeData) => {
-    const {
-        full_name, phone, designation, joining_date,role, resign_date, dob, alt_phone, city, ctc, 
-        bank_number, ifsc, passbook_image, pan_card, aadhar_card, last_company_name, offer_letter, 
-        photo, last_company_experience_letter
-    } = employeeData;
+  const {
+      full_name, phone, designation, joining_date, role, resign_date, dob, alt_phone, 
+      city, ctc, bank_number, ifsc, passbook_image, pan_card, aadhar_card, 
+      last_company_name, offer_letter, photo, last_company_experience_letter
+  } = employeeData;
 
-    const emp_id = await generateEmpId(); // Auto-generate emp_id
-    const pin = generatePin(); // Auto-generate 4-digit PIN
+  // Generate unique IDs
+  const emp_id = await generateEmpId();
+  const pin = await generatePin();
 
-    // Ensure empty strings are converted to NULL
-    const cleanValue = (value) => (value === "" ? null : value);
+  // Ensure empty strings are converted to NULL
+  const cleanValue = (value) => {
+      if (value === "" || value === undefined || value === null) {
+          return null;
+      }
+      return value;
+  };
 
-    const query = `
-    INSERT INTO employees 
-    (emp_id, name, emp_number, designation, role, joining_date, resign_date, dob, 
-    alt_phone, assign_city, ctc, bank_number, ifsc, passbook_image, pan_card, 
-    aadhar_card, last_company_name, offer_letter, photo, last_company_experience_letter, 
-    pin, leave_balance, created_at, updated_at) 
-    VALUES 
-    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
-     $17, $18, $19, $20, $21, $22, NOW(), NOW()) 
-    RETURNING *;
-`;
+  // Check if emp_id already exists (extra safety)
+  const checkExistQuery = "SELECT emp_id FROM employees WHERE emp_id = $1";
+  const exists = await pool.query(checkExistQuery, [emp_id]);
+  
+  if (exists.rows.length > 0) {
+      throw new Error(`Employee ID ${emp_id} already exists. Please try again.`);
+  }
 
-    try {
-        const result = await pool.query(query, [
-            emp_id, 
-            full_name, 
-            phone, 
-            designation, 
-            role,
-            cleanValue(joining_date),  // Convert "" to NULL
-            cleanValue(resign_date),   // Convert "" to NULL
-            cleanValue(dob),           // Convert "" to NULL
-            alt_phone, 
-            city, 
-            ctc, 
-            bank_number, 
-            ifsc, 
-            passbook_image, 
-            pan_card, 
-            aadhar_card, 
-            last_company_name, 
-            offer_letter, 
-            photo, 
-            last_company_experience_letter, 
-            pin,
-            1.5  // Default leave balance
-        ]);
+  const query = `
+      INSERT INTO employees 
+      (emp_id, name, emp_number, designation, role, joining_date, resign_date, dob, 
+      alt_phone, assign_city, ctc, bank_number, ifsc, passbook_image, pan_card, 
+      aadhar_card, last_company_name, offer_letter, photo, last_company_experience_letter, 
+      pin, leave_balance, created_at, updated_at) 
+      VALUES 
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
+       $17, $18, $19, $20, $21, $22, NOW(), NOW()) 
+      RETURNING *;
+  `;
 
-        console.log("Inserted Employee Data:", result.rows[0]); // Debugging
+  try {
+      console.log("Attempting to insert with emp_id:", emp_id);
+      console.log("Generated PIN:", pin);
 
-        return result.rows[0];
-    } catch (error) {
-        console.error("DB Insert Error:", error);
-        throw error;
-    }
+      const result = await pool.query(query, [
+          emp_id, 
+          full_name, 
+          phone, 
+          designation, 
+          role,
+          cleanValue(joining_date),
+          cleanValue(resign_date),
+          cleanValue(dob),
+          cleanValue(alt_phone), 
+          cleanValue(city), 
+          cleanValue(ctc), 
+          cleanValue(bank_number), 
+          cleanValue(ifsc), 
+          passbook_image, 
+          pan_card, 
+          aadhar_card, 
+          cleanValue(last_company_name), 
+          offer_letter, 
+          photo, 
+          last_company_experience_letter, 
+          pin,
+          1.5  // Default leave balance
+      ]);
+
+      console.log("Successfully inserted Employee:", result.rows[0].emp_id);
+      return result.rows[0];
+  } catch (error) {
+      console.error("DB Insert Error Details:", {
+          error: error.message,
+          code: error.code,
+          detail: error.detail,
+          emp_id: emp_id
+      });
+      throw error;
+  }
 };
 
 // Delete Employee from DB
