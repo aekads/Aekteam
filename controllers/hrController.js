@@ -84,47 +84,83 @@ exports.getAddEmployeePage = async (req, res) => {
 
 //creat Emp HR roll
 exports.postAddEmployee = async (req, res) => {
-    try {
-        console.log("Received Form Data:", req.body);
-        console.log("Received Files:", req.files);
+  try {
+      console.log("=== ADD EMPLOYEE REQUEST ===");
+      console.log("Received Form Data:", req.body);
+      console.log("Received Files:", req.files);
 
-        const employeeData = {
-            full_name: req.body.full_name,  
-            phone: req.body.phone,
-            designation: req.body.designation,
-            role: req.body.role,
-            joining_date: req.body.joining_date,
-            resign_date: req.body.resign_date,
-            dob: req.body.dob,
-            alt_phone: req.body.alt_phone,
-            city: req.body.city,
-            ctc: req.body.ctc,
-            bank_number: req.body.bank_number,
-            ifsc: req.body.ifsc,
-            passbook_image: req.files?.passbook_image?.[0]?.path || null,
-            pan_card: req.files?.pan_card?.[0]?.path || null,
-            aadhar_card: req.files?.aadhar_card?.[0]?.path || null,
-            last_company_name: req.body.last_company_name,
-            offer_letter: req.files?.offer_letter?.[0]?.path || null,
-            photo: req.files?.photo?.[0]?.path || null,
-            last_company_experience_letter: req.files?.last_company_experience_letter?.[0]?.path || null
-        };
+      // Validate required fields
+      if (!req.body.full_name || !req.body.phone) {
+          return res.status(400).json({ 
+              success: false, 
+              error: "Full Name and Phone are required fields." 
+          });
+      }
 
-        // Ensure required fields exist
-        if (!employeeData.full_name) {
-            return res.status(400).json({ error: "Missing required fields" });
-        }
+      const employeeData = {
+          full_name: req.body.full_name.trim(),  
+          phone: req.body.phone.trim(),
+          designation: req.body.designation?.trim() || null,
+          role: req.body.role?.trim() || 'employee', // Default role
+          joining_date: req.body.joining_date || null,
+          resign_date: req.body.resign_date || null,
+          dob: req.body.dob || null,
+          alt_phone: req.body.alt_phone?.trim() || null,
+          city: req.body.city?.trim() || null,
+          ctc: req.body.ctc?.trim() || null,
+          bank_number: req.body.bank_number?.trim() || null,
+          ifsc: req.body.ifsc?.trim() || null,
+          last_company_name: req.body.last_company_name?.trim() || null,
+          passbook_image: req.files?.passbook_image?.[0]?.path || null,
+          pan_card: req.files?.pan_card?.[0]?.path || null,
+          aadhar_card: req.files?.aadhar_card?.[0]?.path || null,
+          offer_letter: req.files?.offer_letter?.[0]?.path || null,
+          photo: req.files?.photo?.[0]?.path || null,
+          last_company_experience_letter: req.files?.last_company_experience_letter?.[0]?.path || null
+      };
 
-        // Insert employee into DB
-        const newEmployee = await addEmployee(employeeData);
-        res.json({ success: true, message: "Employee Add successfully!", employee: newEmployee });
+      console.log("Processed Employee Data:", employeeData);
 
-    } catch (error) {
-        console.error("Error adding employee:", error);
-        res.status(500).json({ success: false, error: error.message });
-    }
+      // Insert employee into DB
+      const newEmployee = await employeeModel.addEmployee(employeeData);
+      
+      res.json({ 
+          success: true, 
+          message: "Employee added successfully!", 
+          employee: {
+              emp_id: newEmployee.emp_id,
+              name: newEmployee.name,
+              emp_number: newEmployee.emp_number,
+              pin: newEmployee.pin,
+              designation: newEmployee.designation
+          }
+      });
+
+  } catch (error) {
+      console.error("Error adding employee:", error);
+      
+      // Handle specific error types
+      let errorMessage = "Failed to add employee.";
+      let statusCode = 500;
+      
+      if (error.code === '23505') { // PostgreSQL unique violation
+          if (error.detail?.includes('emp_id')) {
+              errorMessage = "Employee ID generation conflict. Please try again.";
+          } else if (error.detail?.includes('pin')) {
+              errorMessage = "PIN generation conflict. Please try again.";
+          } else {
+              errorMessage = "Duplicate entry found. Please check employee details.";
+          }
+          statusCode = 409; // Conflict
+      }
+      
+      res.status(statusCode).json({ 
+          success: false, 
+          error: errorMessage,
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+  }
 };
-
 
 
 
