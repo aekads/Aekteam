@@ -1,4 +1,4 @@
-<%- include('./partials/hrsidebar') %> 
+<%- include('./partials/hrsidebar') %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,251 +6,703 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leave Approval Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
- /* General Body */
-body {
-    font-family: "SF Pro Display", "Poppins", sans-serif;
-    background: #ecf0f3;
-    margin: 0;
-    color: #2d3436;
-}
+        :root {
+            --primary-blue: #4361ee;
+            --secondary-blue: #3a0ca3;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --warning-yellow: #ffc107;
+            --light-gray: #f8f9fa;
+            --dark-gray: #343a40;
+            --border-radius: 10px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
 
-/* Container */
-.container {
-    margin-left: 270px;
-    padding: 25px;
-}
+        /* General Body */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fb;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
 
-/* Title */
-h1 {
-    font-size: 28px;
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 25px;
-    padding-left: 12px;
-    border-left: 6px solid #007bff;
-}
+        /* Main Container */
+        .main-container {
+            margin-left: 270px;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
 
-/* Table Wrapper - Glassmorphism Style */
-.table-responsive {
-    border-radius: 16px;
-    backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    overflow: hidden;
-    transition: all 0.3s ease-in-out;
-}
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eaeaea;
+        }
 
-/* Table */
-.table {
-    margin-bottom: 0;
-    border-collapse: separate;
-    border-spacing: 0;
-}
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-.table thead th {
-    background: linear-gradient(90deg, #007bff, #0056b3);
-    color: #fff;
-    font-weight: 600;
-    text-align: center;
-    padding: 14px;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    letter-spacing: 0.3px;
-}
+        .page-header h1 i {
+            color: var(--primary-blue);
+        }
 
-.table td {
-    text-align: center;
-    padding: 14px;
-    vertical-align: middle;
-    border-bottom: 1px solid #eaeaea;
-}
+        .stats-summary {
+            display: flex;
+            gap: 15px;
+            background: white;
+            padding: 15px 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
 
-/* Hover Effect */
-.table-hover tbody tr:hover {
-    background-color: rgba(0, 123, 255, 0.05);
-    transform: scale(1.005);
-    transition: all 0.2s ease-in-out;
-}
+        .stat-item {
+            text-align: center;
+            padding: 0 20px;
+        }
 
-/* Badges */
-.badge {
-    padding: 7px 14px;
-    font-size: 13px;
-    border-radius: 30px;
-    font-weight: 500;
-    text-transform: capitalize;
-    box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
-}
+        .stat-item:not(:last-child) {
+            border-right: 1px solid #eaeaea;
+        }
 
-.bg-success { background: #27ae60 !important; }
-.bg-danger { background: #e74c3c !important; }
-.bg-warning { background: #f1c40f !important; color: #000; }
+        .stat-count {
+            font-size: 24px;
+            font-weight: 700;
+            display: block;
+        }
 
-/* Buttons */
-.btn {
-    border-radius: 30px;
-    font-weight: 500;
-    padding: 7px 16px;
-    transition: all 0.3s ease-in-out;
-}
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
 
-.btn-success:hover { transform: scale(1.07); background: #229954; }
-.btn-danger:hover { transform: scale(1.07); background: #c0392b; }
+        .pending-count { color: var(--warning-yellow); }
+        .approved-count { color: var(--success-green); }
+        .rejected-count { color: var(--danger-red); }
 
-/* Responsive - Tablet & Mobile */
-@media (max-width: 992px) {
-    .container {
-        margin-left: 0;
-        padding: 15px;
-    }
+        /* Table Container */
+        .table-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
 
-    .table thead {
-        display: none; /* Hide table header */
-    }
+        /* Table Styling */
+        .table {
+            margin: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
 
-    .table tbody tr {
-        display: block;
-        margin-bottom: 15px;
-        border: 1px solid #eaeaea;
-        border-radius: 12px;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.05);
-        padding: 12px;
-        background: #fff;
-    }
+        .table thead {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+        }
 
-    .table tbody td {
-        display: flex;
-        justify-content: space-between;
-        text-align: left;
-        border: none;
-        padding: 8px 10px;
-        font-size: 14px;
-    }
+        .table thead th {
+            color: #212529;
+            font-weight: 600;
+            padding: 18px 16px;
+            border: none;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 15px;
+            letter-spacing: 0.3px;
+        }
 
-    .table tbody td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: #555;
-    }
-}
-@media (min-width: 1000px) and (max-width: 1300px) {
-    .container, 
-    .container-sm, 
-    .container-md, 
-    .container-lg, 
-    .container-xl, 
-    .container-xxl {
-        max-width: 1000px; /* or 100% if you want fluid inside the range */
-    }
-}
+        .table tbody tr {
+            transition: var(--transition);
+        }
 
+        .table tbody tr:hover {
+            background-color: rgba(67, 97, 238, 0.05);
+        }
 
+        .table tbody td {
+            padding: 16px;
+            vertical-align: middle;
+            border-bottom: 1px solid #eef2f7;
+            text-align: center;
+            font-size: 14.5px;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: capitalize;
+            display: inline-block;
+            min-width: 90px;
+        }
+
+        .badge-pending {
+            background-color: rgba(255, 193, 7, 0.15);
+            color: #856404;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .badge-approved {
+            background-color: rgba(40, 167, 69, 0.15);
+            color: #155724;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+
+        .badge-rejected {
+            background-color: rgba(220, 53, 69, 0.15);
+            color: #721c24;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-action {
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13.5px;
+            transition: var(--transition);
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-approve {
+            background-color: var(--success-green);
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-reject {
+            background-color: var(--danger-red);
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-action i {
+            font-size: 14px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 60px;
+            color: #dee2e6;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 22px;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Date Display */
+        .date-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+            color: #495057;
+            background-color: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        /* Reason Tooltip */
+        .reason-text {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: help;
+            position: relative;
+            display: inline-block;
+        }
+
+        .reason-text:hover::after {
+            content: attr(data-fulltext);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            white-space: normal;
+            width: 300px;
+            z-index: 1000;
+            font-size: 13px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* Responsive Design */
+
+        /* Tablet (768px - 992px) */
+        @media (max-width: 992px) {
+            .main-container {
+                margin-left: 0;
+                padding: 15px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+
+            .stats-summary {
+                width: 100%;
+                justify-content: space-around;
+                padding: 12px 15px;
+            }
+
+            .stat-item {
+                padding: 0 15px;
+            }
+
+            .table-responsive {
+                border-radius: var(--border-radius);
+                overflow: hidden;
+            }
+
+            .table thead {
+                display: none;
+            }
+
+            .table tbody tr {
+                display: block;
+                margin-bottom: 15px;
+                border: 1px solid #eaeaea;
+                border-radius: var(--border-radius);
+                background: white;
+                box-shadow: var(--box-shadow);
+                padding: 15px;
+            }
+
+            .table tbody td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                text-align: left;
+                border: none;
+                padding: 12px 8px;
+                position: relative;
+                border-bottom: 1px solid #f0f0f0;
+            }
+
+            .table tbody td:last-child {
+                border-bottom: none;
+            }
+
+            .table tbody td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: var(--primary-blue);
+                min-width: 140px;
+                font-size: 14px;
+            }
+
+            .action-buttons {
+                justify-content: flex-end;
+                width: 100%;
+            }
+        }
+
+        /* Mobile (up to 767px) */
+        @media (max-width: 767px) {
+            .main-container {
+                padding: 10px;
+            }
+
+            .page-header h1 {
+                font-size: 24px;
+            }
+
+            .stats-summary {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .stat-item {
+                padding: 10px 0;
+                border-right: none !important;
+                border-bottom: 1px solid #eaeaea;
+            }
+
+            .stat-item:last-child {
+                border-bottom: none;
+            }
+
+            .table tbody tr {
+                padding: 10px;
+            }
+
+            .table tbody td {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+                padding: 10px 8px;
+            }
+
+            .table tbody td::before {
+                min-width: 100%;
+                margin-bottom: 5px;
+                font-size: 13px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+                width: 100%;
+            }
+
+            .btn-action {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .status-badge {
+                align-self: flex-start;
+            }
+        }
+
+        /* Small Mobile (up to 480px) */
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 20px;
+            }
+
+            .stat-count {
+                font-size: 20px;
+            }
+
+            .stat-label {
+                font-size: 12px;
+            }
+
+            .date-cell {
+                font-size: 13px;
+                padding: 6px 10px;
+            }
+
+            .reason-text:hover::after {
+                width: 250px;
+                font-size: 12px;
+                left: 0;
+                transform: none;
+            }
+        }
+
+        /* Large Desktop (min-width: 1200px) */
+        @media (min-width: 1200px) {
+            .main-container {
+                max-width: calc(100% - 270px);
+                margin-left: 270px;
+            }
+        }
+
+        /* Animation for new rows */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .table tbody tr {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Loading state */
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* Form styling */
+        form {
+            margin: 0;
+        }
     </style>
-</head>                                                                         
+</head>
 <body>
-   <%
-function formatDate(date) {
-  if (!date) return '';
-  const d = new Date(date);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-%>
+    <div class="main-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>
+                <i class="fas fa-clipboard-check"></i>
+                Leave Approval Dashboard
+            </h1>
+            
+         
+        </div>
 
-<div class="container">
-    <h1>Leave Approval Dashboard</h1>
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover">
-            <thead>
-                <tr>
-                    <th>Employee ID</th>
-                    <th>Employee Name</th>
-                    <th>Leave Type</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% leaveApplications.forEach(application => { %>
-                  <tr>
-  <td data-label="Employee ID"><%= application.emp_id %></td>
-  <td data-label="Employee Name"><%= application.employee_name %></td>
-  <td data-label="Leave Type"><%= application.leave_type %></td>
- <td data-label="Start Date"><%= formatDate(application.start_date) %></td>
-<td data-label="End Date"><%= formatDate(application.end_date) %></td>
-<td data-label="Reason"><%= application.reason %></td>
-<td data-label="Status">
-    <span class="badge 
-      <%= application.status.toLowerCase() === 'approved' ? 'bg-success' : 
-          application.status.toLowerCase() === 'rejected' ? 'bg-danger' : 
-          'bg-warning' %>">
-      <%= application.status %>
-    </span>
-  </td>
-  <td data-label="Actions">
-    <% if (application.status.toLowerCase() === 'pending') { %>
-      <form action="/dashboard/hr/approve" method="POST" style="display:inline;">
-        <input type="hidden" name="leave_id" value="<%= application.id %>">
-        <button type="submit" class="btn btn-success btn-sm">Approve</button>
-      </form>
-      <form action="/dashboard/hr/reject" method="POST" style="display:inline;">
-        <input type="hidden" name="leave_id" value="<%= application.id %>">
-        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
-      </form>
-    <% } else { %>
-      <span><%= application.status %></span>
-    <% } %>
-  </td>
-</tr>
+        <!-- Table Container -->
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Employee ID</th>
+                            <th>Employee Name</th>
+                            <th>Leave Type</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (leaveApplications.length === 0) { %>
+                            <tr>
+                                <td colspan="8">
+                                    <div class="empty-state">
+                                        <i class="fas fa-clipboard"></i>
+                                        <h3>No Leave Applications</h3>
+                                        <p>There are no leave applications pending review at the moment.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% 
+                            function formatDate(date) {
+                                if (!date) return '';
+                                const d = new Date(date);
+                                const year = d.getFullYear();
+                                const month = String(d.getMonth() + 1).padStart(2, '0');
+                                const day = String(d.getDate()).padStart(2, '0');
+                                return `${year}-${month}-${day}`;
+                            }
+                            %>
+                            
+                            <% leaveApplications.forEach(application => { %>
+                                <tr>
+                                    <td data-label="Employee ID">
+                                        <strong><%= application.emp_id %></strong>
+                                    </td>
+                                    <td data-label="Employee Name">
+                                        <%= application.employee_name %>
+                                    </td>
+                                    <td data-label="Leave Type">
+                                        <span class="badge bg-info text-dark">
+                                            <%= application.leave_type %>
+                                        </span>
+                                    </td>
+                                    <td data-label="Start Date">
+                                        <span class="date-cell">
+                                            <%= formatDate(application.start_date) %>
+                                        </span>
+                                    </td>
+                                    <td data-label="End Date">
+                                        <span class="date-cell">
+                                            <%= formatDate(application.end_date) %>
+                                        </span>
+                                    </td>
+                                    <td data-label="Reason">
+                                        <span class="reason-text" data-fulltext="<%= application.reason %>">
+                                            <%= application.reason.length > 30 ? 
+                                                application.reason.substring(0, 30) + '...' : 
+                                                application.reason %>
+                                        </span>
+                                    </td>
+                                    <td data-label="Status">
+                                        <span class="status-badge 
+                                            <% if (application.status.toLowerCase() === 'pending') { %>badge-pending<% } 
+                                            else if (application.status.toLowerCase() === 'approved') { %>badge-approved<% } 
+                                            else if (application.status.toLowerCase() === 'rejected') { %>badge-rejected<% } %>">
+                                            <i class="fas 
+                                                <% if (application.status.toLowerCase() === 'pending') { %>fa-clock<% } 
+                                                else if (application.status.toLowerCase() === 'approved') { %>fa-check-circle<% } 
+                                                else if (application.status.toLowerCase() === 'rejected') { %>fa-times-circle<% } %>">
+                                            </i>
+                                            <%= application.status %>
+                                        </span>
+                                    </td>
+                                    <td data-label="Actions">
+                                        <% if (application.status.toLowerCase() === 'pending') { %>
+                                            <div class="action-buttons">
+                                                <form action="/dashboard/hr/approve" method="POST" class="d-inline">
+                                                    <input type="hidden" name="leave_id" value="<%= application.id %>">
+                                                    <button type="submit" class="btn-action btn-approve">
+                                                        <i class="fas fa-check"></i> Approve
+                                                    </button>
+                                                </form>
+                                                <form action="/dashboard/hr/reject" method="POST" class="d-inline">
+                                                    <input type="hidden" name="leave_id" value="<%= application.id %>">
+                                                    <button type="submit" class="btn-action btn-reject">
+                                                        <i class="fas fa-times"></i> Reject
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        <% } else { %>
+                                            <span class="text-muted">
+                                                <i class="fas 
+                                                    <% if (application.status.toLowerCase() === 'approved') { %>fa-check text-success<% } 
+                                                    else if (application.status.toLowerCase() === 'rejected') { %>fa-times text-danger<% } %>">
+                                                </i>
+                                                <%= application.status %>
+                                            </span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-                <% }) %>
-            </tbody>
-        </table>
+        <!-- Flash Messages -->
+        <input type="hidden" id="successMessage" value="<%= messages.success ? messages.success[0] : '' %>">
+        <input type="hidden" id="errorMessage" value="<%= messages.error ? messages.error[0] : '' %>">
     </div>
-</div>
 
-<!-- Hidden inputs to carry flash messages -->
-<input type="hidden" id="successMessage" value="<%= messages.success ? messages.success[0] : '' %>">
-<input type="hidden" id="errorMessage" value="<%= messages.error ? messages.error[0] : '' %>">
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Flash Messages
+            const successMessage = document.getElementById("successMessage").value;
+            const errorMessage = document.getElementById("errorMessage").value;
 
-<!-- Flash Messages with SweetAlert -->
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const successMessage = document.getElementById("successMessage").value;
-        const errorMessage = document.getElementById("errorMessage").value;
+            if (successMessage) {
+                Swal.fire({
+                    title: "Success!",
+                    text: successMessage,
+                    icon: "success",
+                    confirmButtonColor: "#4361ee",
+                    confirmButtonText: "OK",
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            }
 
-        if (successMessage) {
-            Swal.fire({
-                title: "Success!",
-                text: successMessage,
-                icon: "success",
-                confirmButtonColor: "#3085d6",
-                confirmButtonText: "OK"
+            if (errorMessage) {
+                Swal.fire({
+                    title: "Error!",
+                    text: errorMessage,
+                    icon: "error",
+                    confirmButtonColor: "#dc3545",
+                    confirmButtonText: "OK"
+                });
+            }
+
+            // Confirm actions
+            const approveButtons = document.querySelectorAll('.btn-approve');
+            const rejectButtons = document.querySelectorAll('.btn-reject');
+
+            approveButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const form = this.closest('form');
+                    e.preventDefault();
+                    
+                    Swal.fire({
+                        title: 'Approve Leave Application?',
+                        text: "Are you sure you want to approve this leave request?",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, Approve',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
             });
-        }
 
-        if (errorMessage) {
-            Swal.fire({
-                title: "Error!",
-                text: errorMessage,
-                icon: "error",
-                confirmButtonColor: "#d33",
-                confirmButtonText: "OK"
+            rejectButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const form = this.closest('form');
+                    e.preventDefault();
+                    
+                    Swal.fire({
+                        title: 'Reject Leave Application?',
+                        text: "Are you sure you want to reject this leave request?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, Reject',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
             });
-        }
-    });
-</script>
 
+            // Tooltip for truncated text
+            const reasonTexts = document.querySelectorAll('.reason-text');
+            reasonTexts.forEach(text => {
+                text.addEventListener('mouseenter', function() {
+                    if (this.textContent.includes('...')) {
+                        this.title = this.dataset.fulltext;
+                    }
+                });
+            });
 
-
+            // Add loading state to forms
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function() {
+                    const button = this.querySelector('button[type="submit"]');
+                    if (button) {
+                        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                        button.classList.add('loading');
+                        button.disabled = true;
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
