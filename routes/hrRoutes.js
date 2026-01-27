@@ -43,7 +43,7 @@ router.get("/employee-status", hrController.getEmployeesByStatus);
 
 // 🚀 Employee Routes
 router.get('/employee/edit/:emp_id', verifyToken, hrController.getEditEmployeePage);
-router.post('/update/:emp_id',uploadFields, hrController.postUpdateEmployee);
+router.post('/employee/update/:emp_id',uploadFields, hrController.postUpdateEmployee);
 
 // Employee Delete Route
 router.get('/employee/delete/:emp_id', verifyToken, requireHR, hrController.deleteEmployee);
