@@ -53,6 +53,47 @@
     <input type="text" name="ifsc" value="<%= employee.ifsc %>">
 
     
+    <h3>Update Documents</h3>
+
+    <label>Profile Photo:</label>
+    <input type="file" name="photo">
+    <% if (employee.photo) { %>
+        <a href="<%= employee.photo %>" target="_blank">View</a>
+    <% } %>
+    </br>
+
+    <label>Aadhar Card:</label>
+    <input type="file" name="aadhar_card">
+    <% if (employee.aadhar_card) { %>
+        <a href="<%= employee.aadhar_card %>" target="_blank">View</a>
+    <% } %>
+    </br>
+    </br>
+    <label>PAN Card:</label>
+    <input type="file" name="pan_card">
+    <% if (employee.pan_card) { %>
+        <a href="<%= employee.pan_card %>" target="_blank">View</a>
+    <% } %>
+    </br>
+    </br>
+    <label>Passbook:</label>
+    <input type="file" name="passbook_image">
+    <% if (employee.passbook_image) { %>
+        <a href="<%= employee.passbook_image %>" target="_blank">View</a>
+    <% } %>
+    </br>
+    </br>
+    <label>Offer Letter:</label>
+    <input type="file" name="offer_letter">
+    <% if (employee.offer_letter) { %>
+        <a href="<%= employee.offer_letter %>" target="_blank">View</a>
+    <% } %>
+
+    <label>Experience Letter:</label>
+    <input type="file" name="last_company_experience_letter">
+    <% if (employee.last_company_experience_letter) { %>
+        <a href="<%= employee.last_company_experience_letter %>" target="_blank">View</a>
+    <% } %>
 
    
 
@@ -90,9 +131,13 @@
                 });
             } else {
                 Swal.fire({
-                    title: "Error!",
-                    text: result.error || "Failed to update employee!",
-                    icon: "error"
+                    title: "Success!",
+                    text: "Employee updated successfully!",
+                    icon: "success",
+                    timer: 2000,  // Auto close after 2 seconds
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = "/dashboard/hr/employees/list"; // Redirect after success
                 });
             }
         } catch (error) {
