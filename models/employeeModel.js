@@ -451,7 +451,7 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
       // IT_Team, accountant, graphic_team → Saturday + Sunday (8 weekend days/month)
       // sales, maintenance, acquisition → Sunday only (4 weekend days/month)
       let isWeekend = false;
-      const twoDayWeekendRoles = ["it_team", "graphic_team", "accountant"];
+      const twoDayWeekendRoles = ["it_team", "graphic_team", "accountant", "hr"];
       const oneDayWeekendRoles = ["sales", "maintenance", "acquisition"];
       
       if (twoDayWeekendRoles.includes(roleName)) {
