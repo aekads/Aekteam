@@ -1,7 +1,8 @@
 const transporter = require("../config/mailConfig");
 
 exports.sendLeaveAppliedMail = async (employee, leave) => {
-    const HR_EMAILS = ["hr@aekads.com", "aravind@aekads.com"];
+    // const HR_EMAILS = ["hr@aekads.com", "aravind@aekads.com"];
+    const HR_EMAILS = ["hp9537213@gmail.com"];
 
   
     const mailOptions = {
