@@ -5,7 +5,7 @@ const { addEmployee, getEmployees  } = require('../models/employeeModel');
 const ExcelJS = require("exceljs");
 const leaveModel = require("../models/leaveModel");
 const pool = require('../config/db');
-
+const { sendLeaveAppliedMail, sendLeaveCanceledMail } = require("../utils/sendMail");
 
 
 
@@ -818,4 +818,217 @@ exports.addEvent = async (req, res) => {
     console.error(err);
     res.status(500).send('Error adding event');
   }
+};
+
+
+
+// controllers/hrController.js - Add these methods
+
+// GET: HR Apply Leave Page
+exports.getHrApplyLeavePage = async (req, res) => {
+    try {
+        // Get current HR's leave balance
+        const hr_id = req.user.emp_id;
+        
+        const employeeQuery = `
+            SELECT emp_id, name, leave_balance 
+            FROM employees 
+            WHERE emp_id = $1
+        `;
+        const employeeResult = await pool.query(employeeQuery, [hr_id]);
+        
+        if (employeeResult.rows.length === 0) {
+            return res.status(404).send("HR employee not found");
+        }
+        
+        // Get pending leave requests for HR
+        const pendingQuery = `
+            SELECT * FROM leaves 
+            WHERE emp_id = $1 AND status = 'pending'
+            ORDER BY applied_at DESC
+        `;
+        const pendingResult = await pool.query(pendingQuery, [hr_id]);
+        
+        // Get leave history for HR
+        const historyQuery = `
+            SELECT * FROM leaves 
+            WHERE emp_id = $1 AND status IN ('approved', 'rejected')
+            ORDER BY applied_at DESC
+            LIMIT 10
+        `;
+        const historyResult = await pool.query(historyQuery, [hr_id]);
+        
+        res.render('apply-leave', {
+            title: 'Apply Leave',
+            user: req.user,
+            employee: employeeResult.rows[0],
+            pendingLeaves: pendingResult.rows,
+            leaveHistory: historyResult.rows,
+            error: null,
+            success: null
+        });
+        
+    } catch (error) {
+        console.error("Error loading HR leave page:", error);
+        res.status(500).render('error', {
+            message: 'Failed to load leave application page',
+            error: process.env.NODE_ENV === 'development' ? error : {}
+        });
+    }
+};
+
+// POST: HR Submit Leave Application
+exports.postHrApplyLeave = async (req, res) => {
+    try {
+        const {
+            start_date,
+            end_date,
+            leave_type,
+            duration,
+            reason,
+            cc
+        } = req.body;
+        
+        const emp_id = req.user.emp_id;
+        const half_day = duration === 'half-day';
+        
+        // Validate input
+        if (!start_date || !end_date || !leave_type) {
+            return res.render('apply-leave', {
+                title: 'Apply Leave',
+                user: req.user,
+                error: 'Please fill all required fields',
+                success: null
+            });
+        }
+        
+        // Check for date validity
+        const start = new Date(start_date);
+        const end = new Date(end_date);
+        
+        if (start > end) {
+            return res.render('apply-leave', {
+                title: 'Apply Leave',
+                user: req.user,
+                error: 'End date cannot be before start date',
+                success: null
+            });
+        }
+        
+        // Check if today's date is before start date
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (start < today) {
+            return res.render('apply-leave', {
+                title: 'Apply Leave',
+                user: req.user,
+                error: 'Cannot apply leave for past dates',
+                success: null
+            });
+        }
+        
+        // Check for overlapping leaves
+        const overlapQuery = `
+            SELECT id FROM leaves 
+            WHERE emp_id = $1 
+            AND status IN ('pending', 'approved')
+            AND (
+                (start_date BETWEEN $2 AND $3)
+                OR (end_date BETWEEN $2 AND $3)
+                OR ($2 BETWEEN start_date AND end_date)
+                OR ($3 BETWEEN start_date AND end_date)
+            )
+        `;
+        
+        const overlapResult = await pool.query(overlapQuery, [
+            emp_id,
+            start_date,
+            end_date
+        ]);
+        
+        if (overlapResult.rows.length > 0) {
+            return res.render('apply-leave', {
+                title: 'Apply Leave',
+                user: req.user,
+                error: 'You already have a leave request for these dates',
+                success: null
+            });
+        }
+        
+        // Apply leave using leaveModel
+        const leaveData = {
+            emp_id,
+            start_date,
+            end_date,
+            leave_type,
+            half_day,
+            reason: reason || '',
+            cc: cc || ''
+        };
+        
+        const leave = await leaveModel.applyLeave(leaveData);
+           // Get employee details for email
+           const employee = await employeeModel.findEmployee(emp_id);
+        
+        // Send notification email (optional)
+        try {
+          await sendLeaveAppliedMail(employee, leave);
+        } catch (emailError) {
+            console.error("Failed to send email:", emailError);
+        }
+        
+        // Refresh data for the page
+        const employeeQuery = `
+            SELECT emp_id, name, leave_balance 
+            FROM employees 
+            WHERE emp_id = $1
+        `;
+        const employeeResult = await pool.query(employeeQuery, [emp_id]);
+        
+        const pendingQuery = `
+            SELECT * FROM leaves 
+            WHERE emp_id = $1 AND status = 'pending'
+            ORDER BY applied_at DESC
+        `;
+        const pendingResult = await pool.query(pendingQuery, [emp_id]);
+        
+        const historyQuery = `
+            SELECT * FROM leaves 
+            WHERE emp_id = $1 AND status IN ('approved', 'rejected')
+            ORDER BY applied_at DESC
+            LIMIT 10
+        `;
+        const historyResult = await pool.query(historyQuery, [emp_id]);
+        
+        res.render('apply-leave', {
+            title: 'Apply Leave',
+            user: req.user,
+            employee: employeeResult.rows[0],
+            pendingLeaves: pendingResult.rows,
+            leaveHistory: historyResult.rows,
+            error: null,
+            success: 'Leave application submitted successfully!'
+        });
+        
+    } catch (error) {
+        console.error("Error applying leave:", error);
+        
+        // Check if it's an insufficient balance error
+        if (error.message === 'Insufficient leave balance') {
+            return res.render('apply-leave', {
+                title: 'Apply Leave',
+                user: req.user,
+                error: 'Insufficient leave balance',
+                success: null
+            });
+        }
+        
+        res.render('apply-leave', {
+            title: 'Apply Leave',
+            user: req.user,
+            error: 'Failed to apply leave. Please try again.',
+            success: null
+        });
+    }
 };
