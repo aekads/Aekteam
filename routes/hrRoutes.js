@@ -128,5 +128,10 @@ const projectController = require("../controllers/projectController");
 router.get("/summary-reportHR",verifyToken, projectController.renderSummaryReport);
 
 
+router.get('/apply-leave', verifyToken, requireHR, hrController.getHrApplyLeavePage);
+
+// HR Submit Leave Application
+router.post('/apply-leave', verifyToken, requireHR, hrController.postHrApplyLeave);
+
 module.exports = router;
   
