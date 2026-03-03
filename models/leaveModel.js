@@ -165,8 +165,8 @@ exports.updateLeaveStatus = async (leave_id, status, hr_id) => {
     const updatedLeave = leaveUpdateResult.rows[0];
 
     // 🔹 Deduct leave balance ONLY IF:
-    // ✅ status = approved
-    // ✅ leave_type is NOT Paid
+    // ✅ status = approved                                                             
+    // ✅ leave_type is NOT Paid                                            
     if (
         status.toLowerCase() === "approved" &&
         leave_type.toLowerCase() !== "paid"
@@ -257,31 +257,29 @@ exports.addMonthlyLeaveBonus = async () => {
 
 
 exports.getEmployeeLeaveData = async (emp_id) => {
+    const currentYear = new Date().getFullYear();
     const query = `
     SELECT 
-    e.emp_id,
-    e.name,
-    e.leave_balance,
-    COALESCE(SUM(
-        CASE 
-            WHEN l.half_day IN ('1st half', '2nd half') THEN 0.5
-            ELSE (l.end_date - l.start_date + 1)
-        END
-    ), 0) AS leave_taken
-FROM employees e
-LEFT JOIN leaves l 
-    ON l.emp_id = e.emp_id 
-   AND l.status = 'approved'
-WHERE e.emp_id = $1
-GROUP BY e.emp_id, e.name, e.leave_balance;
-
-
-`;
-    const result = await pool.query(query, [emp_id]);
+        e.emp_id,
+        e.name,
+        e.leave_balance,
+        COALESCE(SUM(
+            CASE 
+                WHEN l.half_day IN ('1st half', '2nd half') THEN 0.5
+                ELSE (l.end_date - l.start_date + 1)
+            END
+        ), 0) AS leave_taken
+    FROM employees e
+    LEFT JOIN leaves l 
+        ON l.emp_id = e.emp_id 
+        AND l.status = 'approved'
+        AND DATE_PART('year', l.start_date) = $2
+    WHERE e.emp_id = $1
+    GROUP BY e.emp_id, e.name, e.leave_balance;
+    `;
+    const result = await pool.query(query, [emp_id, currentYear]);
     return result.rows[0];
 };
-  
-
 // ✅ Cancel Leave (Only if it's still pending)
 exports.cancelLeaveById = async (leave_id) => {
     const query = `
