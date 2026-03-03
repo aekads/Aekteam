@@ -600,6 +600,7 @@
                                     <th>Date Range</th>
                                     <th>Type</th>
                                     <th>Duration</th>
+                                    <th>Reason</th>
                                     <th>Status</th>
                                     <th>Action</th>
                                 </tr>
@@ -618,6 +619,7 @@
                                     <th>Date Range</th>
                                     <th>Type</th>
                                     <th>Duration</th>
+                                    <th>Reason</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
@@ -781,44 +783,45 @@
                 }
             }
 
-            async function fetchPendingLeaves() {
-                try {
-                    const response = await fetch('/dashboard/employee/leave/list?status=pending', {
-                        credentials: 'include'
-                    });
-                    const result = await response.json();
-                    const pendingList = document.getElementById('pendingList');
-
-                    if (!response.ok) throw new Error(result.message || "Failed to fetch pending leaves");
-
-                    pendingList.innerHTML = result.leaves.map(leave => {
-                        const startDate = formatDate(leave.start_date);
-                        const endDate = formatDate(leave.end_date);
-                        const statusBadge = getStatusBadge(leave.status);
-
-                        return `
-                        <tr>
-                            <td>${startDate} - ${endDate}</td>
-                            <td>${leave.leave_type}</td>
-                            <td>${leave.half_day || "Full Day"}</td>
-                            <td>${statusBadge}</td>
-                            <td>
-                                <button class="btn btn-danger" onclick="cancelLeave(${leave.id})">
-                                    <i class="fas fa-times"></i> Withdraw
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                    }).join('') || '<tr><td colspan="5" style="text-align: center;">No pending leave requests</td></tr>';
-                } catch (error) {
-                    console.error("Error fetching pending leaves:", error);
-                    pendingList.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #dc3545;">Error loading data</td></tr>';
-                }
-            }
-
-           async function fetchLeaveHistory() {
+     async function fetchPendingLeaves() {
     try {
-        // Remove the status filter to get ALL leaves
+        const response = await fetch('/dashboard/employee/leave/list?status=pending', {
+            credentials: 'include'
+        });
+        const result = await response.json();
+        const pendingList = document.getElementById('pendingList');
+
+        if (!response.ok) throw new Error(result.message || "Failed to fetch pending leaves");
+
+        pendingList.innerHTML = result.leaves.map(leave => {
+            const startDate = formatDate(leave.start_date);
+            const endDate = formatDate(leave.end_date);
+            const statusBadge = getStatusBadge(leave.status);
+            const reason = leave.reason || 'No reason provided';
+
+            return `
+                <tr>
+                    <td>${startDate} - ${endDate}</td>
+                    <td>${leave.leave_type}</td>
+                    <td>${leave.half_day || "Full Day"}</td>
+                    <td>${reason}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <button class="btn btn-danger" onclick="cancelLeave(${leave.id})">
+                            <i class="fas fa-times"></i> Withdraw
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('') || '<tr><td colspan="6" style="text-align: center;">No pending leave requests</td></tr>';
+    } catch (error) {
+        console.error("Error fetching pending leaves:", error);
+        pendingList.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #dc3545;">Error loading data</td></tr>';
+    }
+}
+
+       async function fetchLeaveHistory() {
+    try {
         const response = await fetch('/dashboard/employee/leave/list', {
             credentials: 'include'
         });
@@ -831,19 +834,21 @@
             const startDate = formatDate(leave.start_date);
             const endDate = formatDate(leave.end_date);
             const statusBadge = getStatusBadge(leave.status);
+            const reason = leave.reason || 'No reason provided';
 
             return `
                 <tr>
                     <td>${startDate} - ${endDate}</td>
                     <td>${leave.leave_type}</td>
                     <td>${leave.half_day || "Full Day"}</td>
+                    <td>${reason}</td>
                     <td>${statusBadge}</td>
                 </tr>
             `;
-        }).join('') || '<tr><td colspan="4" style="text-align: center;">No leave history found</td></tr>';
+        }).join('') || '<tr><td colspan="5" style="text-align: center;">No leave history found</td></tr>';
     } catch (error) {
         console.error("Error fetching leave history:", error);
-        leaveList.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #dc3545;">Error loading data</td></tr>';
+        leaveList.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #dc3545;">Error loading data</td></tr>';
     }
 }
 
