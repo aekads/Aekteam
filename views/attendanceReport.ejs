@@ -502,11 +502,18 @@
   // ================================================================
   // HELPERS
   // ================================================================
-  function fmtTime(ts) {
-    if (!ts) return '—';
-    try { return new Date(ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }); }
-    catch(e) { return '—'; }
-  }
+function fmtTime(timeStr) {
+  if (!timeStr) return '—';
+
+  const date = new Date(timeStr);
+
+  return date.toLocaleTimeString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+}
 
   function workingHours(inTs, outTs) {
     if (!inTs || !outTs) return '—';
