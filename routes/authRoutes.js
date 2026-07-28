@@ -747,14 +747,14 @@ workingHours = `${Math.floor(duration.asHours())}h ${duration.minutes()}m`;
     }
     
     
-    // Schedule the cron job to run every day at 4:30 PM
-    cron.schedule("10 21 * * 1-6", () => {
-        console.log("Running daily employee report job at 9:10 PM (excluding Sundays)...");
-        sendEmailReport();
-    }, {
-        scheduled: true,
-        timezone: TIMEZONE, // Ensure correct timezone
-    });
+    // // Schedule the cron job to run every day at 4:30 PM
+    // cron.schedule("10 21 * * 1-6", () => {
+    //     console.log("Running daily employee report job at 9:10 PM (excluding Sundays)...");
+    //     sendEmailReport();
+    // }, {
+    //     scheduled: true,
+    //     timezone: TIMEZONE, // Ensure correct timezone
+    // });
 
 
 module.exports = router;
